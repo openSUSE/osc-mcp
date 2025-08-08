@@ -1,0 +1,4 @@
+# ignore binary
+osc-mcp
+# ignore the vendored stuff
+vendor/*
