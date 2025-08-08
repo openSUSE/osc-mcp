@@ -20,7 +20,11 @@ func main() {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "OS software management",
 		Version: "0.0.1"}, nil)
-	obsCred := osc.UseKeyring(*oscInstance)
+	obsCred, err := osc.UseKeyring(*oscInstance)
+	if err != nil {
+		slog.Error("failed to get OBS credentials", slog.Any("error", err))
+		os.Exit(1)
+	}
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_packages",
 		Description: "Search packages on remote instance.",
