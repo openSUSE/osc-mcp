@@ -33,6 +33,10 @@ func main() {
 		Name:        "list_source_files",
 		Description: "List source files of a package.",
 	}, obsCred.ListSrcFiles)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "branch_package",
+		Description: "Branch a package into a new project.",
+	}, obsCred.BranchPackage)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
