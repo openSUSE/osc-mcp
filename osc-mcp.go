@@ -20,7 +20,7 @@ func main() {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "OS software management",
 		Version: "0.0.1"}, nil)
-	obsCred, err := osc.UseKeyring(*oscInstance)
+	obsCred, err := osc.GetCredentials()
 	if err != nil {
 		slog.Error("failed to get OBS credentials", slog.Any("error", err))
 		os.Exit(1)
