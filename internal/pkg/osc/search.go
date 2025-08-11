@@ -13,7 +13,7 @@ import (
 )
 
 type SearchSrcPkgParam struct {
-	Name     string   `json:"name" jsonschema:"Name of the source package to search"`
+	Name     string   `json:"package_name" jsonschema:"Name of the source package to search"`
 	Projects []string `json:"projects,omitempty" jsonschema:"Optional list of projects to search in"`
 }
 

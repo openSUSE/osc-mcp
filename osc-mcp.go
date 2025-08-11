@@ -29,6 +29,10 @@ func main() {
 		Name:        "search_packages",
 		Description: "Search packages on remote instance.",
 	}, obsCred.SearchSrcPkg)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_source_files",
+		Description: "List source files of a package.",
+	}, obsCred.ListSrcFiles)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server

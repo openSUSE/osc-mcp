@@ -1,0 +1,86 @@
+package osc
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+
+	"github.com/beevik/etree"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+type ListSrcFilesParam struct {
+	ProjectName string `json:"project_name" jsonschema:"Name of the project"`
+	PackageName string `json:"package_name" jsonschema:"Name of the package"`
+}
+
+type FileInfo struct {
+	Name  string `json:"name"`
+	Size  string `json:"size"`
+	MD5   string `json:"md5"`
+	MTime string `json:"mtime"`
+}
+
+func (cred OSCCredentials) ListSrcFiles(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[ListSrcFilesParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
+	if params.Arguments.ProjectName == "" {
+		return nil, fmt.Errorf("project name cannot be empty")
+	}
+	if params.Arguments.PackageName == "" {
+		return nil, fmt.Errorf("package name cannot be empty")
+	}
+
+	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, params.Arguments.ProjectName, params.Arguments.PackageName))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.SetBasicAuth(cred.Name, cred.Passwd)
+	req.Header.Set("Accept", "application/xml; charset=utf-8")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
+	}
+
+	doc := etree.NewDocument()
+	if _, err := doc.ReadFrom(resp.Body); err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var files []FileInfo
+	for _, entry := range doc.FindElements("//entry") {
+		f := FileInfo{
+			Name:  entry.SelectAttrValue("name", ""),
+			Size:  entry.SelectAttrValue("size", ""),
+			MD5:   entry.SelectAttrValue("md5", ""),
+			MTime: entry.SelectAttrValue("mtime", ""),
+		}
+		files = append(files, f)
+	}
+
+	jsonBytes, err := json.MarshalIndent(files, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	return &mcp.CallToolResultFor[any]{
+		Content: []mcp.Content{
+			&mcp.TextContent{
+				Text: string(jsonBytes),
+			},
+		},
+	}, nil
+}
