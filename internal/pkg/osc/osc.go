@@ -7,12 +7,14 @@ import (
 )
 
 type OSCCredentials struct {
-	Name   string
-	Passwd string
+	Name    string
+	Passwd  string
+	Apiaddr string
 }
 
 func UseKeyring(apiAddr string) (cred OSCCredentials, err error) {
 	bus, err := dbus.SessionBus()
+	cred.Apiaddr = apiAddr
 	if err != nil {
 		return cred, fmt.Errorf("cannot connect to session bus: %w", err)
 	}
