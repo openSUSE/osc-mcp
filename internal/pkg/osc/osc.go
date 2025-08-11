@@ -1,18 +1,35 @@
 package osc
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+
 	"github.com/godbus/dbus/v5"
 	keyring "github.com/ppacher/go-dbus-keyring"
 )
 
 type OSCCredentials struct {
-	Name    string
-	Passwd  string
-	Apiaddr string
+	Name      string
+	Passwd    string
+	Apiaddr   string
+	SessionId string
+}
+
+// needed for session id
+func generateRandomString(length int) (string, error) {
+	bytes := make([]byte, length/2)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
 
 func UseKeyring(apiAddr string) (cred OSCCredentials, err error) {
+	cred.SessionId, err = generateRandomString(12)
+	if err != nil {
+		return cred, fmt.Errorf("failed to generate random string: %w", err)
+	}
 	bus, err := dbus.SessionBus()
 	cred.Apiaddr = apiAddr
 	if err != nil {
