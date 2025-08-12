@@ -58,6 +58,10 @@ func main() {
 		Name:        "delete_project",
 		Description: "Deletes a specified project and all the packages of this project.",
 	}, obsCred.DeleteProject)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_local_packages",
+		Description: "List all packages that are locally checked out.",
+	}, obsCred.ListLocalPackages)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
