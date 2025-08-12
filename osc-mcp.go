@@ -12,6 +12,7 @@ import (
 
 var httpAddr = flag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
 var oscInstance = flag.String("api", "api.opensuse.org", "address of the api of the OBS instance to interact with")
+var tempDir = flag.String("temp-dir", "", "if set, use this directory as temporary directory")
 
 func main() {
 	flag.Parse()
@@ -20,10 +21,14 @@ func main() {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "OS software management",
 		Version: "0.0.1"}, nil)
-	obsCred, err := osc.GetCredentials()
+
+	obsCred, created, err := osc.GetCredentials(*tempDir)
 	if err != nil {
 		slog.Error("failed to get OBS credentials", slog.Any("error", err))
 		os.Exit(1)
+	}
+	if created {
+		defer os.RemoveAll(obsCred.TempDir)
 	}
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_packages",

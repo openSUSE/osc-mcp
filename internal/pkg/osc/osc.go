@@ -18,6 +18,7 @@ type OSCCredentials struct {
 	Passwd    string
 	Apiaddr   string
 	SessionId string
+	TempDir   string
 }
 
 // GetCredentials reads the osc configuration, determines the api url and
@@ -26,28 +27,50 @@ type OSCCredentials struct {
 // If use_keyring is set to 1 in the general section, it will try to read the
 // password from the keyring. Otherwise it will use the pass value from the
 // config file.
-func GetCredentials() (creds OSCCredentials, err error) {
+func GetCredentials(tempDir string) (creds OSCCredentials, created bool, err error) {
+	creds.SessionId, err = generateRandomString(12)
+	if err != nil {
+		err = fmt.Errorf("failed to generate random string: %w", err)
+		return
+	}
+
+	if tempDir != "" {
+		creds.TempDir = tempDir
+		created = false
+	} else {
+		creds.TempDir = filepath.Join(os.TempDir(), "osc-mcp-"+creds.SessionId)
+		if err = os.MkdirAll(creds.TempDir, 0755); err != nil {
+			err = fmt.Errorf("failed to create temporary directory: %w", err)
+			return
+		}
+		created = true
+	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return creds, fmt.Errorf("could not get user home directory: %w", err)
+		err = fmt.Errorf("could not get user home directory: %w", err)
+		return
 	}
 
 	cfg := config.NewConfig()
 	configPath := filepath.Join(home, ".oscrc")
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+	if _, err = os.Stat(configPath); os.IsNotExist(err) {
 		configPath = ".oscrc"
-		if _, err := os.Stat(configPath); os.IsNotExist(err) {
-			return creds, fmt.Errorf(".oscrc not found in home directory or current directory")
+		if _, err = os.Stat(configPath); os.IsNotExist(err) {
+			err = fmt.Errorf(".oscrc not found in home directory or current directory")
+			return
 		}
 	}
 
-	if err := cfg.Load(configPath); err != nil {
-		return creds, fmt.Errorf("error loading config file: %w", err)
+	if err = cfg.Load(configPath); err != nil {
+		err = fmt.Errorf("error loading config file: %w", err)
+		return
 	}
 
 	apiurl := cfg.GetString("general", "apiurl")
 	if apiurl == "" {
-		return creds, fmt.Errorf("apiurl not set in general section of .oscrc")
+		err = fmt.Errorf("apiurl not set in general section of .oscrc")
+		return
 	}
 	creds.Apiaddr = apiurl
 	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "https://")
@@ -55,26 +78,29 @@ func GetCredentials() (creds OSCCredentials, err error) {
 
 	useKeyring := cfg.GetBool("general", "use_keyring")
 
+	var keyringCreds OSCCredentials
 	if useKeyring {
-		return useKeyringCreds(creds.Apiaddr)
+		keyringCreds, err = useKeyringCreds(creds.Apiaddr)
+		if err != nil {
+			return
+		}
+		creds.Name = keyringCreds.Name
+		creds.Passwd = keyringCreds.Passwd
+		return
 	}
 
 	user := cfg.GetString(apiurl, "user")
 	pass := cfg.GetString(apiurl, "pass")
 
 	if user == "" {
-		return creds, fmt.Errorf("user not set for apiurl %s in .oscrc", apiurl)
+		err = fmt.Errorf("user not set for apiurl %s in .oscrc", apiurl)
+		return
 	}
 
 	creds.Name = user
 	creds.Passwd = pass
 
-	creds.SessionId, err = generateRandomString(12)
-	if err != nil {
-		return creds, fmt.Errorf("failed to generate random string: %w", err)
-	}
-
-	return creds, nil
+	return
 }
 
 // needed for session id
