@@ -49,6 +49,10 @@ func main() {
 		Name:        "create_package",
 		Description: "Create a new package. Will also create a project if it does not exist.",
 	}, obsCred.CreatePackage)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "delete_project",
+		Description: "Deletes a specified project and all the packages of this project.",
+	}, obsCred.DeleteProject)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
