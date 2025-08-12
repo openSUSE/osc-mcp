@@ -37,6 +37,14 @@ func main() {
 		Name:        "branch_package",
 		Description: "Branch a package into a new project.",
 	}, obsCred.BranchPackage)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_project_meta",
+		Description: "Get the metadata of a project.",
+	}, obsCred.GetProjectMeta)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "set_project_meta",
+		Description: "Write project's meta file. Create the project if it doesn't exist.",
+	}, obsCred.SetProjectMeta)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
