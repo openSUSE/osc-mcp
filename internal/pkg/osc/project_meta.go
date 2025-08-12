@@ -18,10 +18,10 @@ type GetProjectMetaParam struct {
 }
 
 type Repository struct {
-	Name           string   `json:"name"`
-	PathProject    string   `json:"path_project,omitempty"`
-	PathRepository string   `json:"path_repository,omitempty"`
-	Arches         []string `json:"arches,omitempty"`
+	Name           string   `json:"name" yaml:"name"`
+	PathProject    string   `json:"path_project,omitempty" yaml:"path_project,omitempty"`
+	PathRepository string   `json:"path_repository,omitempty" yaml:"path_repository,omitempty"`
+	Arches         []string `json:"arches,omitempty" yaml:"arches,omitempty"`
 }
 
 type ProjectMeta struct {

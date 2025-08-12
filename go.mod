@@ -9,4 +9,7 @@ require (
 	github.com/ppacher/go-dbus-keyring v1.0.1
 )
 
-require github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+require (
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)

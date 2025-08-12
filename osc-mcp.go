@@ -45,6 +45,10 @@ func main() {
 		Name:        "set_project_meta",
 		Description: "Write project's meta file. Create the project if it doesn't exist.",
 	}, obsCred.SetProjectMeta)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "create_package",
+		Description: "Create a new package. Will also create a project if it does not exist.",
+	}, obsCred.CreatePackage)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server

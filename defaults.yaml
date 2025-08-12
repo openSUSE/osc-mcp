@@ -1,0 +1,6 @@
+repositories:
+  - name: "openSUSE_Tumbleweed"
+    path_project: "openSUSE:Factory"
+    path_repository: "snapshot"
+    arches:
+      - "x86_64"
