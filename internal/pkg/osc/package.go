@@ -184,11 +184,20 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSess
 		return nil, err
 	}
 
-	cmd := exec.CommandContext(ctx, "osc", "mkpac", projectName, params.Arguments.PackageName)
+	cmd := exec.CommandContext(ctx, "osc", "checkout", projectName)
 	cmd.Dir = tmpDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to run 'osc mkpac': %w\n%s", err, string(output))
+		return nil, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+	}
+
+	projectDir := filepath.Join(tmpDir, projectName)
+
+	cmd = exec.CommandContext(ctx, "osc", "mkpac", params.Arguments.PackageName)
+	cmd.Dir = projectDir
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
 
 	result := struct {
