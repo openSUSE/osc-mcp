@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"slices"
 
 	"github.com/beevik/etree"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -21,6 +24,10 @@ type FileInfo struct {
 	Size  string `json:"size"`
 	MD5   string `json:"md5"`
 	MTime string `json:"mtime"`
+}
+
+func IgnoredDirs() []string {
+	return []string{".osc", ".git"}
 }
 
 func (cred OSCCredentials) ListSrcFiles(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[ListSrcFilesParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
@@ -72,6 +79,49 @@ func (cred OSCCredentials) ListSrcFiles(ctx context.Context, cc *mcp.ServerSessi
 	}
 
 	jsonBytes, err := json.MarshalIndent(files, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal json: %w", err)
+	}
+
+	return &mcp.CallToolResultFor[any]{
+		Content: []mcp.Content{
+			&mcp.TextContent{
+				Text: string(jsonBytes),
+			},
+		},
+	}, nil
+}
+func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[any]) (toolRes *mcp.CallToolResultFor[any], err error) {
+	var packages []string
+	projectDirs, err := os.ReadDir(cred.TempDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read temp directory %s: %w", cred.TempDir, err)
+	}
+
+	for _, projectDir := range projectDirs {
+		if !projectDir.IsDir() {
+			continue
+		}
+		if slices.Contains(IgnoredDirs(), projectDir.Name()) {
+			continue
+		}
+		projectPath := filepath.Join(cred.TempDir, projectDir.Name())
+		packageDirs, err := os.ReadDir(projectPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read project directory %s: %w", projectPath, err)
+		}
+		for _, packageDir := range packageDirs {
+			if !packageDir.IsDir() {
+				continue
+			}
+			if slices.Contains(IgnoredDirs(), packageDir.Name()) {
+				continue
+			}
+			packages = append(packages, projectDir.Name()+"/"+packageDir.Name())
+		}
+	}
+
+	jsonBytes, err := json.MarshalIndent(packages, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal json: %w", err)
 	}
