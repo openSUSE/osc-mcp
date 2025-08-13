@@ -32,12 +32,12 @@ type ProjectMeta struct {
 	Repositories []Repository `json:"repositories"`
 }
 
-func (cred OSCCredentials) GetProjectMeta(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[GetProjectMetaParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	if params.Arguments.ProjectName == "" {
+func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectName string) (*ProjectMeta, error) {
+	if projectName == "" {
 		return nil, fmt.Errorf("project name cannot be empty")
 	}
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, params.Arguments.ProjectName))
+	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, projectName))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse API URL: %w", err)
 	}
@@ -71,7 +71,7 @@ func (cred OSCCredentials) GetProjectMeta(ctx context.Context, cc *mcp.ServerSes
 		return nil, fmt.Errorf("could not find project element in response")
 	}
 
-	meta := ProjectMeta{
+	meta := &ProjectMeta{
 		Name: projectElement.SelectAttrValue("name", ""),
 	}
 
@@ -102,6 +102,15 @@ func (cred OSCCredentials) GetProjectMeta(ctx context.Context, cc *mcp.ServerSes
 		meta.Repositories = append(meta.Repositories, r)
 	}
 
+	return meta, nil
+}
+
+func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[GetProjectMetaParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
+	meta, err := cred.getProjectMetaInternal(ctx, params.Arguments.ProjectName)
+	if err != nil {
+		return nil, err
+	}
+
 	jsonBytes, err := json.MarshalIndent(meta, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal json: %w", err)
@@ -125,7 +134,7 @@ type SetProjectMetaParam struct {
 	Repositories []Repository `json:"repositories" jsonschema:"List of repositories for the project."`
 }
 
-func (cred OSCCredentials) SetProjectMeta(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[SetProjectMetaParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
+func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[SetProjectMetaParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
 	if params.Arguments.ProjectName == "" {
 		return nil, fmt.Errorf("project name cannot be empty")
 	}
