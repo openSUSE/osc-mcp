@@ -62,6 +62,10 @@ func main() {
 		Name:        "list_local_packages",
 		Description: "List all packages that are locally checked out.",
 	}, obsCred.ListLocalPackages)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "checkout_package",
+		Description: "Checkout a package to a temporary directory.",
+	}, obsCred.CheckoutPackage)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
