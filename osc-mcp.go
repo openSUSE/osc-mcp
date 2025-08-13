@@ -22,12 +22,12 @@ func main() {
 		Name:    "OS software management",
 		Version: "0.0.1"}, nil)
 
-	obsCred, created, err := osc.GetCredentials(*tempDir)
+	obsCred, err := osc.GetCredentials(*tempDir)
 	if err != nil {
 		slog.Error("failed to get OBS credentials", slog.Any("error", err))
 		os.Exit(1)
 	}
-	if created {
+	if *tempDir == "" {
 		defer os.RemoveAll(obsCred.TempDir)
 	}
 	mcp.AddTool(server, &mcp.Tool{

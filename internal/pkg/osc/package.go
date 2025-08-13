@@ -124,15 +124,6 @@ func (cred OSCCredentials) createProject(ctx context.Context, projectName string
 	return nil
 }
 
-// tempDir returns the path to a session-specific temporary directory, creating it if it doesn't exist.
-func tempDir(sessionId string) (string, error) {
-	path := filepath.Join(os.TempDir(), "osc-mcp", sessionId)
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return "", fmt.Errorf("failed to create temporary directory: %w", err)
-	}
-	return path, nil
-}
-
 func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[CreatePackageParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
 	if params.Arguments.PackageName == "" {
 		return nil, fmt.Errorf("package name cannot be empty")
@@ -179,19 +170,14 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSess
 		}
 	}
 
-	tmpDir, err := tempDir(cred.SessionId)
-	if err != nil {
-		return nil, err
-	}
-
 	cmd := exec.CommandContext(ctx, "osc", "checkout", projectName)
-	cmd.Dir = tmpDir
+	cmd.Dir = cred.TempDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
 
-	projectDir := filepath.Join(tmpDir, projectName)
+	projectDir := filepath.Join(cred.TempDir, projectName)
 
 	cmd = exec.CommandContext(ctx, "osc", "mkpac", params.Arguments.PackageName)
 	cmd.Dir = projectDir

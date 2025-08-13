@@ -27,7 +27,7 @@ type OSCCredentials struct {
 // If use_keyring is set to 1 in the general section, it will try to read the
 // password from the keyring. Otherwise it will use the pass value from the
 // config file.
-func GetCredentials(tempDir string) (creds OSCCredentials, created bool, err error) {
+func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	creds.SessionId, err = generateRandomString(12)
 	if err != nil {
 		err = fmt.Errorf("failed to generate random string: %w", err)
@@ -36,14 +36,12 @@ func GetCredentials(tempDir string) (creds OSCCredentials, created bool, err err
 
 	if tempDir != "" {
 		creds.TempDir = tempDir
-		created = false
 	} else {
 		creds.TempDir = filepath.Join(os.TempDir(), "osc-mcp-"+creds.SessionId)
 		if err = os.MkdirAll(creds.TempDir, 0755); err != nil {
 			err = fmt.Errorf("failed to create temporary directory: %w", err)
 			return
 		}
-		created = true
 	}
 
 	home, err := os.UserHomeDir()
