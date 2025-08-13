@@ -13,12 +13,40 @@ import (
 	keyring "github.com/ppacher/go-dbus-keyring"
 )
 
+type BuildPhase struct {
+	Lines    []string `json:"lines,omitempty"`
+	Success  bool     `json:"success"`
+	Duration int      `json:"duration_seconds,omitempty"`
+}
+
+type SystemInstallation struct {
+	Packages []string `json:"packages,omitempty"`
+	BuildPhase
+}
+
+type BuildLog struct {
+	Header              string             `json:"header"`
+	Preinstall          BuildPhase         `json:"preinstall"`
+	CopyingPackages     BuildPhase         `json:"copying_packages"`
+	VMBoot              BuildPhase         `json:"vm_boot"`
+	PackageCumulation   BuildPhase         `json:"package_cumulation"`
+	PackageInstallation SystemInstallation `json:"package_installation"`
+	Build               BuildPhase         `json:"build"`
+	PostBuildChecks     BuildPhase         `json:"post_build_checks"`
+	RPMLintReport       BuildPhase         `json:"rpmlint_report"`
+	PackageComparison   BuildPhase         `json:"package_comparison"`
+	Summary             string             `json:"summary"`
+	Retries             string             `json:"retries"`
+}
+
 type OSCCredentials struct {
-	Name      string
-	Passwd    string
-	Apiaddr   string
-	SessionId string
-	TempDir   string
+	Name         string
+	Passwd       string
+	Apiaddr      string
+	SessionId    string
+	TempDir      string
+	BuildLogs    map[string]*BuildLog
+	LastBuildKey string
 }
 
 // GetCredentials reads the osc configuration, determines the api url and
@@ -28,6 +56,7 @@ type OSCCredentials struct {
 // password from the keyring. Otherwise it will use the pass value from the
 // config file.
 func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
+	creds.BuildLogs = make(map[string]*BuildLog)
 	creds.SessionId, err = generateRandomString(12)
 	if err != nil {
 		err = fmt.Errorf("failed to generate random string: %w", err)

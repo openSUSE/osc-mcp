@@ -43,6 +43,10 @@ func main() {
 		Description: "Branch a package into a new project.",
 	}, obsCred.BranchPackage)
 	mcp.AddTool(server, &mcp.Tool{
+		Name:        "build_package",
+		Description: "Build a package.",
+	}, obsCred.Build)
+	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_project_meta",
 		Description: "Get the metadata of a project.",
 	}, obsCred.GetProjectMeta)
