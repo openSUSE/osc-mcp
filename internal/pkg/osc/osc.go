@@ -51,10 +51,9 @@ type OSCCredentials struct {
 
 // GetCredentials reads the osc configuration, determines the api url and
 // returns the stored credentials.
-// It will try to read ~/.oscrc.
-// If use_keyring is set to 1 in the general section, it will try to read the
-// password from the keyring. Otherwise it will use the pass value from the
-// config file.
+// It will try to read ~/.config/osc/oscrc, ~/.oscrc and ./.oscrc.
+// It first tries to read the user and password from the config file. If a
+// password is not found, it will try to read the credentials from the keyring.
 func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	creds.BuildLogs = make(map[string]*BuildLog)
 	creds.SessionId, err = generateRandomString(12)
@@ -79,14 +78,31 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 		return
 	}
 
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		configDir = filepath.Join(home, ".config")
+	}
+
 	cfg := config.NewConfig()
-	configPath := filepath.Join(home, ".oscrc")
-	if _, err = os.Stat(configPath); os.IsNotExist(err) {
-		configPath = ".oscrc"
-		if _, err = os.Stat(configPath); os.IsNotExist(err) {
-			err = fmt.Errorf(".oscrc not found in home directory or current directory")
-			return
+	configPaths := []string{
+		filepath.Join(configDir, "osc", "oscrc"),
+		filepath.Join(home, ".oscrc"),
+		".oscrc",
+	}
+
+	var configPath string
+	found := false
+	for _, p := range configPaths {
+		if _, err := os.Stat(p); err == nil {
+			configPath = p
+			found = true
+			break
 		}
+	}
+
+	if !found {
+		err = fmt.Errorf(".oscrc not found in XDG config path, home directory or current directory")
+		return
 	}
 
 	if err = cfg.Load(configPath); err != nil {
@@ -103,29 +119,36 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "https://")
 	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "http://")
 
-	useKeyring := cfg.GetBool("general", "use_keyring")
-
-	var keyringCreds OSCCredentials
-	if useKeyring {
-		keyringCreds, err = useKeyringCreds(creds.Apiaddr)
-		if err != nil {
-			return
-		}
-		creds.Name = keyringCreds.Name
-		creds.Passwd = keyringCreds.Passwd
-		return
-	}
-
 	user := cfg.GetString(apiurl, "user")
 	pass := cfg.GetString(apiurl, "pass")
 
-	if user == "" {
-		err = fmt.Errorf("user not set for apiurl %s in .oscrc", apiurl)
+	if pass != "" {
+		if user == "" {
+			err = fmt.Errorf("user not set for apiurl %s in .oscrc", apiurl)
+			return
+		}
+		creds.Name = user
+		creds.Passwd = pass
 		return
 	}
 
-	creds.Name = user
-	creds.Passwd = pass
+	// fallback to keyring
+	var keyringCreds OSCCredentials
+	keyringCreds, err = useKeyringCreds(creds.Apiaddr)
+	if err != nil {
+		err = fmt.Errorf("password not found in %s and keyring access failed: %w", configPath, err)
+		return
+	}
+
+	creds.Passwd = keyringCreds.Passwd
+	if keyringCreds.Name != "" {
+		creds.Name = keyringCreds.Name
+	} else if user != "" {
+		creds.Name = user
+	} else {
+		err = fmt.Errorf("password found in keyring for %s, but username is missing from both keyring and config", creds.Apiaddr)
+		return
+	}
 
 	return
 }
@@ -140,10 +163,6 @@ func generateRandomString(length int) (string, error) {
 }
 
 func useKeyringCreds(apiAddr string) (cred OSCCredentials, err error) {
-	cred.SessionId, err = generateRandomString(12)
-	if err != nil {
-		return cred, fmt.Errorf("failed to generate random string: %w", err)
-	}
 	bus, err := dbus.SessionBus()
 	cred.Apiaddr = apiAddr
 	if err != nil {
@@ -160,30 +179,33 @@ func useKeyringCreds(apiAddr string) (cred OSCCredentials, err error) {
 	}
 	defer session.Close()
 
-	login, err := secrets.GetCollection("Login")
+	collections, err := secrets.GetAllCollections()
 	if err != nil {
-		return cred, fmt.Errorf("failed to get Login collection: %w", err)
+		return cred, fmt.Errorf("failed to get collections: %w", err)
 	}
 
-	items, err := login.SearchItems(map[string]string{"service": apiAddr})
-	if err != nil {
-		return cred, fmt.Errorf("failed to search for items in keyring: %w", err)
-	}
-
-	if len(items) > 0 {
-		item := items[0]
-
-		secret, err := item.GetSecret(session.Path())
+	for _, collection := range collections {
+		items, err := collection.SearchItems(map[string]string{"service": apiAddr})
 		if err != nil {
-			return cred, fmt.Errorf("failed to get secret from item: %w", err)
+			// Maybe one collection is locked, so we just continue
+			continue
 		}
-		attr, err := item.GetAttributes()
-		if err != nil {
-			return cred, fmt.Errorf("failed to get attributes from item: %w", err)
-		}
-		cred.Name = attr["username"]
-		cred.Passwd = string(secret.Value)
-	}
 
-	return cred, nil
+		if len(items) > 0 {
+			item := items[0]
+
+			secret, err := item.GetSecret(session.Path())
+			if err != nil {
+				return cred, fmt.Errorf("failed to get secret from item: %w", err)
+			}
+			attr, err := item.GetAttributes()
+			if err != nil {
+				return cred, fmt.Errorf("failed to get attributes from item: %w", err)
+			}
+			cred.Name = attr["username"]
+			cred.Passwd = string(secret.Value)
+			return cred, nil
+		}
+	}
+	return cred, fmt.Errorf("could not find credentials for %s in any keyring", apiAddr)
 }

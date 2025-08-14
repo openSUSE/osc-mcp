@@ -3,16 +3,19 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/openSUSE/osc-mcp/internal/pkg/osc"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/openSUSE/osc-mcp/internal/pkg/osc"
 )
 
 var httpAddr = flag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
 var oscInstance = flag.String("api", "api.opensuse.org", "address of the api of the OBS instance to interact with")
-var tempDir = flag.String("temp-dir", "", "if set, use this directory as temporary directory")
+var tempDir = flag.String("workdir", "", "if set, use this directory as temporary directory")
+var print_creds = flag.Bool("print-creds", false, "Just print the retreived credentials and exit")
 
 func main() {
 	flag.Parse()
@@ -23,6 +26,10 @@ func main() {
 		Version: "0.0.1"}, nil)
 
 	obsCred, err := osc.GetCredentials(*tempDir)
+	if *print_creds {
+		fmt.Printf("user: %s\npasswd: %s\n", obsCred.Name, obsCred.Passwd)
+		os.Exit(0)
+	}
 	if err != nil {
 		slog.Error("failed to get OBS credentials", slog.Any("error", err))
 		os.Exit(1)
