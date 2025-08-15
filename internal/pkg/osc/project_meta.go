@@ -26,10 +26,11 @@ type Repository struct {
 
 type ProjectMeta struct {
 	Name         string       `json:"name"`
-	Title        string       `json:"title"`
-	Description  string       `json:"description"`
-	Maintainers  []string     `json:"maintainers"`
-	Repositories []Repository `json:"repositories"`
+	Exists       bool         `json:"exists"`
+	Title        string       `json:"title,omitempty"`
+	Description  string       `json:"description,omitempty"`
+	Maintainers  []string     `json:"maintainers,omitempty"`
+	Repositories []Repository `json:"repositories,omitempty"`
 }
 
 func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectName string) (*ProjectMeta, error) {
@@ -57,7 +58,12 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusNotFound {
+		return &ProjectMeta{
+			Name:   projectName,
+			Exists: false,
+		}, nil
+	} else if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
 	}
 

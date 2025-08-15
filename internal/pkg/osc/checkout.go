@@ -33,7 +33,9 @@ func (cred *OSCCredentials) CheckoutPackage(ctx context.Context, cc *mcp.ServerS
 	}
 
 	result := map[string]string{
-		"path": path.Join(cred.TempDir, params.Arguments.Project, params.Arguments.Package),
+		"path":          path.Join(cred.TempDir, params.Arguments.Project, params.Arguments.Package),
+		"package_name":  params.Arguments.Package,
+		"project_name:": params.Arguments.Project,
 	}
 	jsonBytes, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {

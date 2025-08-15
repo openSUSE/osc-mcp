@@ -17,44 +17,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type CreatePackageParam struct {
-	PackageName string `json:"package_name" jsonschema:"The name of the package to create."`
-}
-
 type DefaultRepositories struct {
 	Repositories []Repository `yaml:"repositories"`
-}
-
-// projectExists checks if a project exists on the build service.
-func (cred OSCCredentials) projectExists(ctx context.Context, projectName string) (bool, error) {
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, projectName))
-	if err != nil {
-		return false, fmt.Errorf("failed to parse API URL: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
-	if err != nil {
-		return false, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.SetBasicAuth(cred.Name, cred.Passwd)
-	req.Header.Set("Accept", "application/xml; charset=utf-8")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, fmt.Errorf("failed to execute request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
-		return true, nil
-	}
-	if resp.StatusCode == http.StatusNotFound {
-		return false, nil
-	}
-
-	return false, fmt.Errorf("api request failed with status: %s", resp.Status)
 }
 
 func (cred OSCCredentials) createProject(ctx context.Context, projectName string, title string, description string, repositories []Repository) error {
@@ -124,19 +88,22 @@ func (cred OSCCredentials) createProject(ctx context.Context, projectName string
 	return nil
 }
 
+type CreatePackageParam struct {
+	PackageName string `json:"package_name" jsonschema:"The name of the package to create."`
+}
+
 func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[CreatePackageParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
 	if params.Arguments.PackageName == "" {
 		return nil, fmt.Errorf("package name cannot be empty")
 	}
 
-	projectName := fmt.Sprintf("home:%s:%s", cred.Name, cred.SessionId)
+	projectName := fmt.Sprintf("home:%s:osc-mpc:%s", cred.Name, cred.SessionId)
 
-	exists, err := cred.projectExists(ctx, projectName)
+	meta, err := cred.getProjectMetaInternal(ctx, projectName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if project exists: %w", err)
 	}
-
-	if !exists {
+	if !meta.Exists {
 		var defaults DefaultRepositories
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -189,9 +156,11 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSess
 	result := struct {
 		Project string `json:"project"`
 		Package string `json:"package"`
+		Path    string `json:"path"`
 	}{
 		Project: projectName,
 		Package: params.Arguments.PackageName,
+		Path:    filepath.Join(projectDir, params.Arguments.PackageName),
 	}
 	jsonBytes, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {

@@ -1,8 +1,6 @@
 package osc
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -54,24 +52,10 @@ type OSCCredentials struct {
 // It will try to read ~/.config/osc/oscrc, ~/.oscrc and ./.oscrc.
 // It first tries to read the user and password from the config file. If a
 // password is not found, it will try to read the credentials from the keyring.
-func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
+func GetCredentials(tempDir string, id string) (creds OSCCredentials, err error) {
+	creds.TempDir = tempDir
+	creds.SessionId = id
 	creds.BuildLogs = make(map[string]*BuildLog)
-	creds.SessionId, err = generateRandomString(12)
-	if err != nil {
-		err = fmt.Errorf("failed to generate random string: %w", err)
-		return
-	}
-
-	if tempDir != "" {
-		creds.TempDir = tempDir
-	} else {
-		creds.TempDir = filepath.Join(os.TempDir(), "osc-mcp-"+creds.SessionId)
-		if err = os.MkdirAll(creds.TempDir, 0755); err != nil {
-			err = fmt.Errorf("failed to create temporary directory: %w", err)
-			return
-		}
-	}
-
 	home, err := os.UserHomeDir()
 	if err != nil {
 		err = fmt.Errorf("could not get user home directory: %w", err)
@@ -151,15 +135,6 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	}
 
 	return
-}
-
-// needed for session id
-func generateRandomString(length int) (string, error) {
-	bytes := make([]byte, length/2)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
 }
 
 func useKeyringCreds(apiAddr string) (cred OSCCredentials, err error) {

@@ -97,7 +97,12 @@ type ListLocalParams struct {
 }
 
 func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[ListLocalParams]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	var packages []string
+	type local_package struct {
+		package_name string
+		project_name string
+		path         string
+	}
+	packages := []local_package{}
 	projectDirs, err := os.ReadDir(cred.TempDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read temp directory %s: %w", cred.TempDir, err)
@@ -122,7 +127,11 @@ func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.Server
 			if slices.Contains(IgnoredDirs(), packageDir.Name()) {
 				continue
 			}
-			packages = append(packages, projectDir.Name()+"/"+packageDir.Name())
+			packages = append(packages, local_package{
+				package_name: projectDir.Name(),
+				project_name: packageDir.Name(),
+				path:         packageDir.Name(),
+			})
 		}
 	}
 
