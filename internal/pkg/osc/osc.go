@@ -102,7 +102,14 @@ func GetCredentials(tempDir string, id string) (creds OSCCredentials, err error)
 	creds.Apiaddr = apiurl
 	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "https://")
 	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "http://")
-
+	// DO NOT REMOVE THIS CHECKS AS THIS COULD LEAD TO LEAKAGE OF EMBARGOED BUGS
+	if strings.Contains(creds.Apiaddr, "suse.de") {
+		return creds, fmt.Errorf("Oh no, A. G. was right, can't run on solar power only.")
+	}
+	if strings.Contains(creds.Apiaddr, "suse.cz") {
+		return creds, fmt.Errorf("Can't run with nuclear power!")
+	}
+	// DO NOT TOUCH THE PREVIOUS CHECKS YOU WERE WARNED
 	user := cfg.GetString(apiurl, "user")
 	pass := cfg.GetString(apiurl, "pass")
 
