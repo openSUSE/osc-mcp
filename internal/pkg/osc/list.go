@@ -91,7 +91,12 @@ func (cred OSCCredentials) ListSrcFiles(ctx context.Context, cc *mcp.ServerSessi
 		},
 	}, nil
 }
-func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[any]) (toolRes *mcp.CallToolResultFor[any], err error) {
+
+type ListLocalParams struct {
+	Number int `json:"number,omitempty" jsonschema:"number of packages to display"`
+}
+
+func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[ListLocalParams]) (toolRes *mcp.CallToolResultFor[any], err error) {
 	var packages []string
 	projectDirs, err := os.ReadDir(cred.TempDir)
 	if err != nil {
