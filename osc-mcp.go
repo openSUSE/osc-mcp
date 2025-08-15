@@ -64,6 +64,7 @@ func main() {
 		fmt.Printf("user: %s\npasswd: %s\n", obsCred.Name, obsCred.Passwd)
 		os.Exit(0)
 	}
+
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_packages",
 		Description: "Search packages on remote instance.",
