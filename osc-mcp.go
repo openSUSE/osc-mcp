@@ -105,6 +105,16 @@ func main() {
 		Name:        "checkout_package",
 		Description: fmt.Sprintf("Checkout a package from the online repostory. After this step the package is available as local package under %s", *workDir),
 	}, obsCred.CheckoutPackage)
+	buildLogSchema, err := osc.GetBuildLogSchema()
+	if err != nil {
+		slog.Error("failed to get input schema for BuildLog", "error", err)
+		os.Exit(1)
+	}
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_build_log",
+		Description: "Get the remote or local build log of a package.",
+		InputSchema: buildLogSchema,
+	}, obsCred.BuildLog)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
