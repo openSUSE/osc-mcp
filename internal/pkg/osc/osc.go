@@ -12,30 +12,18 @@ import (
 )
 
 type BuildPhase struct {
-	Lines    []string `json:"lines,omitempty"`
-	Success  bool     `json:"success"`
-	Duration int      `json:"duration_seconds,omitempty"`
+	Lines      []string       `json:"lines,omitempty"`
+	Success    bool           `json:"success"`
+	Duration   int            `json:"duration_seconds,omitempty"`
+	Name       string         `json:"name"`
+	Properties map[string]any `json:"properties,omitempty"`
 }
 
-type SystemInstallation struct {
-	Packages []string `json:"packages,omitempty"`
-	BuildPhase
+type BuildPhaseResult struct {
+	Result interface{} `json:"result"`
 }
 
-type BuildLog struct {
-	Header              string             `json:"header"`
-	Preinstall          BuildPhase         `json:"preinstall"`
-	CopyingPackages     BuildPhase         `json:"copying_packages"`
-	VMBoot              BuildPhase         `json:"vm_boot"`
-	PackageCumulation   BuildPhase         `json:"package_cumulation"`
-	PackageInstallation SystemInstallation `json:"package_installation"`
-	Build               BuildPhase         `json:"build"`
-	PostBuildChecks     BuildPhase         `json:"post_build_checks"`
-	RPMLintReport       BuildPhase         `json:"rpmlint_report"`
-	PackageComparison   BuildPhase         `json:"package_comparison"`
-	Summary             string             `json:"summary"`
-	Retries             string             `json:"retries"`
-}
+type BuildLog []BuildPhaseResult
 
 type OSCCredentials struct {
 	Name         string

@@ -24,7 +24,7 @@ func toBuildPhase(content string) BuildPhase {
 	}
 
 	if len(lines) == 0 {
-		return BuildPhase{Success: true}
+		return BuildPhase{Success: false}
 	}
 
 	durationRegex := regexp.MustCompile(`^\[\s*(\d+)s\]`)
@@ -80,14 +80,11 @@ func parseBuildLog(log string) *BuildLog {
 	log = strings.ReplaceAll(log, "\r\n", "\n")
 	lines := strings.Split(log, "\n")
 
-	var builders = make(map[string]*strings.Builder)
-	for _, name := range []string{"header", "preinstall", "copying_packages", "vm_boot", "package_cumulation", "package_installation", "build", "post_build_checks", "rpmlint_report", "package_comparison", "summary", "retries"} {
-		builders[name] = &strings.Builder{}
-	}
-
+	structured_log := []BuildPhaseResult{}
 	current := "header"
 
 	for _, line := range lines {
+		strBuild := strings.Builder{}
 		// This state machine is adapted for chroot builds based on the provided log.
 		// It may need adjustments for other build types (e.g., KVM).
 		if strings.Contains(line, "init_buildsystem") && current == "header" {
@@ -106,46 +103,29 @@ func parseBuildLog(log string) *BuildLog {
 			current = "retries"
 		}
 
-		builders[current].WriteString(line + "\n")
+		strBuild.WriteString(line + "\n")
 	}
 
-	return &BuildLog{
-		Header:              strings.TrimSpace(builders["header"].String()),
-		Preinstall:          toBuildPhase(builders["preinstall"].String()),
-		CopyingPackages:     toBuildPhase(builders["copying_packages"].String()),
-		VMBoot:              toBuildPhase(builders["vm_boot"].String()),
-		PackageCumulation:   toBuildPhase(builders["package_cumulation"].String()),
-		PackageInstallation: toSystemInstallation(builders["package_installation"].String()),
-		Build:               toBuildPhase(builders["build"].String()),
-		PostBuildChecks:     toBuildPhase(builders["post_build_checks"].String()),
-		RPMLintReport:       toBuildPhase(builders["rpmlint_report"].String()),
-		PackageComparison:   toBuildPhase(builders["package_comparison"].String()),
-		Summary:             strings.TrimSpace(builders["summary"].String()),
-		Retries:             strings.TrimSpace(builders["retries"].String()),
-	}
-}
-
-// BuildPhaseResult wraps a build phase with its name.
-type BuildPhaseResult struct {
-	Name   string      `json:"name"`
-	Result interface{} `json:"result"`
 }
 
 // GetBuildLog retrieves the build log for a given package and parses it into a structured format.
 func (cred *OSCCredentials) GetBuildLog(ctx context.Context, projectName, repositoryName, architectureName, packageName string) ([]BuildPhaseResult, error) {
 	url := fmt.Sprintf("https://%s/build/%s/%s/%s/%s/_log", cred.Apiaddr, projectName, repositoryName, architectureName, packageName)
-
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
+
 	req.SetBasicAuth(cred.Name, cred.Passwd)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -157,6 +137,7 @@ func (cred *OSCCredentials) GetBuildLog(ctx context.Context, projectName, reposi
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to read build log response body: %w", err)
 	}
@@ -178,8 +159,22 @@ func (cred *OSCCredentials) GetBuildLog(ctx context.Context, projectName, reposi
 		{Name: "Summary", Result: buildLog.Summary},
 		{Name: "Retries", Result: buildLog.Retries},
 	}
+	var finalResults []BuildPhaseResult
+	for _, result := range results {
+		var lines []string
+		switch v := result.Result.(type) {
+		case BuildPhase:
+			lines = v.Lines
+		case SystemInstallation:
+			lines = v.Lines
+		}
 
-	return results, nil
+		if len(lines) > 0 {
+			finalResults = append(finalResults, result)
+		}
+	}
+
+	return finalResults, nil
 }
 
 type BuildLogParam struct {
@@ -211,7 +206,7 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, cc *mcp.ServerSession,
 	}
 	if params.Arguments.RepositoryName == "" {
 		//\FIXME Defaults from jsonschema doesn't seem to work
-		params.Arguments.ProjectName = defRepo
+		params.Arguments.RepositoryName = defRepo
 	}
 	if params.Arguments.ArchitectureName == "" {
 		//\FIXME Defaults from jsonschema doesn't seem to work
