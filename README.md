@@ -1,5 +1,5 @@
 # MCP server for openBuild service
-This project aims to offer a MCP service for the openBuild service.
+This project aims to offer a MCP service for the openBuild service. The Model Context Protocol (MCP) is an open-source framework designed to standardize how artificial intelligence systems, such as large language models (LLMs), connect and share data with external tools and data sources.
 
 >[!NOTE]
 >The project is in a very early stage, so things may break.
