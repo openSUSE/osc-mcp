@@ -33,11 +33,16 @@ Add following configuration to `~/.gemini/settings.json`
   "mcpServers": {
     "osc-mcp": {
       "command": "/home/chris/programming/github/openSUSE/osc-mcp/osc-mcp",
-      "args": ["-workdir", "/tmp/osc-mcp","-clean-workdir"]
+      "args": ["-workdir", "/tmp/mcp/osc-mcp","-clean-workdir"]
     }
   },
-  "include-directories": ["/tmp/osc-mcp" ]
+  "include-directories": ["/tmp/mcp/osc-mcp" ]
   
 ```
-
+Now create the directory `/tmp/mcp` and start the gemini cli client with
+```
+  cd /tmp/mcp
+  npx https://github.com/google-gemini/gemini-cli
+```
+so that the `gemini-cli` has access to checked out files.
 
