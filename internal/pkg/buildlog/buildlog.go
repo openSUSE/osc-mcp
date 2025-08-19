@@ -171,9 +171,9 @@ func (log *BuildLog) FormatJson(nrLines int, printSucceded bool) map[string]any 
 			"Duration": phaseDetails.Duration,
 			"Success":  phaseDetails.Sucedded,
 		}
-		if nrLines > 0 && (printSucceded || !phaseDetails.Sucedded) {
+		if printSucceded || !phaseDetails.Sucedded {
 			printLines := nrLines
-			if nrLines > len(phaseDetails.Lines) {
+			if nrLines > len(phaseDetails.Lines) || nrLines == 0 {
 				printLines = len(phaseDetails.Lines)
 			}
 			phases[phase.String()] = map[string]any{

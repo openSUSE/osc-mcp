@@ -67,7 +67,13 @@ func GetBuildLogSchema() (*jsonschema.Schema, error) {
 		return nil, err
 	}
 	schema.AdditionalProperties = &jsonschema.Schema{}
-	schema.Default = []byte(`{"repository_name":"` + defRepo + `","architecture_name":"` + defArch + `","project_name":"","package_name":""}`)
+	schema.Default = []byte(`{
+	"repository_name":"` + defRepo + `",
+	"architecture_name":"` + defArch + `",
+	"project_name":"",
+	"package_name":""
+	"nr_lines":100,
+	"show_sucedded":false}`)
 	return schema, nil
 }
 
