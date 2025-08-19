@@ -48,7 +48,7 @@ type Phase struct {
 	Duration int
 }
 
-type Log struct {
+type BuildLog struct {
 	Name    string
 	Project string
 	Distro  string
@@ -103,8 +103,8 @@ func extractTime(line string) (int, bool) {
 	return seconds, true
 }
 
-func ParseLog(logContent string) (*Log, error) {
-	log := &Log{
+func Parse(logContent string) (*BuildLog, error) {
+	log := &BuildLog{
 		Phases: make(map[BuildPhase]Phase),
 		rawlog: logContent,
 	}
@@ -151,7 +151,7 @@ func ParseLog(logContent string) (*Log, error) {
 	return log, nil
 }
 
-func (log *Log) FormatJson() map[string]any {
+func (log *BuildLog) FormatJson() map[string]any {
 	properties := map[string]string{
 		"Name":    log.Name,
 		"Project": log.Project,
