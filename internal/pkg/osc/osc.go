@@ -7,23 +7,10 @@ import (
 	"strings"
 
 	"github.com/godbus/dbus/v5"
+	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 	"github.com/openSUSE/osc-mcp/internal/pkg/config"
 	keyring "github.com/ppacher/go-dbus-keyring"
 )
-
-type BuildPhase struct {
-	Lines      []string       `json:"lines,omitempty"`
-	Success    bool           `json:"success"`
-	Duration   int            `json:"duration_seconds,omitempty"`
-	Name       string         `json:"name"`
-	Properties map[string]any `json:"properties,omitempty"`
-}
-
-type BuildPhaseResult struct {
-	Result interface{} `json:"result"`
-}
-
-type BuildLog []BuildPhaseResult
 
 type OSCCredentials struct {
 	Name         string
@@ -31,7 +18,7 @@ type OSCCredentials struct {
 	Apiaddr      string
 	SessionId    string
 	TempDir      string
-	BuildLogs    map[string]*BuildLog
+	BuildLogs    map[string]*buildlog.BuildLog
 	LastBuildKey string
 }
 
@@ -43,7 +30,7 @@ type OSCCredentials struct {
 func GetCredentials(tempDir string, id string) (creds OSCCredentials, err error) {
 	creds.TempDir = tempDir
 	creds.SessionId = id
-	creds.BuildLogs = make(map[string]*BuildLog)
+	creds.BuildLogs = make(map[string]*buildlog.BuildLog)
 	home, err := os.UserHomeDir()
 	if err != nil {
 		err = fmt.Errorf("could not get user home directory: %w", err)

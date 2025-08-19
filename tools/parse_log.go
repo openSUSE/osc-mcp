@@ -60,7 +60,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		log, err := buildlog.Parse(string(content))
+		log := buildlog.Parse(string(content))
 		if err != nil {
 			slog.Error("failed to parse log", "error", err)
 			os.Exit(1)

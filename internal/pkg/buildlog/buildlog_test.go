@@ -70,8 +70,7 @@ func TestParseLog(t *testing.T) {
 			logContent, err := os.ReadFile(tc.logFile)
 			assert.NoError(t, err)
 
-			log, err := ParseLog(string(logContent))
-			assert.NoError(t, err)
+			log := Parse(string(logContent))
 
 			assert.Equal(t, tc.expectedName, log.Name)
 			assert.Equal(t, tc.expectedProject, log.Project)

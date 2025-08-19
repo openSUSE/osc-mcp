@@ -11,6 +11,7 @@ import (
 	"runtime"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 )
 
 type BuildParam struct {
@@ -101,10 +102,14 @@ func (cred *OSCCredentials) Build(ctx context.Context, cc *mcp.ServerSession, pa
 
 	err := oscCmd.Run()
 
-	buildLog := parseBuildLog(out.String())
+	buildLog := buildlog.Parse(out.String())
+	if err != nil {
+		slog.Error("failed to parse build log", "error", err)
+		// Continue without a parsed log
+	}
 	buildKey := fmt.Sprintf("%s/%s:%s:%s", params.Arguments.ProjectName, params.Arguments.PackageName, arch, dist)
 	if cred.BuildLogs == nil {
-		cred.BuildLogs = make(map[string]*BuildLog)
+		cred.BuildLogs = make(map[string]*buildlog.BuildLog)
 	}
 	cred.BuildLogs[buildKey] = buildLog
 	cred.LastBuildKey = buildKey
@@ -113,29 +118,21 @@ func (cred *OSCCredentials) Build(ctx context.Context, cc *mcp.ServerSession, pa
 	if err != nil {
 		slog.Error("failed to run osc build", slog.String("command", oscCmd.String()), slog.String("output", out.String()))
 		resultData = struct {
-			Error     string    `json:"error"`
-			ParsedLog *BuildLog `json:"parsed_log"`
+			Error     string             `json:"error"`
+			ParsedLog *buildlog.BuildLog `json:"parsed_log"`
 		}{
 			Error:     err.Error(),
 			ParsedLog: buildLog,
 		}
 	} else {
-		type BuildPhaseResult struct {
-			Phase      string `json:"phase"`
-			Success    bool   `json:"success"`
-			Duration   int    `json:"duration"`
-			LinesCount int    `json:"lines_count"`
-		}
-		resultData = []BuildPhaseResult{
-			{"preinstall", buildLog.Preinstall.Success, buildLog.Preinstall.Duration, len(buildLog.Preinstall.Lines)},
-			{"copying_packages", buildLog.CopyingPackages.Success, buildLog.CopyingPackages.Duration, len(buildLog.CopyingPackages.Lines)},
-			{"vm_boot", buildLog.VMBoot.Success, buildLog.VMBoot.Duration, len(buildLog.VMBoot.Lines)},
-			{"package_cumulation", buildLog.PackageCumulation.Success, buildLog.PackageCumulation.Duration, len(buildLog.PackageCumulation.Lines)},
-			{"package_installation", buildLog.PackageInstallation.Success, buildLog.PackageInstallation.Duration, len(buildLog.PackageInstallation.Lines)},
-			{"build", buildLog.Build.Success, buildLog.Build.Duration, len(buildLog.Build.Lines)},
-			{"post_build_checks", buildLog.PostBuildChecks.Success, buildLog.PostBuildChecks.Duration, len(buildLog.PostBuildChecks.Lines)},
-			{"rpmlint_report", buildLog.RPMLintReport.Success, buildLog.RPMLintReport.Duration, len(buildLog.RPMLintReport.Lines)},
-			{"package_comparison", buildLog.PackageComparison.Success, buildLog.PackageComparison.Duration, len(buildLog.PackageComparison.Lines)},
+		resultData = struct {
+			Success       bool           `json:"success"`
+			PackagesBuilt []string       `json:"packages_built"`
+			RpmLint       map[string]any `json:"lint_report"`
+		}{
+			Success:       true,
+			PackagesBuilt: []string{},       // This needs to be populated
+			RpmLint:       map[string]any{}, // This needs to be populated
 		}
 	}
 

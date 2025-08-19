@@ -103,7 +103,7 @@ func extractTime(line string) (int, bool) {
 	return seconds, true
 }
 
-func Parse(logContent string) (*BuildLog, error) {
+func Parse(logContent string) *BuildLog {
 	log := &BuildLog{
 		Phases: make(map[BuildPhase]Phase),
 		rawlog: logContent,
@@ -148,7 +148,7 @@ func Parse(logContent string) (*BuildLog, error) {
 	currentPhaseDetails.Duration = lastTime - phaseStartTime
 	log.Phases[phase] = currentPhaseDetails
 
-	return log, nil
+	return log
 }
 
 func (log *BuildLog) FormatJson() map[string]any {
