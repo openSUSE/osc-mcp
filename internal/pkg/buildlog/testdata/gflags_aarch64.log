@@ -1,0 +1,1594 @@
+[    0s] Using BUILD_ROOT=/var/cache/obs/worker/root_28/.mount
+[    0s] Using BUILD_ARCH=aarch64:aarch64_ilp32:armv8l
+[    0s] Doing kvm build in /var/cache/obs/worker/root_28/root
+[    0s] 
+[    1s] 
+[    1s] i02-armsrv1 started "build gflags.spec" at Mon Jun 30 15:14:41 UTC 2025.
+[    1s] 
+[    1s] Building gflags for project 'home:mslacken:ml' repository '16.0' arch 'aarch64' srcmd5 '1fcd5322c49c1805256d7c6ac71a5e18'
+[    1s] 
+[    1s] processing recipe /var/cache/obs/worker/root_28/.build-srcdir/gflags.spec ...
+[    1s] running changelog2spec --target rpm --file /var/cache/obs/worker/root_28/.build-srcdir/gflags.spec
+[    1s] init_buildsystem --configdir /var/run/obs/worker/28/build/configs --cachedir /var/cache/build --prepare --clean --rpmlist /var/cache/obs/worker/root_28/.build.rpmlist /var/cache/obs/worker/root_28/.build-srcdir/gflags.spec build ...
+[    1s] cycle: rpm-config-SUSE -> rpm
+[    1s]   breaking dependency rpm-config-SUSE -> rpm
+[    2s] [1/35] preinstalling filesystem...
+[    2s] [2/35] preinstalling permissions...
+[    2s] [3/35] preinstalling glibc...
+[    2s] [4/35] preinstalling diffutils...
+[    2s] [5/35] preinstalling fillup...
+[    2s] [6/35] preinstalling libacl1...
+[    2s] [7/35] preinstalling libattr1...
+[    2s] [8/35] preinstalling libbz2-1...
+[    2s] [9/35] preinstalling libcap2...
+[    2s] [10/35] preinstalling libeconf0...
+[    2s] [11/35] preinstalling libgcc_s1...
+[    2s] [12/35] preinstalling libgpg-error0...
+[    2s] [13/35] preinstalling libjitterentropy3...
+[    2s] [14/35] preinstalling liblua5_4-5...
+[    2s] [15/35] preinstalling liblzma5...
+[    2s] [16/35] preinstalling libncurses6...
+[    2s] [17/35] preinstalling libpcre2-8-0...
+[    2s] [18/35] preinstalling libpopt0...
+[    2s] [19/35] preinstalling libz1...
+[    2s] [20/35] preinstalling libzstd1...
+[    2s] [21/35] preinstalling attr...
+[    2s] [22/35] preinstalling libreadline8...
+[    2s] [23/35] preinstalling libselinux1...
+[    2s] [24/35] preinstalling libelf1...
+[    2s] [25/35] preinstalling libgcrypt20...
+[    2s] [26/35] preinstalling bash...
+[    2s] [27/35] preinstalling sed...
+[    2s] [28/35] preinstalling tar...
+[    2s] [29/35] preinstalling bash-sh...
+[    2s] [30/35] preinstalling grep...
+[    2s] [31/35] preinstalling pam...
+[    2s] [32/35] preinstalling coreutils...
+[    2s] [33/35] preinstalling aaa_base...
+[    2s] [34/35] preinstalling rpm-config-SUSE...
+[    2s] [35/35] preinstalling rpm...
+[    3s] 
+[    3s] [1/9] preinstalling kernel-obs-build...
+[    3s] [2/9] preinstalling libblkid1...
+[    3s] [3/9] preinstalling libcrypt1...
+[    3s] [4/9] preinstalling libdb-4_8...
+[    3s] [5/9] preinstalling libsmartcols1...
+[    3s] [6/9] preinstalling libuuid1...
+[    3s] [7/9] preinstalling libmount1...
+[    3s] [8/9] preinstalling perl-base...
+[    3s] [9/9] preinstalling util-linux...
+[    3s] copying packages...
+[    4s] reordering...cycle: binutils -> libctf0
+[    4s]   breaking dependency libctf0 -> binutils
+[    4s] cycle: python313-base -> libpython3_13-1_0
+[    4s]   breaking dependency python313-base -> libpython3_13-1_0
+[    4s] cycle: rpm-config-SUSE -> rpm
+[    4s]   breaking dependency rpm-config-SUSE -> rpm
+[    4s] done
+[    4s] Detected virtio-serial support
+[    5s] booting kvm...
+[    5s] ### VM INTERACTION START ###
+[    5s] Using virtio-serial support
+[    5s] /usr/bin/qemu-system-aarch64 -nodefaults -no-reboot -nographic -vga none -cpu host -enable-kvm -M virt,accel=kvm,usb=off,gic-version=host -sandbox on -object rng-random,filename=/dev/random,id=rng0 -device virtio-rng-device,rng=rng0 -object iothread,id=io0 -run-with user=qemu -net none -kernel /var/cache/obs/worker/root_28/.mount/boot/kernel -initrd /var/cache/obs/worker/root_28/.mount/boot/initrd -append root=/dev/disk/by-id/virtio-0 rootfstype=ext4 rootflags=noatime elevator=noop nmi_watchdog=0 rw ia32_emulation=1 oops=panic panic=1 quiet console=hvc0 init=/.build/build -m 10240 -drive file=/var/cache/obs/worker/root_28/root,format=raw,if=none,id=disk,cache=unsafe,aio=io_uring -device virtio-blk-device,iothread=io0,drive=disk,serial=0 -drive file=/var/cache/obs/worker/root_28/swap,format=raw,if=none,id=swap,cache=unsafe,aio=io_uring -device virtio-blk-device,iothread=io0,drive=swap,serial=1 -device virtio-serial,max_ports=2 -device virtconsole,chardev=virtiocon0 -chardev stdio,id=virtiocon0 -chardev socket,id=monitor,server=on,wait=off,path=/var/cache/obs/worker/root_28/root.qemu/monitor -mon chardev=monitor,mode=readline -smp 4
+[    6s] [!p]104[?7h[[0;1;31mFAILED[0m] Failed to start [0;1;39mVirtual Console Setup[0m.
+[    8s] [6n[32766;32766H[6n[!p]104[?7h### VM INTERACTION END ###
+[    8s] 2nd stage started in virtual machine
+[    8s] ^[[24;10R^[[24;80Rmachine type: aarch64
+[    8s] Linux version: 6.12.0-160000.17-default #1 SMP PREEMPT_DYNAMIC Wed Jun 25 21:05:52 UTC 2025 (9932895)
+[    8s] Time: Mon Jun 30 15:14:48 UTC 2025
+[    8s] Increasing log level from now on...
+[    8s] [    3.155455][  T562] sysrq: Changing Loglevel
+[    8s] [    3.155589][  T562] sysrq: Loglevel set to 4
+[    8s] Enable sysrq operations
+[    8s] Setting up swapspace version 1, size = 2 GiB (2147479552 bytes)
+[    8s] no label, UUID=858192c0-81e0-4caf-8b3e-73bce28b8571
+[    8s] WARNING: udev not running, creating extra device nodes
+[    8s] logging output to //.build.log...
+[    8s] processing recipe //.build-srcdir/gflags.spec ...
+[    8s] init_buildsystem --configdir /.build/configs --cachedir /var/cache/build //.build-srcdir/gflags.spec build ...
+[    8s] initializing rpm db...
+[    8s] querying package ids...
+[    9s] [1/143] cumulate compat-usrmerge-tools-84.87-160000.1.25
+[    9s] [2/143] cumulate crypto-policies-20250124.4d262e7-160000.3.2
+[    9s] [3/143] cumulate file-magic-5.46-160000.3.3
+[    9s] [4/143] cumulate kernel-obs-build-6.12.0-160000.17.2
+[    9s] [5/143] cumulate pkgconf-m4-2.2.0-160000.1.9
+[    9s] [6/143] cumulate python-rpm-macros-20241120.6ae645f-160000.2.10
+[    9s] [7/143] cumulate system-user-root-20190513-160000.1.8
+[    9s] [8/143] cumulate terminfo-base-6.5.20250531-160000.4.4
+[    9s] [9/143] cumulate filesystem-84.87-160000.3.5
+[    9s] [10/143] cumulate glibc-2.40-160000.3.2
+[    9s] [11/143] cumulate diffutils-3.12-160000.2.2
+[    9s] [12/143] cumulate envsubst-mini-0.22.5-160000.2.6
+[    9s] [13/143] cumulate fillup-1.42-160000.2.9
+[    9s] [14/143] cumulate glibc-gconv-modules-extra-2.40-160000.3.2
+[    9s] [15/143] cumulate glibc-locale-base-2.40-160000.3.2
+[    9s] [16/143] cumulate libacl1-2.3.2-160000.1.9
+[    9s] [17/143] cumulate libatomic1-15.1.1+git9642-160000.3.2
+[    9s] [18/143] cumulate libattr1-2.5.2-160000.1.12
+[    9s] [19/143] cumulate libaudit1-4.0-160000.1.8
+[    9s] [20/143] cumulate libbz2-1-1.0.8-160000.1.18
+[    9s] [21/143] cumulate libcap-ng0-0.8.5-160000.1.7
+[    9s] [22/143] cumulate libcap2-2.73-160000.2.3
+[    9s] [23/143] cumulate libcrypt1-4.4.38-160000.1.8
+[    9s] [24/143] cumulate libeconf0-0.7.9-160000.2.3
+[    9s] [25/143] cumulate libexpat1-2.7.1-160000.2.2
+[    9s] [26/143] cumulate libffi8-3.4.6-160000.1.14
+[    9s] [27/143] cumulate libgcc_s1-15.1.1+git9642-160000.3.2
+[    9s] [28/143] cumulate libgdbm6-1.24-160000.1.8
+[    9s] [29/143] cumulate libgmp10-6.3.0-160000.3.11
+[    9s] [30/143] cumulate libgomp1-15.1.1+git9642-160000.3.2
+[    9s] [31/143] cumulate libgpg-error0-1.54-160000.2.2
+[    9s] [32/143] cumulate libitm1-15.1.1+git9642-160000.3.2
+[    9s] [33/143] cumulate libjitterentropy3-3.6.3-160000.2.1
+[    9s] [34/143] cumulate liblua5_4-5-5.4.7-160000.2.3
+[    9s] [35/143] cumulate liblz1-1.15-160000.1.6
+[    9s] [36/143] cumulate liblz4-1-1.10.0-160000.1.11
+[    9s] [37/143] cumulate liblzma5-5.6.2-160000.1.16
+[    9s] [38/143] cumulate libmpdec4-4.0.1-160000.2.2
+[    9s] [39/143] cumulate libpcre2-8-0-10.45-160000.2.2
+[    9s] [40/143] cumulate libpkgconf5-2.2.0-160000.1.9
+[    9s] [41/143] cumulate libpopt0-1.19-160000.1.14
+[    9s] [42/143] cumulate librhash1-1.4.5-160000.2.2
+[    9s] [43/143] cumulate libseccomp2-2.6.0-160000.1.8
+[    9s] [44/143] cumulate libsmartcols1-2.41.1-160000.1.2
+[    9s] [45/143] cumulate libuuid1-2.41.1-160000.1.2
+[    9s] [46/143] cumulate libuv1-1.48.0-160000.1.14
+[    9s] [47/143] cumulate libz1-1.2.13-160000.3.2
+[    9s] [48/143] cumulate libzstd1-1.5.7-160000.1.9
+[    9s] [49/143] cumulate patch-2.7.6-160000.3.10
+[    9s] [50/143] cumulate update-alternatives-1.22.18-160000.2.2
+[    9s] [51/143] cumulate which-2.23-160000.2.2
+[    9s] [52/143] cumulate libncurses6-6.5.20250531-160000.4.4
+[    9s] [53/143] cumulate attr-2.5.2-160000.1.12
+[    9s] [54/143] cumulate libblkid1-2.41.1-160000.1.2
+[    9s] [55/143] cumulate libctf-nobfd0-2.43-160000.3.23
+[    9s] [56/143] cumulate libgdbm_compat4-1.24-160000.1.8
+[    9s] [57/143] cumulate libisl23-0.26-160000.1.17
+[    9s] [58/143] cumulate libmpfr6-4.2.1-160000.1.18
+[    9s] [59/143] cumulate libreadline8-8.2.13-160000.2.3
+[    9s] [60/143] cumulate libselinux1-3.8.1-160000.1.11
+[    9s] [61/143] cumulate libstdc++6-15.1.1+git9642-160000.3.2
+[    9s] [62/143] cumulate ncurses-utils-6.5.20250531-160000.4.4
+[    9s] [63/143] cumulate perl-base-5.40.2-160000.1.2
+[    9s] [64/143] cumulate pkgconf-2.2.0-160000.1.9
+[    9s] [65/143] cumulate libelf1-0.192-160000.1.14
+[    9s] [66/143] cumulate libgcrypt20-1.11.1-160000.3.5
+[    9s] [67/143] cumulate libxml2-2-2.13.8-160000.2.2
+[    9s] [68/143] cumulate libopenssl3-3.5.0-160000.4.5
+[    9s] [69/143] cumulate permctl-1699_20250120-160000.2.2
+[    9s] [70/143] cumulate libmagic1-5.46-160000.3.3
+[    9s] [71/143] cumulate build-mkbaselibs-20250602-160000.1.2
+[    9s] [72/143] cumulate bash-5.2.37-160000.3.14
+[    9s] [73/143] cumulate dwz-0.15-160000.5.2
+[    9s] [74/143] cumulate findutils-4.10.0-160000.2.11
+[    9s] [75/143] cumulate file-5.46-160000.3.3
+[    9s] [76/143] cumulate libasan8-15.1.1+git9642-160000.3.2
+[    9s] [77/143] cumulate libdb-4_8-4.8.30-160000.2.13
+[    9s] [78/143] cumulate libfdisk1-2.41.1-160000.1.2
+[    9s] [79/143] cumulate libhwasan0-15.1.1+git9642-160000.3.2
+[    9s] [80/143] cumulate liblsan0-15.1.1+git9642-160000.3.2
+[    9s] [81/143] cumulate libmount1-2.41.1-160000.1.2
+[    9s] [82/143] cumulate libmpc3-1.3.1-160000.1.19
+[    9s] [83/143] cumulate libtsan2-15.1.1+git9642-160000.3.2
+[    9s] [84/143] cumulate libubsan1-15.1.1+git9642-160000.3.2
+[    9s] [85/143] cumulate sed-4.9-160000.1.16
+[    9s] [86/143] cumulate tar-1.35-160000.2.14
+[    9s] [87/143] cumulate libdw1-0.192-160000.1.14
+[    9s] [88/143] cumulate perl-5.40.2-160000.1.2
+[    9s] [89/143] cumulate libarchive13-3.8.1-160000.1.3
+[    9s] [90/143] cumulate bash-sh-5.2.37-160000.3.14
+[    9s] [91/143] cumulate brp-check-suse-84.87+git20230324.8680ce4-160000.1.13
+[    9s] [92/143] cumulate perl-rpm-packaging-1.2-160000.1.3
+[    9s] [93/143] cumulate libasm1-0.192-160000.1.14
+[    9s] [94/143] cumulate cpp13-13.4.0+git9739-160000.1.1
+[    9s] [95/143] cumulate cpio-2.15-160000.2.10
+[    9s] [96/143] cumulate cpp-build-13-160000.1.8
+[    9s] [97/143] cumulate gzip-1.13-160000.2.17
+[    9s] [98/143] cumulate make-4.4.1-160000.2.11
+[    9s] [99/143] cumulate bzip2-1.0.8-160000.1.18
+[    9s] [100/143] cumulate grep-3.11-160000.2.13
+[    9s] [101/143] cumulate pkgconf-pkg-config-2.2.0-160000.1.9
+[    9s] [102/143] cumulate xz-5.6.2-160000.1.16
+[    9s] [103/143] cumulate gettext-runtime-mini-0.22.5-160000.2.6
+[    9s] [104/143] cumulate gawk-5.3.2-160000.2.2
+[    9s] [105/143] cumulate lua54-5.4.7-160000.2.3
+[    9s] [106/143] cumulate coreutils-9.6-160000.2.2
+[    9s] [107/143] cumulate elfutils-0.192-160000.1.14
+[    9s] [108/143] cumulate compat-usrmerge-build-84.87-160000.1.25
+[    9s] [109/143] cumulate systemd-rpm-macros-25-160000.1.3
+[    9s] [110/143] cumulate libxcrypt-devel-4.4.38-160000.1.8
+[    9s] [111/143] cumulate linux-glibc-devel-6.12-160000.1.1
+[    9s] [112/143] cumulate permissions-config-1699_20250120-160000.2.2
+[    9s] [113/143] cumulate polkit-default-privs-1550+20250604.71bfb94-160000.1.1
+[    9s] [114/143] cumulate gettext-tools-mini-0.22.5-160000.2.6
+[    9s] [115/143] cumulate aaa_base-84.87+git20250429.1cad3bc-160000.1.2
+[    9s] [116/143] cumulate aaa_base-malloccheck-84.87+git20250429.1cad3bc-160000.1.2
+[    9s] [117/143] cumulate permissions-1699_20250120-160000.2.2
+[    9s] [118/143] cumulate glibc-devel-2.40-160000.3.2
+[    9s] [119/143] cumulate rpmlint-mini-2.7.0+git20250623.c7a8c058-160000.2.29
+[    9s] [120/143] cumulate libstdc++6-devel-gcc13-13.4.0+git9739-160000.1.1
+[    9s] [121/143] cumulate pam-1.7.1-160000.1.2
+[    9s] [122/143] cumulate post-build-checks-84.87+git20240327.7996a0f-160000.1.7
+[    9s] [123/143] cumulate util-linux-2.41.1-160000.1.2
+[    9s] [124/143] cumulate rpm-config-SUSE-20250328-160000.1.2
+[    9s] [125/143] cumulate libctf0-2.43-160000.3.23
+[    9s] [126/143] cumulate python313-base-3.13.5-160000.1.1
+[    9s] [127/143] cumulate python313-packaging-24.2-160000.2.3
+[    9s] [128/143] cumulate libpython3_13-1_0-3.13.5-160000.1.1
+[    9s] [129/143] cumulate binutils-2.43-160000.3.23
+[    9s] [130/143] cumulate cmake-mini-3.31.7-160000.3.2
+[    9s] [131/143] cumulate rpm-4.20.1-160000.4.3
+[    9s] [132/143] cumulate cmake-3.31.7-160000.3.1
+[    9s] [133/143] cumulate python-rpm-packaging-20210526+a18ca48-160000.1.8
+[    9s] [134/143] cumulate build-compare-20240801T083050.024a3a7-160000.1.42
+[    9s] [135/143] cumulate librpmbuild10-4.20.1-160000.4.3
+[    9s] [136/143] cumulate debugedit-5.0-160000.1.19
+[    9s] [137/143] cumulate gcc13-13.4.0+git9739-160000.1.1
+[    9s] [138/143] cumulate gcc13-PIE-13.4.0+git9739-160000.1.1
+[    9s] [139/143] cumulate gcc-build-13-160000.1.8
+[    9s] [140/143] cumulate gcc13-c++-13.4.0+git9739-160000.1.1
+[    9s] [141/143] cumulate gcc-build-PIE-13-160000.1.8
+[    9s] [142/143] cumulate gcc-build-c++-13-160000.1.8
+[    9s] [143/143] cumulate rpm-build-4.20.1-160000.4.3
+[    9s] now installing cumulated packages
+[    9s] Preparing...                          ########################################
+[    9s] Updating / installing...
+[    9s] system-user-root-20190513-160000.1.8  ########################################
+[    9s] terminfo-base-6.5.20250531-160000.4.4 ########################################
+[    9s] python-rpm-macros-20241120.6ae645f-160########################################
+[    9s] pkgconf-m4-2.2.0-160000.1.9           ########################################
+[    9s] file-magic-5.46-160000.3.3            ########################################
+[    9s] crypto-policies-20250124.4d262e7-16000########################################
+[    9s] compat-usrmerge-tools-84.87-160000.1.2########################################
+[    9s] filesystem-84.87-160000.3.5           ########################################
+[    9s] glibc-2.40-160000.3.2                 ########################################
+[    9s] libz1-1.2.13-160000.3.2               ########################################
+[    9s] libgcc_s1-15.1.1+git9642-160000.3.2   ########################################
+[    9s] libstdc++6-15.1.1+git9642-160000.3.2  ########################################
+[    9s] libzstd1-1.5.7-160000.1.9             ########################################
+[    9s] libbz2-1-1.0.8-160000.1.18            ########################################
+[    9s] libgmp10-6.3.0-160000.3.11            ########################################
+[    9s] liblzma5-5.6.2-160000.1.16            ########################################
+[    9s] libelf1-0.192-160000.1.14             ########################################
+[    9s] libacl1-2.3.2-160000.1.9              ########################################
+[    9s] libmpfr6-4.2.1-160000.1.18            ########################################
+[    9s] libcrypt1-4.4.38-160000.1.8           ########################################
+[    9s] perl-base-5.40.2-160000.1.2           ########################################
+[    9s] libdw1-0.192-160000.1.14              ########################################
+[    9s] fillup-1.42-160000.2.9                ########################################
+[    9s] libcap2-2.73-160000.2.3               ########################################
+[    9s] libncurses6-6.5.20250531-160000.4.4   ########################################
+[    9s] libreadline8-8.2.13-160000.2.3        ########################################
+[   10s] bash-5.2.37-160000.3.14               ########################################
+[   10s] bash-sh-5.2.37-160000.3.14            ########################################
+[   10s] xz-5.6.2-160000.1.16                  ########################################
+[   10s] gawk-5.3.2-160000.2.2                 ########################################
+[   10s] cpio-2.15-160000.2.10                 ########################################
+[   10s] libmpc3-1.3.1-160000.1.19             ########################################
+[   10s] libisl23-0.26-160000.1.17             ########################################
+[   10s] libeconf0-0.7.9-160000.2.3            ########################################
+[   10s] libblkid1-2.41.1-160000.1.2           ########################################
+[   10s] libgomp1-15.1.1+git9642-160000.3.2    ########################################
+[   10s] liblua5_4-5-5.4.7-160000.2.3          ########################################
+[   10s] libpopt0-1.19-160000.1.14             ########################################
+[   10s] libuuid1-2.41.1-160000.1.2            ########################################
+[   10s] cpp13-13.4.0+git9739-160000.1.1       ########################################
+[   10s] make-4.4.1-160000.2.11                ########################################
+[   10s] permctl-1699_20250120-160000.2.2      ########################################
+[   10s] dwz-0.15-160000.5.2                   ########################################
+[   10s] diffutils-3.12-160000.2.2             ########################################
+[   10s] libattr1-2.5.2-160000.1.12            ########################################
+[   10s] libaudit1-4.0-160000.1.8              ########################################
+[   10s] libexpat1-2.7.1-160000.2.2            ########################################
+[   10s] libgdbm6-1.24-160000.1.8              ########################################
+[   10s] libjitterentropy3-3.6.3-160000.2.1    ########################################
+[   10s] libopenssl3-3.5.0-160000.4.5          ########################################
+[   10s] libpcre2-8-0-10.45-160000.2.2         ########################################
+[   10s] libselinux1-3.8.1-160000.1.11         ########################################
+[   10s] coreutils-9.6-160000.2.2              ########################################
+[   10s] sed-4.9-160000.1.16                   ########################################
+[   10s] grep-3.11-160000.2.13                 ########################################
+[   10s] findutils-4.10.0-160000.2.11          ########################################
+[   10s] libuv1-1.48.0-160000.1.14             ########################################
+[   10s] update-alternatives-1.22.18-160000.2.2########################################
+[   10s] lua54-5.4.7-160000.2.3                ########################################
+[   10s] update-alternatives: using /usr/bin/lua5.4 to provide /usr/bin/lua (lua) in auto mode
+[   10s] systemd-rpm-macros-25-160000.1.3      ########################################
+[   10s] linux-glibc-devel-6.12-160000.1.1     ########################################
+[   10s] permissions-config-1699_20250120-16000########################################
+[   10s] Updating /etc/sysconfig/security ...
+[   10s] Checking permissions and ownerships - using the permissions files
+[   10s] 	/usr/share/permissions/permissions
+[   10s] 	/usr/share/permissions/permissions.easy
+[   10s] 	/etc/permissions.local
+[   10s] /usr/sbin/unix_chkpwd: setting to root:shadow 4755 (wrong owner/group root:root)
+[   10s] permissions-1699_20250120-160000.2.2  ########################################
+[   10s] pam-1.7.1-160000.1.2                  ########################################
+[   10s] polkit-default-privs-1550+20250604.71b########################################
+[   10s] Updating /etc/sysconfig/security ...
+[   10s] can't open /etc/polkit-1/rules.d/90-default-privs.rules.new: No such file or directory
+[   10s] warning: %post(polkit-default-privs-1550+20250604.71bfb94-160000.1.1.noarch) scriptlet failed, exit status 2
+[   10s] libmount1-2.41.1-160000.1.2           ########################################
+[   10s] tar-1.35-160000.2.14                  ########################################
+[   10s] libgdbm_compat4-1.24-160000.1.8       ########################################
+[   11s] perl-5.40.2-160000.1.2                ########################################
+[   11s] perl-rpm-packaging-1.2-160000.1.3     ########################################
+[   11s] cpp-build-13-160000.1.8               ########################################
+[   11s] libfdisk1-2.41.1-160000.1.2           ########################################
+[   11s] gzip-1.13-160000.2.17                 ########################################
+[   11s] bzip2-1.0.8-160000.1.18               ########################################
+[   11s] ncurses-utils-6.5.20250531-160000.4.4 ########################################
+[   11s] aaa_base-84.87+git20250429.1cad3bc-160########################################
+[   11s] Updating /etc/sysconfig/language ...
+[   11s] Updating /etc/sysconfig/proxy ...
+[   11s] aaa_base-malloccheck-84.87+git20250429########################################
+[   11s] libasm1-0.192-160000.1.14             ########################################
+[   11s] elfutils-0.192-160000.1.14            ########################################
+[   11s] libxml2-2-2.13.8-160000.2.2           ########################################
+[   11s] libasan8-15.1.1+git9642-160000.3.2    ########################################
+[   11s] libhwasan0-15.1.1+git9642-160000.3.2  ########################################
+[   11s] liblsan0-15.1.1+git9642-160000.3.2    ########################################
+[   11s] libtsan2-15.1.1+git9642-160000.3.2    ########################################
+[   11s] libubsan1-15.1.1+git9642-160000.3.2   ########################################
+[   11s] libctf-nobfd0-2.43-160000.3.23        ########################################
+[   11s] libctf0-2.43-160000.3.23              ########################################
+[   11s] binutils-2.43-160000.3.23             ########################################
+[   11s] update-alternatives: using /usr/bin/ld.bfd to provide /usr/bin/ld (ld) in auto mode
+[   11s] debugedit-5.0-160000.1.19             ########################################
+[   11s] envsubst-mini-0.22.5-160000.2.6       ########################################
+[   11s] gettext-runtime-mini-0.22.5-160000.2.6########################################
+[   11s] glibc-gconv-modules-extra-2.40-160000.########################################
+[   11s] gettext-tools-mini-0.22.5-160000.2.6  ########################################
+[   11s] glibc-locale-base-2.40-160000.3.2     ########################################
+[   11s] libatomic1-15.1.1+git9642-160000.3.2  ########################################
+[   11s] libcap-ng0-0.8.5-160000.1.7           ########################################
+[   11s] libffi8-3.4.6-160000.1.14             ########################################
+[   11s] libgpg-error0-1.54-160000.2.2         ########################################
+[   11s] libgcrypt20-1.11.1-160000.3.5         ########################################
+[   11s] rpm-config-SUSE-20250328-160000.1.2   ########################################
+[   12s] rpm-4.20.1-160000.4.3                 ########################################
+[   12s] Updating /etc/sysconfig/services ...
+[   12s] libitm1-15.1.1+git9642-160000.3.2     ########################################
+[   12s] liblz1-1.15-160000.1.6                ########################################
+[   12s] libmagic1-5.46-160000.3.3             ########################################
+[   12s] librpmbuild10-4.20.1-160000.4.3       ########################################
+[   12s] liblz4-1-1.10.0-160000.1.11           ########################################
+[   12s] libarchive13-3.8.1-160000.1.3         ########################################
+[   12s] libmpdec4-4.0.1-160000.2.2            ########################################
+[   12s] python313-base-3.13.5-160000.1.1      ########################################
+[   12s] libpython3_13-1_0-3.13.5-160000.1.1   ########################################
+[   12s] python313-packaging-24.2-160000.2.3   ########################################
+[   12s] python-rpm-packaging-20210526+a18ca48-########################################
+[   12s] libpkgconf5-2.2.0-160000.1.9          ########################################
+[   12s] pkgconf-2.2.0-160000.1.9              ########################################
+[   12s] pkgconf-pkg-config-2.2.0-160000.1.9   ########################################
+[   12s] libxcrypt-devel-4.4.38-160000.1.8     ########################################
+[   12s] glibc-devel-2.40-160000.3.2           ########################################
+[   13s] gcc13-13.4.0+git9739-160000.1.1       ########################################
+[   13s] gcc-build-13-160000.1.8               ########################################
+[   13s] gcc13-PIE-13.4.0+git9739-160000.1.1   ########################################
+[   13s] libstdc++6-devel-gcc13-13.4.0+git9739-########################################
+[   13s] gcc13-c++-13.4.0+git9739-160000.1.1   ########################################
+[   13s] librhash1-1.4.5-160000.2.2            ########################################
+[   13s] cmake-mini-3.31.7-160000.3.2          ########################################
+[   14s] libseccomp2-2.6.0-160000.1.8          ########################################
+[   14s] file-5.46-160000.3.3                  ########################################
+[   14s] libsmartcols1-2.41.1-160000.1.2       ########################################
+[   14s] util-linux-2.41.1-160000.1.2          ########################################
+[   14s] patch-2.7.6-160000.3.10               ########################################
+[   14s] which-2.23-160000.2.2                 ########################################
+[   14s] rpm-build-4.20.1-160000.4.3           ########################################
+[   14s] build-compare-20240801T083050.024a3a7-########################################
+[   14s] cmake-3.31.7-160000.3.1               ########################################
+[   14s] gcc-build-c++-13-160000.1.8           ########################################
+[   14s] gcc-build-PIE-13-160000.1.8           ########################################
+[   14s] post-build-checks-84.87+git20240327.79########################################
+[   14s] brp-check-suse-84.87+git20230324.8680c########################################
+[   14s] rpmlint-mini-2.7.0+git20250623.c7a8c05########################################
+[   14s] compat-usrmerge-build-84.87-160000.1.2########################################
+[   14s] attr-2.5.2-160000.1.12                ########################################
+[   14s] build-mkbaselibs-20250602-160000.1.2  ########################################
+[   14s] libdb-4_8-4.8.30-160000.2.13          ########################################
+[   14s] kernel-obs-build-6.12.0-160000.17.2   ########################################
+[   15s] now finalizing build dir...
+[   15s] ... running 01-add_abuild_user_to_trusted_group
+[   15s] ... running 02-set_timezone_to_utc
+[   15s] ... running 03-set-permissions-secure
+[   15s] ... running 11-hack_uname_version_to_kernel_version
+[   15s] setting SOURCE_DATE_EPOCH_MTIME to 1726045616
+[   16s] -----------------------------------------------------------------
+[   16s] I have the following modifications for gflags.spec:
+[   16s] 19c19
+[   16s] < %global flavor @BUILD_FLAVOR@%{nil}
+[   16s] ---
+[   16s] > %global flavor %{nil}
+[   16s] 37c37
+[   16s] < Release:        0
+[   16s] ---
+[   16s] > Release:        lp160.22.2
+[   16s] -----------------------------------------------------------------
+[   16s] ----- building gflags.spec (user abuild)
+[   16s] -----------------------------------------------------------------
+[   16s] -----------------------------------------------------------------
+[   17s] setting SOURCE_DATE_EPOCH_MTIME to 1726045616
+[   17s] + exec rpmbuild -ba --define '_srcdefattr (-,root,root)' --nosignature --define '_build_create_debug 1' --define 'disturl obs://build.opensuse.org/home:mslacken:ml/16.0/1fcd5322c49c1805256d7c6ac71a5e18-gflags' /home/abuild/rpmbuild/SOURCES/gflags.spec
+[   17s] using SOURCE_DATE_EPOCH with value 1726045594 as build time
+[   17s] Executing(%mkbuilddir): /usr/bin/bash -e /var/tmp/rpm-tmp.0vxM5l
+[   17s] Executing(%prep): /usr/bin/bash -e /var/tmp/rpm-tmp.bDPgyy
+[   17s] + umask 022
+[   17s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   17s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   17s] + rm -rf gflags-2.2.2
+[   17s] + /usr/lib/rpm/rpmuncompress -x /home/abuild/rpmbuild/SOURCES/gflags-2.2.2.tar.gz
+[   17s] + STATUS=0
+[   17s] + '[' 0 -ne 0 ']'
+[   17s] + cd gflags-2.2.2
+[   17s] + /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
+[   17s] + sed -i -e 's@libdir=.*@libdir=/usr/lib64@' cmake/package.pc.in
+[   17s] + RPM_EC=0
+[   17s] ++ jobs -p
+[   17s] + exit 0
+[   17s] Executing(%build): /usr/bin/bash -e /var/tmp/rpm-tmp.8C2XLE
+[   17s] + umask 022
+[   17s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   17s] + /usr/bin/rm -rf /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT
+[   17s] ++ dirname /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT
+[   17s] + /usr/bin/mkdir -p /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   17s] + /usr/bin/mkdir /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT
+[   17s] + cd gflags-2.2.2
+[   17s] + ref=/usr/lib/rpm
+[   17s] + mints=0
+[   17s] + case $(uname -m) in
+[   17s] ++ uname -m
+[   17s] + mints=20120610
+[   17s] + for s in guess sub
+[   17s] ++ find -maxdepth 8 -name config.guess
+[   17s] + for s in guess sub
+[   17s] ++ find -maxdepth 8 -name config.sub
+[   17s] + find . -type f -name CMakeLists.txt -exec sed -i -re '/^[[:blank:]]*[sS][eE][tT][[:blank:]]*\([[:blank:]]*(CMAKE_BUILD_TYPE|CMAKE_COLOR_MAKEFILE|CMAKE_INSTALL_PREFIX|CMAKE_VERBOSE_MAKEFILE).*\)/{s/^/#IGNORE /}' '{}' +
+[   17s] + mkdir -p build
+[   17s] + cd build
+[   17s] + /usr/bin/cmake /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/. '-GUnix Makefiles' -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_INSTALL_BINDIR:PATH=bin -DCMAKE_INSTALL_SBINDIR:PATH=sbin -DCMAKE_INSTALL_LIBEXECDIR:PATH=libexec -DCMAKE_INSTALL_SYSCONFDIR:PATH=etc -DCMAKE_INSTALL_SHAREDSTATEDIR:PATH=/var/lib -DCMAKE_INSTALL_LOCALSTATEDIR:PATH=var -DCMAKE_INSTALL_RUNSTATEDIR:PATH=run -DCMAKE_INSTALL_LIBDIR:PATH=lib64 -DCMAKE_INSTALL_INCLUDEDIR:PATH=include -DCMAKE_INSTALL_DATAROOTDIR:PATH=share -DCMAKE_INSTALL_DOCDIR:PATH=share/doc/packages/gflags -DCMAKE_INSTALL_MANDIR:PATH=share/man -DCMAKE_INSTALL_INFODIR:PATH=share/info -DINCLUDE_INSTALL_DIR:PATH=/usr/include -DLIB_INSTALL_DIR:PATH=/usr/lib64 -DSYSCONF_INSTALL_DIR:PATH=/etc -DSHARE_INSTALL_PREFIX:PATH=/usr/share -DCMAKE_BUILD_TYPE=RelWithDebInfo '-DCMAKE_C_FLAGS=-mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g' '-DCMAKE_CXX_FLAGS=-mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g' '-DCMAKE_Fortran_FLAGS=-mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g' '-DCMAKE_EXE_LINKER_FLAGS=-flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now' '-DCMAKE_MODULE_LINKER_FLAGS=-flto=auto -Wl,--as-needed' '-DCMAKE_SHARED_LINKER_FLAGS=-flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now' -DLIB_SUFFIX=64 -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_STATIC_LIBS:BOOL=OFF -DCMAKE_COLOR_MAKEFILE:BOOL=OFF -DCMAKE_INSTALL_DO_STRIP:BOOL=OFF -DCMAKE_MODULES_INSTALL_DIR=/usr/lib64/cmake/gflags -DBUILD_STATIC_LIBS:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_TESTING:BOOL=ON
+[   17s] CMake Deprecation Warning at CMakeLists.txt:73 (cmake_minimum_required):
+[   17s]   Compatibility with CMake < 3.10 will be removed from a future version of
+[   17s]   CMake.
+[   17s] 
+[   17s]   Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+[   17s]   to tell CMake that the project requires at least <min> but has been updated
+[   17s]   to work with policies introduced by <max> or earlier.
+[   17s] 
+[   17s] 
+[   17s] -- The CXX compiler identification is GNU 13.4.0
+[   17s] -- Detecting CXX compiler ABI info
+[   17s] -- Detecting CXX compiler ABI info - done
+[   18s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[   18s] -- Detecting CXX compile features
+[   18s] -- Detecting CXX compile features - done
+[   18s] -- Looking for C++ include unistd.h
+[   18s] -- Looking for C++ include unistd.h - found
+[   18s] -- Looking for C++ include stdint.h
+[   18s] -- Looking for C++ include stdint.h - found
+[   18s] -- Looking for C++ include inttypes.h
+[   18s] -- Looking for C++ include inttypes.h - found
+[   18s] -- Looking for C++ include sys/types.h
+[   19s] -- Looking for C++ include sys/types.h - found
+[   19s] -- Looking for C++ include sys/stat.h
+[   19s] -- Looking for C++ include sys/stat.h - found
+[   19s] -- Looking for C++ include fnmatch.h
+[   19s] -- Looking for C++ include fnmatch.h - found
+[   19s] -- Looking for C++ include stddef.h
+[   19s] -- Looking for C++ include stddef.h - found
+[   19s] -- Check size of uint32_t
+[   20s] -- Check size of uint32_t - done
+[   20s] -- Looking for strtoll
+[   20s] -- Looking for strtoll - found
+[   20s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[   20s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[   20s] -- Found Threads: TRUE
+[   20s] -- Check size of pthread_rwlock_t
+[   21s] -- Check size of pthread_rwlock_t - done
+[   21s] -- Configuring done (3.8s)
+[   21s] -- Generating done (0.0s)
+[   21s] CMake Warning:
+[   21s]   Manually-specified variables were not used by the project:
+[   21s] 
+[   21s]     CMAKE_C_FLAGS
+[   21s]     CMAKE_Fortran_FLAGS
+[   21s]     CMAKE_INSTALL_BINDIR
+[   21s]     CMAKE_INSTALL_DATAROOTDIR
+[   21s]     CMAKE_INSTALL_DOCDIR
+[   21s]     CMAKE_INSTALL_DO_STRIP
+[   21s]     CMAKE_INSTALL_INCLUDEDIR
+[   21s]     CMAKE_INSTALL_INFODIR
+[   21s]     CMAKE_INSTALL_LIBDIR
+[   21s]     CMAKE_INSTALL_LIBEXECDIR
+[   21s]     CMAKE_INSTALL_LOCALSTATEDIR
+[   21s]     CMAKE_INSTALL_MANDIR
+[   21s]     CMAKE_INSTALL_RUNSTATEDIR
+[   21s]     CMAKE_INSTALL_SBINDIR
+[   21s]     CMAKE_INSTALL_SHAREDSTATEDIR
+[   21s]     CMAKE_INSTALL_SYSCONFDIR
+[   21s]     CMAKE_MODULES_INSTALL_DIR
+[   21s]     SHARE_INSTALL_PREFIX
+[   21s]     SYSCONF_INSTALL_DIR
+[   21s] 
+[   21s] 
+[   21s] -- Build files have been written to: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build
+[   21s] + /usr/bin/make -O VERBOSE=1 -j4
+[   21s] /usr/bin/cmake -S/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 -B/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build --check-build-system CMakeFiles/Makefile.cmake 0
+[   21s] /usr/bin/cmake -E cmake_progress_start /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build//CMakeFiles/progress.marks
+[   21s] /usr/bin/make  -f CMakeFiles/Makefile2 all
+[   21s] /usr/bin/make  -f CMakeFiles/gflags_shared.dir/build.make CMakeFiles/gflags_shared.dir/depend
+[   21s] /usr/bin/make  -f CMakeFiles/gflags_nothreads_shared.dir/build.make CMakeFiles/gflags_nothreads_shared.dir/depend
+[   21s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   21s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles/gflags_nothreads_shared.dir/DependInfo.cmake
+[   21s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   21s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   21s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles/gflags_shared.dir/DependInfo.cmake
+[   21s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   21s] /usr/bin/make  -f CMakeFiles/gflags_shared.dir/build.make CMakeFiles/gflags_shared.dir/build
+[   21s] /usr/bin/make  -f CMakeFiles/gflags_nothreads_shared.dir/build.make CMakeFiles/gflags_nothreads_shared.dir/build
+[   21s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   21s] [ 15%] Building CXX object CMakeFiles/gflags_shared.dir/src/gflags_reporting.cc.o
+[   21s] /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -Dgflags_shared_EXPORTS -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -fPIC -MD -MT CMakeFiles/gflags_shared.dir/src/gflags_reporting.cc.o -MF CMakeFiles/gflags_shared.dir/src/gflags_reporting.cc.o.d -o CMakeFiles/gflags_shared.dir/src/gflags_reporting.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src/gflags_reporting.cc
+[   21s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] [ 21%] Building CXX object CMakeFiles/gflags_shared.dir/src/gflags_completions.cc.o
+[   22s] /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -Dgflags_shared_EXPORTS -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -fPIC -MD -MT CMakeFiles/gflags_shared.dir/src/gflags_completions.cc.o -MF CMakeFiles/gflags_shared.dir/src/gflags_completions.cc.o.d -o CMakeFiles/gflags_shared.dir/src/gflags_completions.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src/gflags_completions.cc
+[   22s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] [ 26%] Building CXX object CMakeFiles/gflags_nothreads_shared.dir/src/gflags_reporting.cc.o
+[   22s] /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -DNO_THREADS -Dgflags_nothreads_shared_EXPORTS -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -fPIC -MD -MT CMakeFiles/gflags_nothreads_shared.dir/src/gflags_reporting.cc.o -MF CMakeFiles/gflags_nothreads_shared.dir/src/gflags_reporting.cc.o.d -o CMakeFiles/gflags_nothreads_shared.dir/src/gflags_reporting.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src/gflags_reporting.cc
+[   22s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] [  5%] Building CXX object CMakeFiles/gflags_shared.dir/src/gflags.cc.o
+[   22s] /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -Dgflags_shared_EXPORTS -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -fPIC -MD -MT CMakeFiles/gflags_shared.dir/src/gflags.cc.o -MF CMakeFiles/gflags_shared.dir/src/gflags.cc.o.d -o CMakeFiles/gflags_shared.dir/src/gflags.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src/gflags.cc
+[   22s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] [ 21%] Building CXX object CMakeFiles/gflags_nothreads_shared.dir/src/gflags.cc.o
+[   22s] /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -DNO_THREADS -Dgflags_nothreads_shared_EXPORTS -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -fPIC -MD -MT CMakeFiles/gflags_nothreads_shared.dir/src/gflags.cc.o -MF CMakeFiles/gflags_nothreads_shared.dir/src/gflags.cc.o.d -o CMakeFiles/gflags_nothreads_shared.dir/src/gflags.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src/gflags.cc
+[   22s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   22s] [ 31%] Building CXX object CMakeFiles/gflags_nothreads_shared.dir/src/gflags_completions.cc.o
+[   22s] /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -DNO_THREADS -Dgflags_nothreads_shared_EXPORTS -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -fPIC -MD -MT CMakeFiles/gflags_nothreads_shared.dir/src/gflags_completions.cc.o -MF CMakeFiles/gflags_nothreads_shared.dir/src/gflags_completions.cc.o.d -o CMakeFiles/gflags_nothreads_shared.dir/src/gflags_completions.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src/gflags_completions.cc
+[   22s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] [ 36%] Linking CXX shared library lib/libgflags.so
+[   25s] /usr/bin/cmake -E cmake_link_script CMakeFiles/gflags_shared.dir/link.txt --verbose=1
+[   25s] /usr/bin/c++ -fPIC -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -Wl,--dependency-file=CMakeFiles/gflags_shared.dir/link.d -flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now -shared -Wl,-soname,libgflags.so.2.2 -o lib/libgflags.so.2.2.2 CMakeFiles/gflags_shared.dir/src/gflags.cc.o CMakeFiles/gflags_shared.dir/src/gflags_reporting.cc.o CMakeFiles/gflags_shared.dir/src/gflags_completions.cc.o
+[   25s] /usr/bin/cmake -E cmake_symlink_library lib/libgflags.so.2.2.2 lib/libgflags.so.2.2 lib/libgflags.so
+[   25s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] [ 42%] Built target gflags_shared
+[   25s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] /usr/bin/make  -f test/CMakeFiles/gflags_strip_flags_test.dir/build.make test/CMakeFiles/gflags_strip_flags_test.dir/depend
+[   25s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest.dir/build.make test/CMakeFiles/gflags_unittest.dir/depend
+[   25s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest-main.dir/build.make test/CMakeFiles/gflags_unittest-main.dir/depend
+[   25s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_unittest.dir/DependInfo.cmake
+[   25s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_strip_flags_test.dir/DependInfo.cmake
+[   25s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest.dir/build.make test/CMakeFiles/gflags_unittest.dir/build
+[   25s] /usr/bin/make  -f test/CMakeFiles/gflags_strip_flags_test.dir/build.make test/CMakeFiles/gflags_strip_flags_test.dir/build
+[   25s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_unittest-main.dir/DependInfo.cmake
+[   25s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   25s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest-main.dir/build.make test/CMakeFiles/gflags_unittest-main.dir/build
+[   26s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] [ 42%] Linking CXX shared library lib/libgflags_nothreads.so
+[   26s] /usr/bin/cmake -E cmake_link_script CMakeFiles/gflags_nothreads_shared.dir/link.txt --verbose=1
+[   26s] /usr/bin/c++ -fPIC -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -Wl,--dependency-file=CMakeFiles/gflags_nothreads_shared.dir/link.d -flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now -shared -Wl,-soname,libgflags_nothreads.so.2.2 -o lib/libgflags_nothreads.so.2.2.2 CMakeFiles/gflags_nothreads_shared.dir/src/gflags.cc.o CMakeFiles/gflags_nothreads_shared.dir/src/gflags_reporting.cc.o CMakeFiles/gflags_nothreads_shared.dir/src/gflags_completions.cc.o
+[   26s] /usr/bin/cmake -E cmake_symlink_library lib/libgflags_nothreads.so.2.2.2 lib/libgflags_nothreads.so.2.2 lib/libgflags_nothreads.so
+[   26s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] [ 52%] Building CXX object test/CMakeFiles/gflags_strip_flags_test.dir/gflags_strip_flags_test.cc.o
+[   26s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -MD -MT test/CMakeFiles/gflags_strip_flags_test.dir/gflags_strip_flags_test.cc.o -MF CMakeFiles/gflags_strip_flags_test.dir/gflags_strip_flags_test.cc.o.d -o CMakeFiles/gflags_strip_flags_test.dir/gflags_strip_flags_test.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test/gflags_strip_flags_test.cc
+[   26s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] [ 63%] Built target gflags_nothreads_shared
+[   26s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest_main.dir/build.make test/CMakeFiles/gflags_unittest_main.dir/depend
+[   26s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_unittest_main.dir/DependInfo.cmake
+[   26s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest_main.dir/build.make test/CMakeFiles/gflags_unittest_main.dir/build
+[   26s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] [ 63%] Linking CXX executable ../bin/gflags_strip_flags_test
+[   26s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/cmake -E cmake_link_script CMakeFiles/gflags_strip_flags_test.dir/link.txt --verbose=1
+[   26s] /usr/bin/c++ -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now -rdynamic -Wl,--dependency-file=CMakeFiles/gflags_strip_flags_test.dir/link.d CMakeFiles/gflags_strip_flags_test.dir/gflags_strip_flags_test.cc.o -o ../bin/gflags_strip_flags_test  -Wl,-rpath,/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/lib ../lib/libgflags.so.2.2.2
+[   26s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] [ 68%] Built target gflags_strip_flags_test
+[   26s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] /usr/bin/make  -f test/CMakeFiles/gflags_declare_test.dir/build.make test/CMakeFiles/gflags_declare_test.dir/depend
+[   26s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_declare_test.dir/DependInfo.cmake
+[   26s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] /usr/bin/make  -f test/CMakeFiles/gflags_declare_test.dir/build.make test/CMakeFiles/gflags_declare_test.dir/build
+[   26s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   26s] [ 73%] Building CXX object test/CMakeFiles/gflags_declare_test.dir/gflags_declare_test.cc.o
+[   26s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -MD -MT test/CMakeFiles/gflags_declare_test.dir/gflags_declare_test.cc.o -MF CMakeFiles/gflags_declare_test.dir/gflags_declare_test.cc.o.d -o CMakeFiles/gflags_declare_test.dir/gflags_declare_test.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test/gflags_declare_test.cc
+[   26s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] [ 78%] Building CXX object test/CMakeFiles/gflags_declare_test.dir/gflags_declare_flags.cc.o
+[   27s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -MD -MT test/CMakeFiles/gflags_declare_test.dir/gflags_declare_flags.cc.o -MF CMakeFiles/gflags_declare_test.dir/gflags_declare_flags.cc.o.d -o CMakeFiles/gflags_declare_test.dir/gflags_declare_flags.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test/gflags_declare_flags.cc
+[   27s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] [ 52%] Building CXX object test/CMakeFiles/gflags_unittest.dir/gflags_unittest.cc.o
+[   27s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -MD -MT test/CMakeFiles/gflags_unittest.dir/gflags_unittest.cc.o -MF CMakeFiles/gflags_unittest.dir/gflags_unittest.cc.o.d -o CMakeFiles/gflags_unittest.dir/gflags_unittest.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test/gflags_unittest.cc
+[   27s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] [ 57%] Building CXX object test/CMakeFiles/gflags_unittest-main.dir/gflags_unittest-main.cc.o
+[   27s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -MD -MT test/CMakeFiles/gflags_unittest-main.dir/gflags_unittest-main.cc.o -MF CMakeFiles/gflags_unittest-main.dir/gflags_unittest-main.cc.o.d -o CMakeFiles/gflags_unittest-main.dir/gflags_unittest-main.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/gflags_unittest-main.cc
+[   27s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] [ 84%] Linking CXX executable ../bin/gflags_declare_test
+[   27s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/cmake -E cmake_link_script CMakeFiles/gflags_declare_test.dir/link.txt --verbose=1
+[   27s] /usr/bin/c++ -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now -rdynamic -Wl,--dependency-file=CMakeFiles/gflags_declare_test.dir/link.d CMakeFiles/gflags_declare_test.dir/gflags_declare_test.cc.o CMakeFiles/gflags_declare_test.dir/gflags_declare_flags.cc.o -o ../bin/gflags_declare_test  -Wl,-rpath,/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/lib ../lib/libgflags.so.2.2.2
+[   27s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] [ 94%] Built target gflags_declare_test
+[   27s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   27s] [ 68%] Building CXX object test/CMakeFiles/gflags_unittest_main.dir/gflags_unittest_main.cc.o
+[   27s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/src -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include -I/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/include/gflags -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -MD -MT test/CMakeFiles/gflags_unittest_main.dir/gflags_unittest_main.cc.o -MF CMakeFiles/gflags_unittest_main.dir/gflags_unittest_main.cc.o.d -o CMakeFiles/gflags_unittest_main.dir/gflags_unittest_main.cc.o -c /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/gflags_unittest_main.cc
+[   27s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   33s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   33s] [ 89%] Linking CXX executable ../bin/gflags_unittest
+[   33s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/cmake -E cmake_link_script CMakeFiles/gflags_unittest.dir/link.txt --verbose=1
+[   33s] /usr/bin/c++ -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now -rdynamic -Wl,--dependency-file=CMakeFiles/gflags_unittest.dir/link.d CMakeFiles/gflags_unittest.dir/gflags_unittest.cc.o -o ../bin/gflags_unittest  -Wl,-rpath,/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/lib ../lib/libgflags.so.2.2.2
+[   33s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   33s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   33s] [100%] Built target gflags_unittest
+[   33s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   35s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   35s] [100%] Linking CXX executable ../bin/gflags_unittest_main
+[   35s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/cmake -E cmake_link_script CMakeFiles/gflags_unittest_main.dir/link.txt --verbose=1
+[   35s] /usr/bin/c++ -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now -rdynamic -Wl,--dependency-file=CMakeFiles/gflags_unittest_main.dir/link.d CMakeFiles/gflags_unittest_main.dir/gflags_unittest_main.cc.o -o ../bin/gflags_unittest_main  -Wl,-rpath,/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/lib ../lib/libgflags.so.2.2.2
+[   35s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   35s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   35s] [ 94%] Linking CXX executable ../bin/gflags_unittest-main
+[   35s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test && /usr/bin/cmake -E cmake_link_script CMakeFiles/gflags_unittest-main.dir/link.txt --verbose=1
+[   35s] /usr/bin/c++ -mbranch-protection=standard -O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -O2 -g -DNDEBUG -flto=auto -Wl,--as-needed -Wl,--no-undefined -Wl,-z,now -rdynamic -Wl,--dependency-file=CMakeFiles/gflags_unittest-main.dir/link.d "CMakeFiles/gflags_unittest-main.dir/gflags_unittest-main.cc.o" -o ../bin/gflags_unittest-main  -Wl,-rpath,/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/lib ../lib/libgflags.so.2.2.2
+[   35s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   35s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   35s] [100%] Built target gflags_unittest-main
+[   35s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [100%] Built target gflags_unittest_main
+[   36s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/cmake -E cmake_progress_start /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles 0
+[   36s] + RPM_EC=0
+[   36s] ++ jobs -p
+[   36s] + exit 0
+[   36s] Executing(%install): /usr/bin/bash -e /var/tmp/rpm-tmp.LRZkvW
+[   36s] + umask 022
+[   36s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   36s] + /usr/bin/rm -rf /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT
+[   36s] + /usr/bin/mkdir -p /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   36s] + /usr/bin/mkdir /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT
+[   36s] + cd gflags-2.2.2
+[   36s] + DESTDIR=/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT
+[   36s] + /usr/bin/make install -C build
+[   36s] make: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/cmake -S/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 -B/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build --check-build-system CMakeFiles/Makefile.cmake 0
+[   36s] /usr/bin/cmake -E cmake_progress_start /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build//CMakeFiles/progress.marks
+[   36s] /usr/bin/make  -f CMakeFiles/Makefile2 all
+[   36s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f CMakeFiles/gflags_shared.dir/build.make CMakeFiles/gflags_shared.dir/depend
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles/gflags_shared.dir/DependInfo.cmake
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f CMakeFiles/gflags_shared.dir/build.make CMakeFiles/gflags_shared.dir/build
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[2]: Nothing to be done for 'CMakeFiles/gflags_shared.dir/build'.
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [ 21%] Built target gflags_shared
+[   36s] /usr/bin/make  -f CMakeFiles/gflags_nothreads_shared.dir/build.make CMakeFiles/gflags_nothreads_shared.dir/depend
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles/gflags_nothreads_shared.dir/DependInfo.cmake
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f CMakeFiles/gflags_nothreads_shared.dir/build.make CMakeFiles/gflags_nothreads_shared.dir/build
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[2]: Nothing to be done for 'CMakeFiles/gflags_nothreads_shared.dir/build'.
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [ 42%] Built target gflags_nothreads_shared
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_strip_flags_test.dir/build.make test/CMakeFiles/gflags_strip_flags_test.dir/depend
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_strip_flags_test.dir/DependInfo.cmake
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_strip_flags_test.dir/build.make test/CMakeFiles/gflags_strip_flags_test.dir/build
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[2]: Nothing to be done for 'test/CMakeFiles/gflags_strip_flags_test.dir/build'.
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [ 52%] Built target gflags_strip_flags_test
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest.dir/build.make test/CMakeFiles/gflags_unittest.dir/depend
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_unittest.dir/DependInfo.cmake
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest.dir/build.make test/CMakeFiles/gflags_unittest.dir/build
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[2]: Nothing to be done for 'test/CMakeFiles/gflags_unittest.dir/build'.
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [ 63%] Built target gflags_unittest
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest-main.dir/build.make test/CMakeFiles/gflags_unittest-main.dir/depend
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_unittest-main.dir/DependInfo.cmake
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest-main.dir/build.make test/CMakeFiles/gflags_unittest-main.dir/build
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[2]: Nothing to be done for 'test/CMakeFiles/gflags_unittest-main.dir/build'.
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [ 73%] Built target gflags_unittest-main
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest_main.dir/build.make test/CMakeFiles/gflags_unittest_main.dir/depend
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_unittest_main.dir/DependInfo.cmake
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_unittest_main.dir/build.make test/CMakeFiles/gflags_unittest_main.dir/build
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[2]: Nothing to be done for 'test/CMakeFiles/gflags_unittest_main.dir/build'.
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [ 84%] Built target gflags_unittest_main
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_declare_test.dir/build.make test/CMakeFiles/gflags_declare_test.dir/depend
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2 /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/test/CMakeFiles/gflags_declare_test.dir/DependInfo.cmake
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/make  -f test/CMakeFiles/gflags_declare_test.dir/build.make test/CMakeFiles/gflags_declare_test.dir/build
+[   36s] make[2]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[2]: Nothing to be done for 'test/CMakeFiles/gflags_declare_test.dir/build'.
+[   36s] make[2]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] [100%] Built target gflags_declare_test
+[   36s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] /usr/bin/cmake -E cmake_progress_start /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/CMakeFiles 0
+[   36s] /usr/bin/make  -f CMakeFiles/Makefile2 preinstall
+[   36s] make[1]: Entering directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] make[1]: Nothing to be done for 'preinstall'.
+[   36s] make[1]: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] Install the project...
+[   36s] /usr/bin/cmake -P cmake_install.cmake
+[   36s] -- Install configuration: "RelWithDebInfo"
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags.so.2.2.2
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags.so.2.2
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags.so
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags_nothreads.so.2.2.2
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags_nothreads.so.2.2
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags_nothreads.so
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/include/gflags/gflags.h
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/include/gflags/gflags_declare.h
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/include/gflags/gflags_completions.h
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/include/gflags/gflags_gflags.h
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/cmake/gflags/gflags-config.cmake
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/cmake/gflags/gflags-config-version.cmake
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/cmake/gflags/gflags-targets.cmake
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/cmake/gflags/gflags-targets-relwithdebinfo.cmake
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/cmake/gflags/gflags-nonamespace-targets.cmake
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/cmake/gflags/gflags-nonamespace-targets-relwithdebinfo.cmake
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/bin/gflags_completions.sh
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/pkgconfig/gflags.pc
+[   36s] -- Installing: /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/home/abuild/.cmake/packages/gflags/1517893d82dfcf97475a559a3d57ec1c
+[   36s] make: Leaving directory '/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build'
+[   36s] + ln -s /usr/lib64/libgflags.so /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags_shared.so
+[   36s] + ln -s /usr/lib64/libgflags_nothreads.so /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags_nothreads_shared.so
+[   36s] + rm -rf /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/home/
+[   36s] + /usr/lib/rpm/find-debuginfo -j4 -n --run-dwz --dwz-low-mem-die-limit 10000000 --dwz-max-die-limit 50000000 -S debugsourcefiles.list /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2
+[   36s] extracting debug info from /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags.so.2.2.2
+[   36s] extracting debug info from /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/lib64/libgflags_nothreads.so.2.2.2
+[   36s] original debug info size: 2532kB, size after compression: 2160kB
+[   36s] /usr/lib/rpm/sepdebugcrcfix: Updated 2 CRC32s, 0 CRC32s did match.
+[   36s] 382 blocks
+[   36s] + /usr/lib/rpm/brp-compress
+[   36s] + /usr/lib/rpm/brp-suse
+[   36s] calling /usr/lib/rpm/brp-suse.d/brp-05-permissions
+[   36s] calling /usr/lib/rpm/brp-suse.d/brp-15-strip-debug
+[   36s] calling /usr/lib/rpm/brp-suse.d/brp-25-symlink
+[   36s] INFO: relinking /usr/lib64/libgflags_nothreads_shared.so -> libgflags_nothreads.so (was /usr/lib64/libgflags_nothreads.so)
+[   36s] INFO: relinking /usr/lib64/libgflags_shared.so -> libgflags.so (was /usr/lib64/libgflags.so)
+[   36s] calling /usr/lib/rpm/brp-suse.d/brp-50-generate-fips-hmac
+[   36s] calling /usr/lib/rpm/brp-suse.d/brp-75-ar
+[   36s] Executing(%check): /usr/bin/bash -e /var/tmp/rpm-tmp.bcKBlD
+[   36s] + umask 022
+[   36s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   36s] + cd gflags-2.2.2
+[   36s] ++ pwd
+[   36s] + export LD_LIBRARY_PATH=/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/lib
+[   36s] + LD_LIBRARY_PATH=/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build/lib
+[   36s] + cd build
+[   36s] + /usr/bin/ctest --output-on-failure --force-new-ctest-process -j4
+[   36s] Test project /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/build
+[   36s]       Start  1: strip_flags_help
+[   36s]       Start  2: unittest
+[   36s]       Start  3: help-reporting
+[   36s]       Start  4: long-helpstring
+[   36s]  1/51 Test  #2: unittest .........................   Passed    0.01 sec
+[   36s]       Start  5: changed_bool1
+[   36s]  2/51 Test  #1: strip_flags_help .................   Passed    0.02 sec
+[   36s]       Start  6: changed_bool2
+[   36s]  3/51 Test  #3: help-reporting ...................   Passed    0.03 sec
+[   36s]       Start  7: changeable_string_var
+[   36s]  4/51 Test  #4: long-helpstring ..................   Passed    0.03 sec
+[   36s]       Start  8: nohelp
+[   36s]  5/51 Test  #5: changed_bool1 ....................   Passed    0.04 sec
+[   36s]  6/51 Test  #6: changed_bool2 ....................   Passed    0.03 sec
+[   36s]       Start  9: help=false
+[   36s]       Start 10: helpfull
+[   36s]  7/51 Test  #7: changeable_string_var ............   Passed    0.03 sec
+[   36s]       Start 11: helpshort
+[   36s]  8/51 Test  #8: nohelp ...........................   Passed    0.03 sec
+[   36s]       Start 12: helpshort-tldflag1
+[   36s]  9/51 Test  #9: help=false .......................   Passed    0.02 sec
+[   36s]       Start 13: helpshort-tldflag2
+[   36s] 10/51 Test #10: helpfull .........................   Passed    0.02 sec
+[   36s]       Start 14: helpshort-main
+[   36s] 11/51 Test #11: helpshort ........................   Passed    0.02 sec
+[   36s]       Start 15: helpshort_main
+[   36s] 12/51 Test #12: helpshort-tldflag1 ...............   Passed    0.02 sec
+[   36s]       Start 16: helpon
+[   36s] 13/51 Test #14: helpshort-main ...................   Passed    0.02 sec
+[   36s]       Start 17: helpon=gflags
+[   36s] 14/51 Test #13: helpshort-tldflag2 ...............   Passed    0.04 sec
+[   36s] 15/51 Test #16: helpon ...........................   Passed    0.02 sec
+[   36s]       Start 18: helpon_gflags
+[   36s]       Start 19: helpon=gflags_unittest
+[   36s] 16/51 Test #15: helpshort_main ...................   Passed    0.03 sec
+[   36s]       Start 20: helpmatch_reporting
+[   36s] 17/51 Test #17: helpon=gflags ....................   Passed    0.02 sec
+[   36s]       Start 21: helpmatch=unittest
+[   36s] 18/51 Test #18: helpon_gflags ....................   Passed    0.01 sec
+[   36s]       Start 22: helpmatch=nosuchsubstring
+[   36s] 19/51 Test #19: helpon=gflags_unittest ...........   Passed    0.02 sec
+[   36s]       Start 23: helpon=nosuchmodule
+[   36s] 20/51 Test #20: helpmatch_reporting ..............   Passed    0.03 sec
+[   36s]       Start 24: helppackage
+[   36s] 21/51 Test #21: helpmatch=unittest ...............   Passed    0.02 sec
+[   36s] 22/51 Test #22: helpmatch=nosuchsubstring ........   Passed    0.02 sec
+[   36s]       Start 25: helpxml
+[   36s]       Start 26: version-1
+[   36s] 23/51 Test #23: helpon=nosuchmodule ..............   Passed    0.02 sec
+[   36s]       Start 27: version-2
+[   36s] 24/51 Test #26: version-1 ........................   Passed    0.02 sec
+[   36s]       Start 28: undefok-1
+[   36s] 25/51 Test #27: version-2 ........................   Passed    0.02 sec
+[   36s]       Start 29: undefok-2
+[   36s] 26/51 Test #25: helpxml ..........................   Passed    0.03 sec
+[   36s]       Start 30: undefok-3
+[   36s] 27/51 Test #24: helppackage ......................   Passed    0.04 sec
+[   36s]       Start 31: undefok-4
+[   36s] 28/51 Test #28: undefok-1 ........................   Passed    0.02 sec
+[   36s]       Start 32: undefok-5
+[   36s] 29/51 Test #29: undefok-2 ........................   Passed    0.02 sec
+[   36s]       Start 33: undefok-6
+[   36s] 30/51 Test #31: undefok-4 ........................   Passed    0.01 sec
+[   36s]       Start 34: flagfile.1
+[   36s] 31/51 Test #30: undefok-3 ........................   Passed    0.02 sec
+[   36s]       Start 35: flagfile.2
+[   36s] 32/51 Test #32: undefok-5 ........................   Passed    0.01 sec
+[   36s]       Start 36: flagfile.3
+[   36s] 33/51 Test #33: undefok-6 ........................   Passed    0.01 sec
+[   36s]       Start 37: fromenv=version
+[   36s] 34/51 Test #34: flagfile.1 .......................   Passed    0.01 sec
+[   36s]       Start 38: tryfromenv=version
+[   36s] 35/51 Test #37: fromenv=version ..................   Passed    0.01 sec
+[   36s]       Start 39: fromenv=help
+[   36s] 36/51 Test #35: flagfile.2 .......................   Passed    0.02 sec
+[   36s] 37/51 Test #36: flagfile.3 .......................   Passed    0.01 sec
+[   37s]       Start 40: tryfromenv=help
+[   37s]       Start 41: fromenv=helpfull
+[   37s] 38/51 Test #38: tryfromenv=version ...............   Passed    0.01 sec
+[   37s]       Start 42: tryfromenv=helpfull
+[   37s] 39/51 Test #40: tryfromenv=help ..................   Passed    0.01 sec
+[   37s]       Start 43: tryfromenv=undefok
+[   37s] 40/51 Test #39: fromenv=help .....................   Passed    0.02 sec
+[   37s] 41/51 Test #41: fromenv=helpfull .................   Passed    0.01 sec
+[   37s] 42/51 Test #42: tryfromenv=helpfull ..............   Passed    0.01 sec
+[   37s]       Start 44: tryfromenv=weirdo
+[   37s]       Start 45: tryfromenv-multiple
+[   37s]       Start 46: fromenv=test_bool
+[   37s] 43/51 Test #43: tryfromenv=undefok ...............   Passed    0.01 sec
+[   37s]       Start 47: fromenv=test_bool-ok
+[   37s] 44/51 Test #44: tryfromenv=weirdo ................   Passed    0.01 sec
+[   37s] 45/51 Test #46: fromenv=test_bool ................   Passed    0.01 sec
+[   37s]       Start 48: version-overrides-fromenv
+[   37s]       Start 49: dashdash
+[   37s] 46/51 Test #45: tryfromenv-multiple ..............   Passed    0.02 sec
+[   37s]       Start 50: always_fail
+[   37s] 47/51 Test #47: fromenv=test_bool-ok .............   Passed    0.01 sec
+[   37s] 48/51 Test #49: dashdash .........................   Passed    0.01 sec
+[   37s]       Start 51: gflags_declare
+[   37s] 49/51 Test #48: version-overrides-fromenv ........   Passed    0.01 sec
+[   37s] 50/51 Test #51: gflags_declare ...................   Passed    0.00 sec
+[   37s] 51/51 Test #50: always_fail ......................   Passed    0.01 sec
+[   37s] 
+[   37s] 100% tests passed, 0 tests failed out of 51
+[   37s] 
+[   37s] Total Test time (real) =   0.26 sec
+[   37s] + cd ..
+[   37s] + RPM_EC=0
+[   37s] ++ jobs -p
+[   37s] + exit 0
+[   37s] Processing files: gflags-2.2.2-lp160.22.2.aarch64
+[   37s] Executing(%doc): /usr/bin/bash -e /var/tmp/rpm-tmp.IxH4wA
+[   37s] + umask 022
+[   37s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   37s] + cd gflags-2.2.2
+[   37s] + DOCDIR=/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/doc/packages/gflags
+[   37s] + export LC_ALL=C.UTF-8
+[   37s] + LC_ALL=C.UTF-8
+[   37s] + export DOCDIR
+[   37s] + /usr/bin/mkdir -p /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/doc/packages/gflags
+[   37s] + cp -pr /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/AUTHORS.txt /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/doc/packages/gflags
+[   37s] + cp -pr /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/ChangeLog.txt /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/doc/packages/gflags
+[   37s] + cp -pr /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/README.md /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/doc/packages/gflags
+[   37s] + RPM_EC=0
+[   37s] ++ jobs -p
+[   37s] + exit 0
+[   37s] Executing(%license): /usr/bin/bash -e /var/tmp/rpm-tmp.Fp1p1U
+[   37s] + umask 022
+[   37s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   37s] + cd gflags-2.2.2
+[   37s] + LICENSEDIR=/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/licenses/gflags
+[   37s] + export LC_ALL=C.UTF-8
+[   37s] + LC_ALL=C.UTF-8
+[   37s] + export LICENSEDIR
+[   37s] + /usr/bin/mkdir -p /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/licenses/gflags
+[   37s] + cp -pr /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/COPYING.txt /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/licenses/gflags
+[   37s] + RPM_EC=0
+[   37s] ++ jobs -p
+[   37s] + exit 0
+[   37s] Provides: gflags = 2.2.2-lp160.22.2 gflags(aarch-64) = 2.2.2-lp160.22.2
+[   37s] Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(FileDigests) <= 4.6.0-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+[   37s] Requires: /bin/bash
+[   37s] Processing files: gflags-debugsource-2.2.2-lp160.22.2.aarch64
+[   37s] Provides: gflags-debugsource = 2.2.2-lp160.22.2 gflags-debugsource(aarch-64) = 2.2.2-lp160.22.2
+[   37s] Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(FileDigests) <= 4.6.0-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+[   37s] Processing files: libgflags2_2-2.2.2-lp160.22.2.aarch64
+[   37s] Executing(%license): /usr/bin/bash -e /var/tmp/rpm-tmp.TCsuYV
+[   37s] + umask 022
+[   37s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   37s] + cd gflags-2.2.2
+[   37s] + LICENSEDIR=/home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/licenses/libgflags2_2
+[   37s] + export LC_ALL=C.UTF-8
+[   37s] + LC_ALL=C.UTF-8
+[   37s] + export LICENSEDIR
+[   37s] + /usr/bin/mkdir -p /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/licenses/libgflags2_2
+[   37s] + cp -pr /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/gflags-2.2.2/COPYING.txt /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT/usr/share/licenses/libgflags2_2
+[   37s] + RPM_EC=0
+[   37s] ++ jobs -p
+[   37s] + exit 0
+[   37s] Provides: libgflags.so.2.2()(64bit) libgflags2_2 = 2.2.2-lp160.22.2 libgflags2_2(aarch-64) = 2.2.2-lp160.22.2 libgflags_nothreads.so.2.2()(64bit)
+[   37s] Requires(interp): /sbin/ldconfig /sbin/ldconfig
+[   37s] Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(FileDigests) <= 4.6.0-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+[   37s] Requires(post): /sbin/ldconfig
+[   37s] Requires(postun): /sbin/ldconfig
+[   37s] Requires: ld-linux-aarch64.so.1()(64bit) ld-linux-aarch64.so.1(GLIBC_2.17)(64bit) libc.so.6()(64bit) libc.so.6(GLIBC_2.17)(64bit) libc.so.6(GLIBC_2.34)(64bit) libc.so.6(GLIBC_2.38)(64bit) libgcc_s.so.1()(64bit) libgcc_s.so.1(GCC_3.0)(64bit) libgcc_s.so.1(GCC_3.3.1)(64bit) libstdc++.so.6()(64bit) libstdc++.so.6(CXXABI_1.3)(64bit) libstdc++.so.6(CXXABI_1.3.8)(64bit) libstdc++.so.6(CXXABI_1.3.9)(64bit) libstdc++.so.6(GLIBCXX_3.4)(64bit) libstdc++.so.6(GLIBCXX_3.4.20)(64bit) libstdc++.so.6(GLIBCXX_3.4.21)(64bit) libstdc++.so.6(GLIBCXX_3.4.32)(64bit) libstdc++.so.6(GLIBCXX_3.4.9)(64bit)
+[   37s] Conflicts: libgflags2
+[   37s] Processing files: gflags-devel-2.2.2-lp160.22.2.aarch64
+[   37s] Provides: cmake(gflags) = 2.2.2 gflags-devel = 2.2.2-lp160.22.2 gflags-devel(aarch-64) = 2.2.2-lp160.22.2 pkgconfig(gflags) = 2.2.2
+[   37s] Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(FileDigests) <= 4.6.0-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+[   37s] Requires: /usr/bin/pkg-config
+[   37s] Processing files: libgflags2_2-debuginfo-2.2.2-lp160.22.2.aarch64
+[   37s] Provides: debuginfo(build-id) = ec33bc6455258ede31ea890165fe1d0d20babce1 debuginfo(build-id) = f122a0a39e1ddfa4db282bd12c45c36d5db95719 libgflags2_2-debuginfo = 2.2.2-lp160.22.2 libgflags2_2-debuginfo(aarch-64) = 2.2.2-lp160.22.2
+[   37s] Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(FileDigests) <= 4.6.0-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+[   37s] Recommends: gflags-debugsource(aarch-64) = 2.2.2-lp160.22.2
+[   37s] Checking for unpackaged file(s): /usr/lib/rpm/check-files /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build/BUILDROOT
+[   37s] Wrote: /home/abuild/rpmbuild/SRPMS/gflags-2.2.2-lp160.22.2.src.rpm
+[   37s] Wrote: /home/abuild/rpmbuild/RPMS/aarch64/gflags-devel-2.2.2-lp160.22.2.aarch64.rpm
+[   37s] Wrote: /home/abuild/rpmbuild/RPMS/aarch64/gflags-debugsource-2.2.2-lp160.22.2.aarch64.rpm
+[   37s] Wrote: /home/abuild/rpmbuild/RPMS/aarch64/gflags-2.2.2-lp160.22.2.aarch64.rpm
+[   37s] Wrote: /home/abuild/rpmbuild/RPMS/aarch64/libgflags2_2-2.2.2-lp160.22.2.aarch64.rpm
+[   38s] Wrote: /home/abuild/rpmbuild/RPMS/aarch64/libgflags2_2-debuginfo-2.2.2-lp160.22.2.aarch64.rpm
+[   38s] Executing(rmbuild): /usr/bin/bash -e /var/tmp/rpm-tmp.06sNDx
+[   38s] + umask 022
+[   38s] + cd /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   38s] + test -d /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   38s] + /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   38s] + rm -rf /home/abuild/rpmbuild/BUILD/gflags-2.2.2-build
+[   38s] + RPM_EC=0
+[   38s] ++ jobs -p
+[   38s] + exit 0
+[   38s] ... checking for files with abuild user/group
+[   38s] ... running 00-check-install-rpms
+[   38s] ... installing all built rpms
+[   38s] Verifying packages...
+[   38s] Preparing packages...
+[   38s] libgflags2_2-2.2.2-lp160.22.2.aarch64
+[   38s] gflags-devel-2.2.2-lp160.22.2.aarch64
+[   38s] gflags-2.2.2-lp160.22.2.aarch64
+[   38s] gflags-debugsource-2.2.2-lp160.22.2.aarch64
+[   38s] libgflags2_2-debuginfo-2.2.2-lp160.22.2.aarch64
+[   38s] ... running 50-check-binary-kernel-log
+[   38s] ... running 50-check-core-files
+[   38s] ... checking for core files
+[   38s] ... running 50-check-debuginfo
+[   38s] ... testing for empty debuginfo packages
+[   38s] ... running 50-check-filelist
+[   38s] ... checking filelist
+[   38s] ... running 50-check-gconf-scriptlets
+[   38s] ... testing GConf scriptlet presence
+[   38s] ... running 50-check-installtest
+[   38s] ... testing for pre/postinstall scripts that are not idempotent
+[   38s] ... running 50-check-invalid-provides
+[   38s] ... running 50-check-invalid-requires
+[   38s] dependency check for libgflags2_2-debuginfo-2.2.2-lp160.22.2.aarch64.rpm:
+[   38s] dependency check for gflags-debugsource-2.2.2-lp160.22.2.aarch64.rpm:
+[   38s] ... running 50-check-kernel-build-id
+[   38s] ... running 50-check-lanana
+[   38s] ... running 50-check-libtool-deps
+[   38s] ... testing devel dependencies required by libtool .la files
+[   38s]     (can be skipped by "skip-check-libtool-deps" anywhere in spec)
+[   38s] ... running 50-check-packaged-twice
+[   38s] ... running 50-check-permissions
+[   38s] ... testing for modified permissions
+[   39s] ... running 98-revert-uname-hack
+[   39s] ... running 99-check-remove-rpms
+[   39s] ... removing all built rpms
+[   39s]     (order: reverse libgflags2_2-debuginfo libgflags2_2 gflags-debugsource gflags-devel gflags)
+[   39s] 
+[   39s] RPMLINT report:
+[   39s] ===============
+[   40s] ============================ rpmlint session starts ============================
+[   40s] rpmlint: 2.7.0
+[   40s] configuration:
+[   40s]     /opt/testing/lib64/python3.13/rpmlint/configdefaults.toml
+[   40s]     /opt/testing/share/rpmlint/cron-whitelist.toml
+[   40s]     /opt/testing/share/rpmlint/dbus-services.toml
+[   40s]     /opt/testing/share/rpmlint/device-files-whitelist.toml
+[   40s]     /opt/testing/share/rpmlint/licenses.toml
+[   40s]     /opt/testing/share/rpmlint/opensuse.toml
+[   40s]     /opt/testing/share/rpmlint/pam-modules.toml
+[   40s]     /opt/testing/share/rpmlint/permissions-whitelist.toml
+[   40s]     /opt/testing/share/rpmlint/pie-executables.toml
+[   40s]     /opt/testing/share/rpmlint/polkit-rules-whitelist.toml
+[   40s]     /opt/testing/share/rpmlint/scoring.toml
+[   40s]     /opt/testing/share/rpmlint/security.toml
+[   40s]     /opt/testing/share/rpmlint/sudoers-whitelist.toml
+[   40s]     /opt/testing/share/rpmlint/sysctl-whitelist.toml
+[   40s]     /opt/testing/share/rpmlint/systemd-tmpfiles.toml
+[   40s]     /opt/testing/share/rpmlint/users-groups.toml
+[   40s]     /opt/testing/share/rpmlint/world-writable-whitelist.toml
+[   40s]     /opt/testing/share/rpmlint/zypper-plugins.toml
+[   40s] checks: 41, packages: 4
+[   40s] 
+[   40s] gflags.aarch64: E: no-binary
+[   40s] The package should be of the noarch architecture because it doesn't contain
+[   40s] any binaries.
+[   40s] 
+[   40s] Check time report (>1% & >0.1s):
+[   40s]     Check                            Duration (in s)   Fraction (in %)  Checked files
+[   40s]     ExtractRpm                                   0.1              37.2               
+[   40s]     TOTAL                                        0.3             100.0               
+[   40s] 
+[   40s]  4 packages and 0 specfiles checked; 1 errors, 0 warnings, 10 filtered, 1 badness; has taken 0.3 s 
+[   40s] 
+[   40s] ... creating baselibs
+[   40s] setting SOURCE_DATE_EPOCH_MTIME to 1726045616
+[   40s] ... running 01-delete-x86_64-subarches
+[   40s] ... comparing built packages with the former built
+[   40s] /usr/lib/build/pkg-diff.sh
+[   40s] compare /.build.oldpackages/gflags-2.2.2-lp160.22.1.src.rpm /home/abuild/rpmbuild/SRPMS/gflags-2.2.2-lp160.22.2.src.rpm
+[   40s] comparing the rpm tags of gflags
+[   40s] --- old-rpm-tags
+[   40s] +++ new-rpm-tags
+[   40s] @@ -88 +88 @@
+[   40s] -gflags.spec e59a0c078a0923b6dc08dc84b24f1b7214a58d6ebce04fcb08c7ec6993b90ceb 32
+[   40s] +gflags.spec 83209ce9f95df04bcd3d590544eb61cf2d31e8cb1b07f4bf0fd28a2b7fbeab25 32
+[   40s] comparing rpmtags
+[   40s] comparing RELEASE
+[   40s] comparing PROVIDES
+[   40s] comparing scripts
+[   40s] comparing filelist
+[   40s] comparing file checksum
+[   40s] compare /.build.oldpackages/gflags-2.2.2-lp160.22.1.aarch64.rpm /home/abuild/rpmbuild/RPMS/aarch64/gflags-2.2.2-lp160.22.2.aarch64.rpm
+[   40s] Comparing gflags-2.2.2-lp160.22.1.aarch64.rpm to gflags-2.2.2-lp160.22.2.aarch64.rpm
+[   40s] comparing the rpm tags of gflags
+[   40s] --- old-rpm-tags
+[   40s] +++ new-rpm-tags
+[   40s] @@ -102 +102 @@
+[   40s] -gflags-2.2.2-lp160.22.1.src.rpm
+[   40s] +gflags-2.2.2-lp160.22.2.src.rpm
+[   40s] comparing rpmtags
+[   40s] comparing RELEASE
+[   40s] comparing PROVIDES
+[   40s] comparing scripts
+[   40s] comparing filelist
+[   40s] comparing file checksum
+[   40s] creating rename script
+[   40s] RPM meta information is identical
+[   40s] compare /.build.oldpackages/gflags-debugsource-2.2.2-lp160.22.1.aarch64.rpm /home/abuild/rpmbuild/RPMS/aarch64/gflags-debugsource-2.2.2-lp160.22.2.aarch64.rpm
+[   40s] Comparing gflags-debugsource-2.2.2-lp160.22.1.aarch64.rpm to gflags-debugsource-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] comparing the rpm tags of gflags-debugsource
+[   41s] --- old-rpm-tags
+[   41s] +++ new-rpm-tags
+[   41s] @@ -112 +112 @@
+[   41s] -gflags-2.2.2-lp160.22.1.src.rpm
+[   41s] +gflags-2.2.2-lp160.22.2.src.rpm
+[   41s] comparing rpmtags
+[   41s] comparing RELEASE
+[   41s] comparing PROVIDES
+[   41s] comparing scripts
+[   41s] comparing filelist
+[   41s] comparing file checksum
+[   41s] creating rename script
+[   41s] RPM meta information is identical
+[   41s] compare /.build.oldpackages/gflags-devel-2.2.2-lp160.22.1.aarch64.rpm /home/abuild/rpmbuild/RPMS/aarch64/gflags-devel-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] Comparing gflags-devel-2.2.2-lp160.22.1.aarch64.rpm to gflags-devel-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] comparing the rpm tags of gflags-devel
+[   41s] --- old-rpm-tags
+[   41s] +++ new-rpm-tags
+[   41s] @@ -121 +121 @@
+[   41s] -gflags-2.2.2-lp160.22.1.src.rpm
+[   41s] +gflags-2.2.2-lp160.22.2.src.rpm
+[   41s] comparing rpmtags
+[   41s] comparing RELEASE
+[   41s] comparing PROVIDES
+[   41s] comparing scripts
+[   41s] comparing filelist
+[   41s] comparing file checksum
+[   41s] creating rename script
+[   41s] RPM meta information is identical
+[   41s] compare /.build.oldpackages/libgflags2_2-2.2.2-lp160.22.1.aarch64.rpm /home/abuild/rpmbuild/RPMS/aarch64/libgflags2_2-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] Comparing libgflags2_2-2.2.2-lp160.22.1.aarch64.rpm to libgflags2_2-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] comparing the rpm tags of libgflags2_2
+[   41s] --- old-rpm-tags
+[   41s] +++ new-rpm-tags
+[   41s] @@ -113 +113 @@
+[   41s] -/usr/lib64/libgflags.so.2.2.2 d509b2c399fd689624e69018f87dc50b8364a5183d323a1c4b435f23e4650d1d 0
+[   41s] +/usr/lib64/libgflags.so.2.2.2 f0e00adae325ff5c1c80fd9da1fafd4727fb9a36b46714f6a19c65cb0575a892 0
+[   41s] @@ -115 +115 @@
+[   41s] -/usr/lib64/libgflags_nothreads.so.2.2.2 89c9e3a9a395dd34476b1e883d10629fb1c1a7495f8a8694cb7d9f19bf0673e0 0
+[   41s] +/usr/lib64/libgflags_nothreads.so.2.2.2 fe8513488ad70b751a0d2bb3f0f70e5def30d0604f301456338324973774901a 0
+[   41s] @@ -123 +123 @@
+[   41s] -gflags-2.2.2-lp160.22.1.src.rpm
+[   41s] +gflags-2.2.2-lp160.22.2.src.rpm
+[   41s] comparing rpmtags
+[   41s] comparing RELEASE
+[   41s] comparing PROVIDES
+[   41s] comparing scripts
+[   41s] comparing filelist
+[   41s] comparing file checksum
+[   41s] creating rename script
+[   41s] RPM file checksum differs.
+[   41s] Extracting packages
+[   41s] /usr/lib64/libgflags.so.2.2.2 differs in ELF sections
+[   41s] --- old /usr/lib64/libgflags.so.2.2.2 (objdump)
+[   41s] +++ new /usr/lib64/libgflags.so.2.2.2 (objdump)
+[   41s] @@ -2,39 +2,39 @@
+[   41s]  .//usr/lib64/libgflags.so.2.2.2:     file format elf64-littleaarch64
+[   41s]  
+[   41s]  Contents of section .hash:
+[   41s] - 0238 83000000 af000000 2c000000 6e000000  ........,...n...
+[   41s] - 0248 3a000000 1a000000 a3000000 68000000  :...........h...
+[   41s] + 0238 83000000 ae000000 2c000000 6e000000  ........,...n...
+[   41s] + 0248 3a000000 1a000000 a2000000 68000000  :...........h...
+[   41s]   0258 2b000000 78000000 8f000000 38000000  +...x.......8...
+[   41s]   0268 55000000 1f000000 75000000 65000000  U.......u...e...
+[   41s]   0278 00000000 36000000 62000000 46000000  ....6...b...F...
+[   41s] - 0288 31000000 9a000000 a6000000 87000000  1...............
+[   41s] - 0298 98000000 00000000 6d000000 00000000  ........m.......
+[   41s] - 02a8 4e000000 00000000 a0000000 45000000  N...........E...
+[   41s] - 02b8 00000000 9b000000 50000000 81000000  ........P.......
+[   41s] + 0288 31000000 99000000 a5000000 87000000  1...............
+[   41s] + 0298 97000000 00000000 6d000000 00000000  ........m.......
+[   41s] + 02a8 4e000000 00000000 9f000000 45000000  N...........E...
+[   41s] + 02b8 00000000 9a000000 50000000 81000000  ........P.......
+[   41s]   02c8 6c000000 27000000 12000000 13000000  l...'...........
+[   41s] - 02d8 ae000000 3c000000 74000000 00000000  ....<...t.......
+[   41s] + 02d8 ad000000 3c000000 74000000 00000000  ....<...t.......
+[   41s]   02e8 00000000 51000000 2d000000 48000000  ....Q...-...H...
+[   41s]   02f8 56000000 53000000 49000000 00000000  V...S...I.......
+[   41s]   0308 77000000 39000000 59000000 00000000  w...9...Y.......
+[   41s]   0318 5a000000 06000000 5d000000 00000000  Z.......].......
+[   41s] - 0328 a9000000 30000000 84000000 4b000000  ....0.......K...
+[   41s] + 0328 a8000000 30000000 84000000 4b000000  ....0.......K...
+[   41s]   0338 07000000 5e000000 58000000 88000000  ....^...X.......
+[   41s]   0348 18000000 00000000 00000000 20000000  ............ ...
+[   41s] - 0358 44000000 70000000 63000000 9f000000  D...p...c.......
+[   41s] + 0358 44000000 70000000 63000000 9e000000  D...p...c.......
+[   41s]   0368 47000000 00000000 00000000 00000000  G...............
+[   41s]   0378 4d000000 00000000 3d000000 42000000  M.......=...B...
+[   41s] - 0388 aa000000 00000000 04000000 10000000  ................
+[   41s] - 0398 8a000000 28000000 00000000 94000000  ....(...........
+[   41s] - 03a8 5b000000 a4000000 5c000000 72000000  [.......\...r...
+[   41s] + 0388 a9000000 00000000 04000000 10000000  ................
+[   41s] + 0398 8a000000 28000000 00000000 69000000  ....(.......i...
+[   41s] + 03a8 5b000000 a3000000 5c000000 72000000  [.......\...r...
+[   41s]   03b8 8e000000 1e000000 3e000000 6a000000  ........>...j...
+[   41s] - 03c8 14000000 ab000000 6b000000 00000000  ........k.......
+[   41s] + 03c8 14000000 aa000000 6b000000 00000000  ........k.......
+[   41s]   03d8 52000000 7d000000 71000000 00000000  R...}...q.......
+[   41s]   03e8 00000000 79000000 00000000 43000000  ....y.......C...
+[   41s]   03f8 00000000 00000000 61000000 00000000  ........a.......
+[   41s] - 0408 00000000 9d000000 00000000 3b000000  ............;...
+[   41s] + 0408 00000000 9c000000 00000000 3b000000  ............;...
+[   41s]   0418 00000000 57000000 00000000 00000000  ....W...........
+[   41s] - 0428 ac000000 9e000000 34000000 00000000  ........4.......
+[   41s] - 0438 3f000000 00000000 97000000 00000000  ?...............
+[   41s] + 0428 ab000000 9d000000 34000000 00000000  ........4.......
+[   41s] + 0438 3f000000 00000000 96000000 00000000  ?...............
+[   41s]   0448 4f000000 00000000 00000000 00000000  O...............
+[   41s]   0458 00000000 00000000 00000000 00000000  ................
+[   41s]   0468 00000000 00000000 00000000 93000000  ................
+[   41s] @@ -42,10 +42,10 @@
+[   41s]   0488 00000000 00000000 00000000 00000000  ................
+[   41s]   0498 00000000 0e000000 00000000 00000000  ................
+[   41s]   04a8 00000000 00000000 00000000 00000000  ................
+[   41s] - 04b8 00000000 00000000 ad000000 8d000000  ................
+[   41s] + 04b8 00000000 00000000 ac000000 8d000000  ................
+[   41s]   04c8 00000000 00000000 00000000 86000000  ................
+[   41s]   04d8 00000000 00000000 00000000 00000000  ................
+[   41s] - 04e8 00000000 95000000 00000000 23000000  ............#...
+[   41s] + 04e8 00000000 94000000 00000000 23000000  ............#...
+[   41s]   04f8 16000000 00000000 00000000 00000000  ................
+[   41s]   0508 7b000000 00000000 19000000 00000000  {...............
+[   41s]   0518 00000000 0a000000 00000000 7a000000  ............z...
+[   41s] @@ -54,36 +54,36 @@
+[   41s]   0548 33000000 64000000 00000000 40000000  3...d.......@...
+[   41s]   0558 00000000 67000000 00000000 17000000  ....g...........
+[   41s]   0568 00000000 00000000 76000000 2f000000  ........v.../...
+[   41s] - 0578 00000000 96000000 11000000 90000000  ................
+[   41s] + 0578 00000000 95000000 11000000 90000000  ................
+[   41s]   0588 0d000000 00000000 4c000000 4a000000  ........L...J...
+[   41s] - 0598 00000000 a2000000 7e000000 54000000  ........~...T...
+[   41s] - 05a8 00000000 99000000 00000000 8c000000  ................
+[   41s] + 0598 00000000 a1000000 7e000000 54000000  ........~...T...
+[   41s] + 05a8 00000000 98000000 00000000 8c000000  ................
+[   41s]   05b8 00000000 00000000 00000000 29000000  ............)...
+[   41s]   05c8 21000000 00000000 35000000 66000000  !.......5...f...
+[   41s] - 05d8 a1000000 00000000 00000000 80000000  ................
+[   41s] - 05e8 a8000000 00000000 00000000 00000000  ................
+[   41s] + 05d8 a0000000 00000000 00000000 80000000  ................
+[   41s] + 05e8 a7000000 00000000 00000000 00000000  ................
+[   41s]   05f8 24000000 91000000 09000000 92000000  $...............
+[   41s] - 0608 00000000 a5000000 03000000 00000000  ................
+[   41s] + 0608 00000000 a4000000 03000000 00000000  ................
+[   41s]   0618 00000000 00000000 37000000 7c000000  ........7...|...
+[   41s]   0628 82000000 00000000 89000000 00000000  ................
+[   41s]   0638 15000000 00000000 00000000 00000000  ................
+[   41s]   0648 26000000 00000000 00000000 00000000  &...............
+[   41s]   0658 73000000 41000000 00000000 00000000  s...A...........
+[   41s] - 0668 9c000000 5f000000 00000000 00000000  ...._...........
+[   41s] + 0668 9b000000 5f000000 00000000 00000000  ...._...........
+[   41s]   0678 0f000000 00000000 00000000 00000000  ................
+[   41s] - 0688 a7000000 00000000 00000000 00000000  ................
+[   41s] - 0698 00000000 69000000 00000000 2a000000  ....i.......*...
+[   41s] - 06a8 1d000000 00000000 00000000 00000000  ................
+[   41s] - 06b8 83000000 00000000 8b000000 1c000000  ................
+[   41s] - 06c8 00000000 0b000000 1b000000 60000000  ............`...
+[   41s] - 06d8 00000000 00000000 00000000 00000000  ................
+[   41s] - 06e8 7f000000 00000000 00000000 00000000  ................
+[   41s] - 06f8 08000000 85000000 00000000 00000000  ................
+[   41s] + 0688 a6000000 00000000 00000000 00000000  ................
+[   41s] + 0698 00000000 00000000 2a000000 1d000000  ........*.......
+[   41s] + 06a8 00000000 00000000 00000000 83000000  ................
+[   41s] + 06b8 00000000 8b000000 1c000000 00000000  ................
+[   41s] + 06c8 0b000000 1b000000 60000000 00000000  ........`.......
+[   41s] + 06d8 00000000 00000000 00000000 7f000000  ................
+[   41s] + 06e8 00000000 00000000 00000000 08000000  ................
+[   41s] + 06f8 85000000 00000000 00000000           ............    
+[   41s]  Contents of section .gnu.hash:
+[   41s]   0708 43000000 5f000000 08000000 09000000  C..._...........
+[   41s]   0718 00080104 01000948 0684a081 26cc70db  .......H....&.p.
+[   41s]   0728 59104564 2a108988 02846b10 10120eb4  Y.Ed*.....k.....
+[   41s] - 0738 0cd08129 08002360 1068829c 230c0ea0  ...)..#`.h..#...
+[   41s] + 0738 0cd08129 08002360 1068029c 230c0ca0  ...)..#`.h..#...
+[   41s]   0748 31044140 cd4010a8 0f9a004c 01868810  1.A@.@.....L....
+[   41s]   0758 5f000000 61000000 63000000 64000000  _...a...c...d...
+[   41s]   0768 66000000 00000000 68000000 00000000  f.......h.......
+[   41s] @@ -96,12 +96,12 @@
+[   41s]   07d8 89000000 00000000 8a000000 8b000000  ................
+[   41s]   07e8 00000000 8d000000 8f000000 91000000  ................
+[   41s]   07f8 92000000 00000000 00000000 93000000  ................
+[   41s] - 0808 98000000 9a000000 00000000 9c000000  ................
+[   41s] - 0818 00000000 9e000000 a0000000 a1000000  ................
+[   41s] - 0828 a2000000 a3000000 a5000000 a7000000  ................
+[   41s] + 0808 97000000 99000000 00000000 9b000000  ................
+[   41s] + 0818 00000000 9d000000 9f000000 a0000000  ................
+[   41s] + 0828 a1000000 a2000000 a4000000 a6000000  ................
+[   41s]   0838 00000000 00000000 00000000 00000000  ................
+[   41s] - 0848 00000000 a9000000 ab000000 ac000000  ................
+[   41s] - 0858 ad000000 00000000 ae000000 60fe9097  ............`...
+[   41s] + 0848 00000000 a8000000 aa000000 ab000000  ................
+[   41s] + 0858 ac000000 00000000 ad000000 60fe9097  ............`...
+[   41s]   0868 657e7c97 b63c5fe5 b1c2312f 853d3dd2  e~|..<_...1/.==.
+[   41s]   0878 f2d2b0f3 6ba3ed79 b4c18e80 037d4138  ....k..y.....}A8
+[   41s]   0888 5bd78cf1 fc01edc5 3b34ff7a d0b89ac9  [.......;4.z....
+[   41s] @@ -115,6178 +115,6184 @@
+[   41s]   0908 a1cf455f 9d34a840 419e4d10 c2dfba85  ..E_.4.@A.M.....
+[   41s]   0918 93200d0f 64fc8730 aff7f119 7c09e479  . ..d..0....|..y
+[   41s]   0928 43f219b2 217c3722 eb0515fd f26414ac  C...!|7".....d..
+[   41s] - 0938 702f042a 5ce7cd8b a03a23f6 b7800da7  p/.*\....:#.....
+[   41s] - 0948 c0e27390 ffa27b4f 8698b39a 75f83209  ..s...{O....u.2.
+[   41s] - 0958 56eca4b2 e9d3b4ad de370b46 4f43affb  V........7.FOC..
+[   41s] - 0968 db1f3c35 6bf66332 312000c8 301f19d2  ..<5k.c21 ..0...
+[   41s] - 0978 632a5b1e bc15f557 0fb77192 82f619b2  c*[....W..q.....
+[   41s] - 0988 9721973e a27f8c96 a301cbf1 85d85d98  .!.>..........].
+[   41s] - 0998 a37e1ab2 651bf08d e52a61cc           .~..e....*a.    
+[   41s] + 0938 5ce7cd8b a03a23f6 b7800da7 c0e27390  \....:#.......s.
+[   41s] + 0948 ffa27b4f 8698b39a 75f83209 56eca4b2  ..{O....u.2.V...
+[   41s] + 0958 e9d3b4ad de370b46 4f43affb db1f3c35  .....7.FOC....<5
+[   41s] + 0968 6bf66332 312000c8 301f19d2 632a5b1e  k.c21 ..0...c*[.
+[   41s] + 0978 bc15f557 0fb77192 82f619b2 9721973e  ...W..q......!.>
+[   41s] + 0988 a27f8c96 a301cbf1 85d85d98 a37e1ab2  ..........]..~..
+[   41s] + 0998 651bf08d e52a61cc                    e....*a.        
+[   41s]  Contents of section .dynsym:
+[   41s] - 09a8 00000000 00000000 00000000 00000000  ................
+[   41s] - 09b8 00000000 00000000 00000000 03000900  ................
+[   41s] - 09c8 38420000 00000000 00000000 00000000  8B..............
+[   41s] - 09d8 00000000 03001700 00000300 00000000  ................
+[   41s] - 09e8 00000000 00000000 37050000 12000000  ........7.......
+[   41s] - 09f8 00000000 00000000 00000000 00000000  ................
+[   41s] - 0a08 df0d0000 12000000 00000000 00000000  ................
+[   41s] - 0a18 00000000 00000000 45030000 12000000  ........E.......
+[   41s] - 0a28 00000000 00000000 00000000 00000000  ................
+[   41s] - 0a38 c9100000 12000000 00000000 00000000  ................
+[   41s] - 0a48 00000000 00000000 fd050000 12000000  ................
+[   41s] - 0a58 00000000 00000000 00000000 00000000  ................
+[   41s] - 0a68 e6140000 12000000 00000000 00000000  ................
+[   41s] - 0a78 00000000 00000000 77050000 12000000  ........w.......
+[   41s] - 0a88 00000000 00000000 00000000 00000000  ................
+[   41s] - 0a98 2c0d0000 12000000 00000000 00000000  ,...............
+[   41s] - 0aa8 00000000 00000000 ae010000 12000000  ................
+[   41s] - 0ab8 00000000 00000000 00000000 00000000  ................
+[   41s] - 0ac8 16010000 12000000 00000000 00000000  ................
+[   41s] - 0ad8 00000000 00000000 f3020000 12000000  ................
+[   41s] - 0ae8 00000000 00000000 00000000 00000000  ................
+[   41s] - 0af8 d8010000 12000000 00000000 00000000  ................
+[   41s] - 0b08 00000000 00000000 0a060000 12000000  ................
+[   41s] - 0b18 00000000 00000000 00000000 00000000  ................
+[   41s] - 0b28 7b090000 12000000 00000000 00000000  {...............
+[   41s] - 0b38 00000000 00000000 79010000 11000000  ........y.......
+[   41s] - 0b48 00000000 00000000 00000000 00000000  ................
+[   41s] - 0b58 f2150000 12000000 00000000 00000000  ................
+[   41s] - 0b68 00000000 00000000 03060000 12000000  ................
+[   41s] - 0b78 00000000 00000000 00000000 00000000  ................
+[   41s] - 0b88 2d110000 12000000 00000000 00000000  -...............
+[   41s] - 0b98 00000000 00000000 e9010000 12000000  ................
+[   41s] - 0ba8 00000000 00000000 00000000 00000000  ................
+[   41s] - 0bb8 c7010000 12000000 00000000 00000000  ................
+[   41s] - 0bc8 00000000 00000000 5b010000 12000000  ........[.......
+[   41s] - 0bd8 00000000 00000000 00000000 00000000  ................
+[   41s] - 0be8 3b0b0000 12000000 00000000 00000000  ;...............
+[   41s] - 0bf8 00000000 00000000 7c150000 12000000  ........|.......
+[   41s] - 0c08 00000000 00000000 00000000 00000000  ................
+[   41s] /usr/lib64/libgflags.so.2.2.2 differs in assembler output
+[   41s] --- old /usr/lib64/libgflags.so.2.2.2 (disasm)
+[   41s] +++ new /usr/lib64/libgflags.so.2.2.2 (disasm)
+[   41s] @@ -18,7 +18,7 @@
+[   41s]  _Znam@plt-0x20:
+[   41s]  	bti	c
+[   41s]  	stp	x16, x30, [sp, #-16]!
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc10
+[   41s]  	br	x17
+[   41s] @@ -26,608 +26,608 @@
+[   41s]  	nop
+[   41s]  
+[   41s]  _Znam@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc18
+[   41s]  	br	x17
+[   41s]  
+[   41s]  fputs@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc20
+[   41s]  	br	x17
+[   41s]  
+[   41s]  memcpy@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc28
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE6appendEPKcm@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc30
+[   41s]  	br	x17
+[   41s]  
+[   41s]  fread@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc38
+[   41s]  	br	x17
+[   41s]  
+[   41s]  strstr@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc40
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc48
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZN6google26ProgramInvocationShortNameEv@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc50
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZSt9terminatev@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc58
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZN6google26ShowUsageWithFlagsRestrictEPKcS1_@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc60
+[   41s]  	br	x17
+[   41s]  
+[   41s]  strlen@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc68
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZN6google15DescribeOneFlagB5cxx11ERKNS_19CommandLineFlagInfoE@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc70
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_appendEPKcm@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc78
+[   41s]  	br	x17
+[   41s]  
+[   41s]  __gcc_personality_v0@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc80
+[   41s]  	br	x17
+[   41s]  
+[   41s]  __stack_chk_fail@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc88
+[   41s]  	br	x17
+[   41s]  
+[   41s]  perror@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc90
+[   41s]  	br	x17
+[   41s]  
+[   41s]  __cxa_begin_catch@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xc98
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC1ERKS4_@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xca0
+[   41s]  	br	x17
+[   41s]  
+[   41s]  fclose@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xca8
+[   41s]  	br	x17
+[   41s]  
+[   41s]  isspace@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xcb0
+[   41s]  	br	x17
+[   41s]  
+[   41s]  memcmp@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xcb8
+[   41s]  	br	x17
+[   41s]  
+[   41s]  __isoc23_strtoll@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xcc0
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZSt20__throw_length_errorPKc@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xcc8
+[   41s]  	br	x17
+[   41s]  
+[   41s]  _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_assignERKS4_@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xcd0
+[   41s]  	br	x17
+[   41s]  
+[   41s]  free@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xcd8
+[   41s]  	br	x17
+[   41s]  
+[   41s]  strchr@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s]  	add	x16, x16, #  xce0
+[   41s]  	br	x17
+[   41s]  
+[   41s]  strdup@plt:
+[   41s] -	adrp	x16, <_ZSt19piecewise_construct@@Base + ofs>
+[   41s] +	adrp	x16, <_ZN6google17kStrippedFlagHelpE@@Base + ofs>
+[   41s]  	ldr	x17, [x16, #  ]
+[   41s] compare /.build.oldpackages/libgflags2_2-debuginfo-2.2.2-lp160.22.1.aarch64.rpm /home/abuild/rpmbuild/RPMS/aarch64/libgflags2_2-debuginfo-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] skipping -debuginfo package
+[   41s] comparing /.build.oldpackages/rpmlint.log and /home/abuild/rpmbuild/OTHER/rpmlint.log
+[   41s] ... saving statistics
+[   41s] ... saving built packages
+[   41s] RPMS/aarch64/libgflags2_2-debuginfo-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/libgflags2_2-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/gflags-debugsource-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/gflags-devel-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/gflags-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] SRPMS/gflags-2.2.2-lp160.22.2.src.rpm
+[   41s] OTHER/_statistics
+[   41s] OTHER/rpmlint.log
+[   41s] 
+[   41s] i02-armsrv1 finished "build gflags.spec" at Mon Jun 30 15:15:21 UTC 2025.
+[   41s] 
+[   41s] ### VM INTERACTION START ###
+[   41s] [   36.400680][    T1] sysrq: Power Off
+[   41s] [   36.416743][   T11] reboot: Power down
+[   41s] ### VM INTERACTION END ###
+[   41s] build: extracting built packages...
+[   41s] RPMS/aarch64/libgflags2_2-debuginfo-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/libgflags2_2-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/gflags-debugsource-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/gflags-devel-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] RPMS/aarch64/gflags-2.2.2-lp160.22.2.aarch64.rpm
+[   41s] SRPMS/gflags-2.2.2-lp160.22.2.src.rpm
+[   41s] OTHER/_statistics
+[   41s] OTHER/rpmlint.log
+
+Retried build at Wed Jul  2 09:17:00 2025 returned same result, skipped
+
+Retried build at Wed Jul  9 13:57:31 2025 returned same result, skipped
+
+Retried build at Thu Jul 17 08:53:03 2025 returned same result, skipped
+
+Retried build at Mon Jul 28 11:43:43 2025 returned same result, skipped
+
+Retried build at Fri Aug 15 11:20:39 2025 returned same result, skipped
