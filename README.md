@@ -46,3 +46,18 @@ Now create the directory `/tmp/mcp` and start the gemini cli client with
 ```
 so that the `gemini-cli` has access to checked out files.
 
+# Useful tools
+
+This project includes a parser for a build log and can output some more strucutured information. It can be build with
+```
+  go build tools/parse_log.go
+```
+and be used like
+```
+  osc lbl | parse_log
+```
+which analyzes/parses the last build log.
+The parser can also retreive remote build logs with
+```
+  parse_log -k dolly -p home:mslacken:p
+```

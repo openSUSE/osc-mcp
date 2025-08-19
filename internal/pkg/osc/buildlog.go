@@ -53,7 +53,9 @@ type BuildLogParam struct {
 	ProjectName      string `json:"project_name" jsonschema:"Name of the project"`
 	PackageName      string `json:"package_name" jsonschema:"Name of the package"`
 	RepositoryName   string `json:"repository_name,omitempty" jsonschema:"Repository name"`
-	ArchitectureName string `json:"architecture_namei,omitempty" jsonschema:"Architecture name"`
+	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
+	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
+	ShowSucceded     bool   `json:"show_sucedded,omitempty" jsonschema:"Also show succeded logs"`
 }
 
 const defRepo = "openSUSE_Tumbleweed"
@@ -90,7 +92,7 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, cc *mcp.ServerSession,
 		return nil, err
 	}
 	log := buildlog.Parse(rawLog)
-	jsonBytes, err := json.MarshalIndent(log.FormatJson(), "", "  ")
+	jsonBytes, err := json.MarshalIndent(log.FormatJson(params.Arguments.NrLines, params.Arguments.ShowSucceded), "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal json: %w", err)
 	}

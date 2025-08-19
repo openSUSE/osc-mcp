@@ -44,6 +44,7 @@ func (p BuildPhase) String() string {
 }
 
 type Phase struct {
+	Sucedded bool
 	Lines    []string
 	Duration int
 }
@@ -139,9 +140,14 @@ func Parse(logContent string) *BuildLog {
 		if newPhase != phase {
 			currentPhaseDetails.Duration = lastTime - phaseStartTime
 			log.Phases[phase] = currentPhaseDetails
-			currentPhaseDetails = Phase{}
+			currentPhaseDetails = Phase{
+				Sucedded: true,
+			}
 			phase = newPhase
 			phaseStartTime = lastTime
+		}
+		if strings.Contains(line, " FAILED") || strings.Contains(line, " ERROR") {
+			currentPhaseDetails.Sucedded = false
 		}
 		currentPhaseDetails.Lines = append(currentPhaseDetails.Lines, line)
 	}
@@ -151,7 +157,7 @@ func Parse(logContent string) *BuildLog {
 	return log
 }
 
-func (log *BuildLog) FormatJson() map[string]any {
+func (log *BuildLog) FormatJson(nrLines int, printSucceded bool) map[string]any {
 	properties := map[string]string{
 		"Name":    log.Name,
 		"Project": log.Project,
@@ -161,20 +167,25 @@ func (log *BuildLog) FormatJson() map[string]any {
 
 	phases := make(map[string]any)
 	for phase, phaseDetails := range log.Phases {
-		phaseSuccess := true
-		for _, line := range phaseDetails.Lines {
-			// A simple heuristic to detect failures.
-			// This can be improved with more sophisticated checks.
-			if strings.Contains(line, " FAILED") || strings.Contains(line, " ERROR") {
-				phaseSuccess = false
-				break
-			}
-		}
-
 		phases[phase.String()] = map[string]any{
-			"Lines":    phaseDetails.Lines,
 			"Duration": phaseDetails.Duration,
-			"Success":  phaseSuccess,
+			"Success":  phaseDetails.Sucedded,
+		}
+		if nrLines > 0 && (printSucceded || !phaseDetails.Sucedded) {
+			printLines := nrLines
+			if nrLines > len(phaseDetails.Lines) {
+				printLines = len(phaseDetails.Lines)
+			}
+			phases[phase.String()] = map[string]any{
+				"Duration": phaseDetails.Duration,
+				"Success":  phaseDetails.Sucedded,
+				"Lines":    phaseDetails.Lines[:printLines],
+			}
+		} else {
+			phases[phase.String()] = map[string]any{
+				"Duration": phaseDetails.Duration,
+				"Success":  phaseDetails.Sucedded,
+			}
 		}
 	}
 
