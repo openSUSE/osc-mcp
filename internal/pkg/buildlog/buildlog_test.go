@@ -45,6 +45,24 @@ func TestParseLog(t *testing.T) {
 				Retries:             {lineCount: 9, duration: 0},
 			},
 		},
+		{
+			name:            "ww4_local",
+			logFile:         "testdata/local-ww4.log",
+			expectedName:    "warewulf4",
+			expectedProject: "local",
+			expectedDistro:  "15.6",
+			expectedArch:    "x86_64",
+			expectedPhases: map[BuildPhase]struct {
+				lineCount int
+				duration  int
+			}{
+				Header:          {lineCount: 894, duration: 5},
+				Build:           {lineCount: 2198, duration: 36},
+				PostBuildChecks: {lineCount: 47, duration: 2},
+				RPMLintReport:   {lineCount: 51, duration: 3},
+				Summary:         {lineCount: 2, duration: 0},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -63,11 +81,11 @@ func TestParseLog(t *testing.T) {
 
 			assert.Equal(t, len(tc.expectedPhases), len(log.Phases))
 
-			for _, phase := range log.Phases {
-				expected, ok := tc.expectedPhases[phase.Phase]
-				assert.True(t, ok, "Unexpected phase: %s", phase.Phase)
-				assert.Equal(t, expected.lineCount, len(phase.Lines), "Line count mismatch for phase %s", phase.Phase)
-				assert.Equal(t, expected.duration, phase.Duration, "Duration mismatch for phase %s", phase.Phase)
+			for phase, expected := range tc.expectedPhases {
+				actual, ok := log.Phases[phase]
+				assert.True(t, ok, "Expected phase %s not found", phase.String())
+				assert.Equal(t, expected.lineCount, len(actual.Lines), "Line count mismatch for phase %s", phase.String())
+				assert.Equal(t, expected.duration, actual.Duration, "Duration mismatch for phase %s", phase.String())
 			}
 		})
 	}

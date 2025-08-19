@@ -60,11 +60,11 @@ var rootCmd = &cobra.Command{
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"Phase", "Duration (s)", "Lines"})
 
-			for _, phase := range log.Phases {
+			for phase, phaseDetails := range log.Phases {
 				table.Append([]string{
-					phase.Phase.String(),
-					strconv.Itoa(phase.Duration),
-					strconv.Itoa(len(phase.Lines)),
+					phase.String(),
+					strconv.Itoa(phaseDetails.Duration),
+					strconv.Itoa(len(phaseDetails.Lines)),
 				})
 			}
 			table.Render()
