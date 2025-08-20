@@ -19,10 +19,23 @@ var oscInstance = flag.String("api", "api.opensuse.org", "address of the api of 
 var workDir = flag.String("workdir", "", "if set, use this directory as temporary directory")
 var print_creds = flag.Bool("print-creds", false, "Just print the retreived credentials and exit")
 var clean_temp = flag.Bool("clean-workdir", false, "Cleans the workdir before usage")
+var logFile = flag.String("logfile", "", "if set, log to this file instead of stderr")
 
 func main() {
 	flag.Parse()
-	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+
+	var logger *slog.Logger
+	if *logFile != "" {
+		f, err := os.OpenFile(*logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			slog.Error("failed to open log file", "error", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+		logger = slog.New(slog.NewTextHandler(f, nil))
+	} else {
+		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+	}
 	slog.SetDefault(logger)
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "OS software management",
@@ -116,7 +129,8 @@ func main() {
 		InputSchema: buildLogSchema,
 	}, obsCred.BuildLog)
 	server.AddPrompt(&mcp.Prompt{
-		Name: "Basic information about OBS",
+		Name:        "basic_information",
+		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",
 	}, obsCred.PromptOSC)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
