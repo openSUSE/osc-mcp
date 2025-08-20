@@ -115,6 +115,9 @@ func main() {
 		Description: "Get the remote or local build log of a package.",
 		InputSchema: buildLogSchema,
 	}, obsCred.BuildLog)
+	server.AddPrompt(&mcp.Prompt{
+		Name: "Basic information about OBS",
+	}, obsCred.PromptOSC)
 	if *httpAddr != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server

@@ -55,7 +55,7 @@ type BuildLogParam struct {
 	RepositoryName   string `json:"repository_name,omitempty" jsonschema:"Repository name"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
-	ShowSucceded     bool   `json:"show_sucedded,omitempty" jsonschema:"Also show succeded logs"`
+	ShowSucceded     bool   `json:"show_succeded,omitempty" jsonschema:"Also show succeded logs"`
 }
 
 const defRepo = "openSUSE_Tumbleweed"
@@ -71,9 +71,9 @@ func GetBuildLogSchema() (*jsonschema.Schema, error) {
 	"repository_name":"` + defRepo + `",
 	"architecture_name":"` + defArch + `",
 	"project_name":"",
-	"package_name":""
+	"package_name":"",
 	"nr_lines":100,
-	"show_sucedded":false}`)
+	"show_succeded":false}`)
 	return schema, nil
 }
 
