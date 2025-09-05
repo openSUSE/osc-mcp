@@ -14,17 +14,13 @@ type Config struct {
 }
 
 // NewConfig creates a new Config object.
-func NewConfig() *Config {
-	return &Config{
+func NewConfig(path string) (newConf *Config, err error) {
+	newConf = &Config{
 		data: make(map[string]map[string]string),
 	}
-}
-
-// Load reads and parses an INI file from the given path.
-func (c *Config) Load(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("failed to open config file: %w", err)
+		return newConf, fmt.Errorf("failed to open config file: %w", err)
 	}
 	defer file.Close()
 
@@ -38,8 +34,8 @@ func (c *Config) Load(path string) error {
 
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			currentSection = line[1 : len(line)-1]
-			if _, ok := c.data[currentSection]; !ok {
-				c.data[currentSection] = make(map[string]string)
+			if _, ok := newConf.data[currentSection]; !ok {
+				newConf.data[currentSection] = make(map[string]string)
 			}
 			continue
 		}
@@ -49,16 +45,16 @@ func (c *Config) Load(path string) error {
 			if len(parts) == 2 {
 				key := strings.TrimSpace(parts[0])
 				value := strings.TrimSpace(parts[1])
-				c.data[currentSection][key] = value
+				newConf.data[currentSection][key] = value
 			}
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+		return newConf, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	return nil
+	return newConf, nil
 }
 
 // GetString returns the string value for a given section and key.

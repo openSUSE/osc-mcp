@@ -18,8 +18,10 @@ import (
 
 func main() {
 	pflag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
-	pflag.String("api", "api.opensuse.org", "address of the api of the OBS instance to interact with")
+	pflag.String("api", "https://api.opensuse.org", "address of the api of the OBS instance to interact with")
 	pflag.String("workdir", "", "if set, use this directory as temporary directory")
+	pflag.String("user", "", "OBS username")
+	pflag.String("password", "", "OBS password")
 	pflag.Bool("print-creds", false, "Just print the retreived credentials and exit")
 	pflag.Bool("clean-workdir", false, "Cleans the workdir before usage")
 	pflag.String("logfile", "", "if set, log to this file instead of stderr")
@@ -80,7 +82,7 @@ func main() {
 		os.Exit(1)
 	}
 	if viper.GetBool("print-creds") {
-		fmt.Printf("user: %s\npasswd: %s\n", obsCred.Name, obsCred.Passwd)
+		fmt.Printf("user: %s\npasswd: %s\napi: %s\n", obsCred.Name, obsCred.Passwd, obsCred.Apiaddr)
 		os.Exit(0)
 	}
 

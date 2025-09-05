@@ -12,6 +12,7 @@ import (
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 	"github.com/openSUSE/osc-mcp/internal/pkg/config"
 	keyring "github.com/ppacher/go-dbus-keyring"
+	"github.com/spf13/viper"
 )
 
 type OSCCredentials struct {
@@ -44,7 +45,6 @@ func GetCredentials(tempDir string, id string) (creds OSCCredentials, err error)
 		configDir = filepath.Join(home, ".config")
 	}
 
-	cfg := config.NewConfig()
 	configPaths := []string{
 		filepath.Join(configDir, "osc", "oscrc"),
 		filepath.Join(home, ".oscrc"),
@@ -65,18 +65,23 @@ func GetCredentials(tempDir string, id string) (creds OSCCredentials, err error)
 		err = fmt.Errorf(".oscrc not found in XDG config path, home directory or current directory")
 		return
 	}
-
-	if err = cfg.Load(configPath); err != nil {
+	cfg, err := config.NewConfig(configPath)
+	if err != nil {
 		err = fmt.Errorf("error loading config file: %w", err)
 		return
 	}
 
 	apiurl := cfg.GetString("general", "apiurl")
+	if viper.GetString("api") != "" {
+		apiurl = viper.GetString("api")
+	}
 	if apiurl == "" {
 		err = fmt.Errorf("apiurl not set in general section of .oscrc")
 		return
 	}
 	creds.Apiaddr = apiurl
+	user := cfg.GetString(apiurl, "user")
+	pass := cfg.GetString(apiurl, "pass")
 	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "https://")
 	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "http://")
 	// DO NOT REMOVE THIS CHECKS AS THIS COULD LEAD TO LEAKAGE OF EMBARGOED BUGS
@@ -87,9 +92,13 @@ func GetCredentials(tempDir string, id string) (creds OSCCredentials, err error)
 		return creds, fmt.Errorf("Can't run with nuclear power!")
 	}
 	// DO NOT TOUCH THE PREVIOUS CHECKS YOU WERE WARNED
-	user := cfg.GetString(apiurl, "user")
-	pass := cfg.GetString(apiurl, "pass")
-
+	// check for command line credentials, they overwrite everything
+	if viper.IsSet("user") {
+		user = viper.GetString("user")
+	}
+	if viper.IsSet("password") {
+		pass = viper.GetString("password")
+	}
 	if pass != "" {
 		if user == "" {
 			err = fmt.Errorf("user not set for apiurl %s in .oscrc", apiurl)
