@@ -2,31 +2,37 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jaevor/go-nanoid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/osc"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
-var httpAddr = flag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
-var oscInstance = flag.String("api", "api.opensuse.org", "address of the api of the OBS instance to interact with")
-var workDir = flag.String("workdir", "", "if set, use this directory as temporary directory")
-var print_creds = flag.Bool("print-creds", false, "Just print the retreived credentials and exit")
-var clean_temp = flag.Bool("clean-workdir", false, "Cleans the workdir before usage")
-var logFile = flag.String("logfile", "", "if set, log to this file instead of stderr")
-
 func main() {
-	flag.Parse()
+	pflag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
+	pflag.String("api", "api.opensuse.org", "address of the api of the OBS instance to interact with")
+	pflag.String("workdir", "", "if set, use this directory as temporary directory")
+	pflag.Bool("print-creds", false, "Just print the retreived credentials and exit")
+	pflag.Bool("clean-workdir", false, "Cleans the workdir before usage")
+	pflag.String("logfile", "", "if set, log to this file instead of stderr")
+
+	pflag.Parse()
+	viper.SetEnvPrefix("OSC_MCP")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.AutomaticEnv()
+	viper.BindPFlags(pflag.CommandLine)
 
 	var logger *slog.Logger
-	if *logFile != "" {
-		f, err := os.OpenFile(*logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if viper.GetString("logfile") != "" {
+		f, err := os.OpenFile(viper.GetString("logfile"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			slog.Error("failed to open log file", "error", err)
 			os.Exit(1)
@@ -49,31 +55,31 @@ func main() {
 		os.Exit(1)
 	}
 	id_str := id()
-	if *workDir == "" {
-		workdir_str := filepath.Join(os.TempDir(), id_str)
-		workDir = &workdir_str
+	workDir := viper.GetString("workdir")
+	if workDir == "" {
+		workDir = filepath.Join(os.TempDir(), id_str)
 		noTempClean = false
 	}
 
-	if *clean_temp {
-		if err = os.RemoveAll(*workDir); err != nil {
+	if viper.GetBool("clean-workdir") {
+		if err = os.RemoveAll(workDir); err != nil {
 			slog.Error("failed to clean up workdir", "error", err)
 		}
 	}
-	if err := os.MkdirAll(*workDir, 0755); err != nil {
-		slog.Error("failed to create temporary directory", "path", *workDir, "error", err)
+	if err := os.MkdirAll(workDir, 0755); err != nil {
+		slog.Error("failed to create temporary directory", "path", workDir, "error", err)
 		os.Exit(1)
 	}
 	if !noTempClean {
-		defer os.RemoveAll(*workDir)
+		defer os.RemoveAll(workDir)
 	}
 
-	obsCred, err := osc.GetCredentials(*workDir, id_str)
+	obsCred, err := osc.GetCredentials(workDir, id_str)
 	if err != nil {
 		slog.Error("failed to get OBS credentials", slog.Any("error", err))
 		os.Exit(1)
 	}
-	if *print_creds {
+	if viper.GetBool("print-creds") {
 		fmt.Printf("user: %s\npasswd: %s\n", obsCred.Name, obsCred.Passwd)
 		os.Exit(0)
 	}
@@ -88,7 +94,7 @@ func main() {
 	}, obsCred.ListSrcFiles)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "branch_package",
-		Description: fmt.Sprintf("Branch a package and check it out as local package under the path %s", *workDir),
+		Description: fmt.Sprintf("Branch a package and check it out as local package under the path %s", workDir),
 	}, obsCred.BranchPackage)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "build_package",
@@ -112,11 +118,11 @@ func main() {
 	}, obsCred.DeleteProject)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_local_packages",
-		Description: fmt.Sprintf("List all local packages which are located under the path %s", *workDir),
+		Description: fmt.Sprintf("List all local packages which are located under the path %s", workDir),
 	}, obsCred.ListLocalPackages)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "checkout_package",
-		Description: fmt.Sprintf("Checkout a package from the online repostory. After this step the package is available as local package under %s", *workDir),
+		Description: fmt.Sprintf("Checkout a package from the online repostory. After this step the package is available as local package under %s", workDir),
 	}, obsCred.CheckoutPackage)
 	buildLogSchema, err := osc.GetBuildLogSchema()
 	if err != nil {
@@ -132,12 +138,12 @@ func main() {
 		Name:        "basic_information",
 		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",
 	}, obsCred.PromptOSC)
-	if *httpAddr != "" {
+	if viper.GetString("http") != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
 		}, nil)
-		slog.Info("MCP handler listening at", slog.String("address", *httpAddr))
-		http.ListenAndServe(*httpAddr, handler)
+		slog.Info("MCP handler listening at", slog.String("address", viper.GetString("http")))
+		http.ListenAndServe(viper.GetString("http"), handler)
 	} else {
 		t := mcp.NewLoggingTransport(mcp.NewStdioTransport(), os.Stdout)
 		if err := server.Run(context.Background(), t); err != nil {
