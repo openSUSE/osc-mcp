@@ -2,7 +2,6 @@ package osc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,20 +22,20 @@ type BranchResult struct {
 	CheckoutDir   string `json:"checkout_dir"`
 }
 
-func (cred OSCCredentials) BranchPackage(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[BranchPackageParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	if params.Arguments.Project == "" {
-		return nil, fmt.Errorf("project name cannot be empty")
+func (cred OSCCredentials) BranchPackage(ctx context.Context, req *mcp.CallToolRequest, params BranchPackageParam) (*mcp.CallToolResult, BranchResult, error) {
+	if params.Project == "" {
+		return nil, BranchResult{}, fmt.Errorf("project name cannot be empty")
 	}
-	if params.Arguments.Package == "" {
-		return nil, fmt.Errorf("package name cannot be empty")
+	if params.Package == "" {
+		return nil, BranchResult{}, fmt.Errorf("package name cannot be empty")
 	}
 
-	targetProject := fmt.Sprintf("home:%s:branches:%s", cred.Name, params.Arguments.Project)
-	targetPackage := params.Arguments.Package
+	targetProject := fmt.Sprintf("home:%s:branches:%s", cred.Name, params.Project)
+	targetPackage := params.Package
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, params.Arguments.Project, params.Arguments.Package))
+	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, params.Project, params.Package))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+		return nil, BranchResult{}, fmt.Errorf("failed to parse API URL: %w", err)
 	}
 	q := apiURL.Query()
 	q.Set("cmd", "branch")
@@ -44,29 +43,29 @@ func (cred OSCCredentials) BranchPackage(ctx context.Context, cc *mcp.ServerSess
 	q.Set("target_package", targetPackage)
 	apiURL.RawQuery = q.Encode()
 
-	req, err := http.NewRequestWithContext(ctx, "POST", apiURL.String(), nil)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", apiURL.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, BranchResult{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.SetBasicAuth(cred.Name, cred.Passwd)
+	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(httpReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, BranchResult{}, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
+		return nil, BranchResult{}, fmt.Errorf("api request failed with status: %s", resp.Status)
 	}
 
 	cmd := exec.CommandContext(ctx, "osc", "checkout", targetProject)
 	cmd.Dir = cred.TempDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+		return nil, BranchResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
 
 	result := BranchResult{
@@ -75,16 +74,5 @@ func (cred OSCCredentials) BranchPackage(ctx context.Context, cc *mcp.ServerSess
 		CheckoutDir:   filepath.Join(cred.TempDir, targetProject),
 	}
 
-	jsonBytes, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
-	}, nil
+	return nil, result, nil
 }

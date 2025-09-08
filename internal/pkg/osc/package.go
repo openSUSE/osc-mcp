@@ -2,7 +2,6 @@ package osc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -92,39 +91,45 @@ type CreatePackageParam struct {
 	PackageName string `json:"package_name" jsonschema:"The name of the package to create."`
 }
 
-func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[CreatePackageParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	if params.Arguments.PackageName == "" {
-		return nil, fmt.Errorf("package name cannot be empty")
+type CreatePackageResult struct {
+	Project string `json:"project"`
+	Package string `json:"package"`
+	Path    string `json:"path"`
+}
+
+func (cred OSCCredentials) CreatePackage(ctx context.Context, req *mcp.CallToolRequest, params CreatePackageParam) (*mcp.CallToolResult, CreatePackageResult, error) {
+	if params.PackageName == "" {
+		return nil, CreatePackageResult{}, fmt.Errorf("package name cannot be empty")
 	}
 
 	projectName := fmt.Sprintf("home:%s:osc-mpc:%s", cred.Name, cred.SessionId)
 
 	meta, err := cred.getProjectMetaInternal(ctx, projectName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check if project exists: %w", err)
+		return nil, CreatePackageResult{}, fmt.Errorf("failed to check if project exists: %w", err)
 	}
 	if !meta.Exists {
 		var defaults DefaultRepositories
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return nil, fmt.Errorf("could not get user home directory: %w", err)
+			return nil, CreatePackageResult{}, fmt.Errorf("could not get user home directory: %w", err)
 		}
 		configPath := filepath.Join(home, ".config", "osc-mcp", "defaults.yaml")
 		if _, err := os.Stat(configPath); os.IsNotExist(err) {
 			configPath = "defaults.yaml"
 			if _, err := os.Stat(configPath); os.IsNotExist(err) {
-				return nil, fmt.Errorf("defaults.yaml not found in ~/.config/osc-mcp/ or current directory")
+				return nil, CreatePackageResult{}, fmt.Errorf("defaults.yaml not found in ~/.config/osc-mcp/ or current directory")
 			}
 		}
 
 		yamlFile, err := os.ReadFile(configPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read defaults.yaml: %w", err)
+			return nil, CreatePackageResult{}, fmt.Errorf("failed to read defaults.yaml: %w", err)
 		}
 
 		err = yaml.Unmarshal(yamlFile, &defaults)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal defaults.yaml: %w", err)
+			return nil, CreatePackageResult{}, fmt.Errorf("failed to unmarshal defaults.yaml: %w", err)
 		}
 
 		err = cred.createProject(ctx, projectName,
@@ -133,7 +138,7 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSess
 			defaults.Repositories,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create project: %w", err)
+			return nil, CreatePackageResult{}, fmt.Errorf("failed to create project: %w", err)
 		}
 	}
 
@@ -141,37 +146,21 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, cc *mcp.ServerSess
 	cmd.Dir = cred.TempDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+		return nil, CreatePackageResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
 
 	projectDir := filepath.Join(cred.TempDir, projectName)
 
-	cmd = exec.CommandContext(ctx, "osc", "mkpac", params.Arguments.PackageName)
+	cmd = exec.CommandContext(ctx, "osc", "mkpac", params.PackageName)
 	cmd.Dir = projectDir
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+		return nil, CreatePackageResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
 
-	result := struct {
-		Project string `json:"project"`
-		Package string `json:"package"`
-		Path    string `json:"path"`
-	}{
+	return nil, CreatePackageResult{
 		Project: projectName,
-		Package: params.Arguments.PackageName,
-		Path:    filepath.Join(projectDir, params.Arguments.PackageName),
-	}
-	jsonBytes, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
+		Package: params.PackageName,
+		Path:    filepath.Join(projectDir, params.PackageName),
 	}, nil
 }

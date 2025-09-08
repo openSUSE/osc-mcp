@@ -3,7 +3,6 @@ package osc
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os/exec"
@@ -17,36 +16,30 @@ type CheckoutPackageCmd struct {
 	Package string `json:"package_name" jsonschema:"Name of the package"`
 }
 
-func (cred *OSCCredentials) CheckoutPackage(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[CheckoutPackageCmd]) (*mcp.CallToolResultFor[any], error) {
-	if params.Arguments.Project == "" || params.Arguments.Package == "" {
-		return nil, fmt.Errorf("project and package must be specified")
+type CheckoutPackageResult struct {
+	Path        string `json:"path"`
+	PackageName string `json:"package_name"`
+	ProjectName string `json:"project_name"`
+}
+
+func (cred *OSCCredentials) CheckoutPackage(ctx context.Context, req *mcp.CallToolRequest, params CheckoutPackageCmd) (*mcp.CallToolResult, CheckoutPackageResult, error) {
+	if params.Project == "" || params.Package == "" {
+		return nil, CheckoutPackageResult{}, fmt.Errorf("project and package must be specified")
 	}
 
-	oscCmd := exec.CommandContext(ctx, "osc", "checkout", params.Arguments.Project, params.Arguments.Package)
+	oscCmd := exec.CommandContext(ctx, "osc", "checkout", params.Project, params.Package)
 	oscCmd.Dir = cred.TempDir
 	var out bytes.Buffer
 	oscCmd.Stdout = &out
 	oscCmd.Stderr = &out
 	if err := oscCmd.Run(); err != nil {
 		slog.Error("failed to run osc checkout", slog.String("command", oscCmd.String()), slog.String("output", out.String()))
-		return nil, fmt.Errorf("failed to run osc checkout command `%s`: %w\nOutput:\n%s", oscCmd.String(), err, out.String())
+		return nil, CheckoutPackageResult{}, fmt.Errorf("failed to run osc checkout command `%s`: %w\nOutput:\n%s", oscCmd.String(), err, out.String())
 	}
 
-	result := map[string]string{
-		"path":          path.Join(cred.TempDir, params.Arguments.Project, params.Arguments.Package),
-		"package_name":  params.Arguments.Package,
-		"project_name:": params.Arguments.Project,
-	}
-	jsonBytes, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
+	return nil, CheckoutPackageResult{
+		Path:        path.Join(cred.TempDir, params.Project, params.Package),
+		PackageName: params.Package,
+		ProjectName: params.Project,
 	}, nil
 }

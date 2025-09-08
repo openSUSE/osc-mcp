@@ -178,7 +178,7 @@ func useKeyringCreds(apiAddr string) (cred OSCCredentials, err error) {
 	return cred, fmt.Errorf("could not find credentials for %s in any keyring", apiAddr)
 }
 
-func (cred *OSCCredentials) PromptOSC(ctx context.Context, ss *mcp.ServerSession, params *mcp.GetPromptParams) (*mcp.GetPromptResult, error) {
+func (cred *OSCCredentials) PromptOSC(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	return &mcp.GetPromptResult{
 		Description: "Source Package management in the OpenBuild Service",
 		Messages: []*mcp.PromptMessage{

@@ -2,7 +2,6 @@ package osc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -60,53 +59,24 @@ type BuildLogParam struct {
 const defRepo = "openSUSE_Tumbleweed"
 const defArch = "x86_64"
 
-func GetBuildLogSchema() (*jsonschema.Schema, error) {
-	schema, err := jsonschema.For[BuildLogParam]()
-	if err != nil {
-		return nil, err
+func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolRequest, params BuildLogParam) (*mcp.CallToolResult, map[string]any, error) {
+	if params.ProjectName == "" {
+		return nil, nil, fmt.Errorf("project name must be specified")
 	}
-	schema.AdditionalProperties = &jsonschema.Schema{}
-	schema.Default = []byte(`{
-	"repository_name":"` + defRepo + `",
-	"architecture_name":"` + defArch + `",
-	"project_name":"",
-	"package_name":"",
-	"nr_lines":100,
-	"show_succeded":false}`)
-	return schema, nil
-}
-
-func (cred *OSCCredentials) BuildLog(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[BuildLogParam]) (*mcp.CallToolResultFor[any], error) {
-	if params.Arguments.ProjectName == "" {
-		return nil, fmt.Errorf("project name must be specified")
+	if params.PackageName == "" {
+		return nil, nil, fmt.Errorf("package name must be specified")
 	}
-	if params.Arguments.PackageName == "" {
-		return nil, fmt.Errorf("package name must be specified")
+	if params.RepositoryName == "" {
+		params.RepositoryName = defRepo
 	}
-	if params.Arguments.RepositoryName == "" {
-		//\FIXME Defaults from jsonschema doesn't seem to work
-		params.Arguments.RepositoryName = defRepo
-	}
-	if params.Arguments.ArchitectureName == "" {
-		//\FIXME Defaults from jsonschema doesn't seem to work
-		params.Arguments.ArchitectureName = defArch
+	if params.ArchitectureName == "" {
+		params.ArchitectureName = defArch
 	}
 
-	rawLog, err := cred.GetBuildLogRaw(ctx, params.Arguments.ProjectName, params.Arguments.RepositoryName, params.Arguments.ArchitectureName, params.Arguments.PackageName)
+	rawLog, err := cred.GetBuildLogRaw(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, params.PackageName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	log := buildlog.Parse(rawLog)
-	jsonBytes, err := json.MarshalIndent(log.FormatJson(params.Arguments.NrLines, params.Arguments.ShowSucceded), "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
-	}, nil
+	return nil, log.FormatJson(params.NrLines, params.ShowSucceded), nil
 }

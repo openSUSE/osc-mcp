@@ -2,7 +2,6 @@ package osc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -30,41 +29,41 @@ func IgnoredDirs() []string {
 	return []string{".osc", ".git"}
 }
 
-func (cred OSCCredentials) ListSrcFiles(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[ListSrcFilesParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	if params.Arguments.ProjectName == "" {
-		return nil, fmt.Errorf("project name cannot be empty")
+func (cred OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRequest, params ListSrcFilesParam) (*mcp.CallToolResult, []FileInfo, error) {
+	if params.ProjectName == "" {
+		return nil, nil, fmt.Errorf("project name cannot be empty")
 	}
-	if params.Arguments.PackageName == "" {
-		return nil, fmt.Errorf("package name cannot be empty")
+	if params.PackageName == "" {
+		return nil, nil, fmt.Errorf("package name cannot be empty")
 	}
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, params.Arguments.ProjectName, params.Arguments.PackageName))
+	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, params.ProjectName, params.PackageName))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+		return nil, nil, fmt.Errorf("failed to parse API URL: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.SetBasicAuth(cred.Name, cred.Passwd)
-	req.Header.Set("Accept", "application/xml; charset=utf-8")
+	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
+	httpReq.Header.Set("Accept", "application/xml; charset=utf-8")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(httpReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, nil, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
+		return nil, nil, fmt.Errorf("api request failed with status: %s", resp.Status)
 	}
 
 	doc := etree.NewDocument()
 	if _, err := doc.ReadFrom(resp.Body); err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var files []FileInfo
@@ -78,34 +77,24 @@ func (cred OSCCredentials) ListSrcFiles(ctx context.Context, cc *mcp.ServerSessi
 		files = append(files, f)
 	}
 
-	jsonBytes, err := json.MarshalIndent(files, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
-	}, nil
+	return nil, files, nil
 }
 
 type ListLocalParams struct {
 	Number int `json:"number,omitempty" jsonschema:"number of packages to display"`
 }
 
-func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[ListLocalParams]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	type local_package struct {
-		package_name string
-		project_name string
-		path         string
-	}
-	packages := []local_package{}
+type LocalPackage struct {
+	PackageName string `json:"package_name"`
+	ProjectName string `json:"project_name"`
+	Path        string `json:"path"`
+}
+
+func (cred OSCCredentials) ListLocalPackages(ctx context.Context, req *mcp.CallToolRequest, params ListLocalParams) (*mcp.CallToolResult, []LocalPackage, error) {
+	packages := []LocalPackage{}
 	projectDirs, err := os.ReadDir(cred.TempDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read temp directory %s: %w", cred.TempDir, err)
+		return nil, nil, fmt.Errorf("failed to read temp directory %s: %w", cred.TempDir, err)
 	}
 
 	for _, projectDir := range projectDirs {
@@ -118,7 +107,7 @@ func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.Server
 		projectPath := filepath.Join(cred.TempDir, projectDir.Name())
 		packageDirs, err := os.ReadDir(projectPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read project directory %s: %w", projectPath, err)
+			return nil, nil, fmt.Errorf("failed to read project directory %s: %w", projectPath, err)
 		}
 		for _, packageDir := range packageDirs {
 			if !packageDir.IsDir() {
@@ -127,24 +116,13 @@ func (cred OSCCredentials) ListLocalPackages(ctx context.Context, cc *mcp.Server
 			if slices.Contains(IgnoredDirs(), packageDir.Name()) {
 				continue
 			}
-			packages = append(packages, local_package{
-				package_name: projectDir.Name(),
-				project_name: packageDir.Name(),
-				path:         packageDir.Name(),
+			packages = append(packages, LocalPackage{
+				PackageName: projectDir.Name(),
+				ProjectName: packageDir.Name(),
+				Path:        packageDir.Name(),
 			})
 		}
 	}
 
-	jsonBytes, err := json.MarshalIndent(packages, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
-	}, nil
+	return nil, packages, nil
 }

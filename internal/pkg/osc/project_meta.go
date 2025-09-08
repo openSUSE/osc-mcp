@@ -2,7 +2,6 @@ package osc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -111,24 +110,9 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 	return meta, nil
 }
 
-func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[GetProjectMetaParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	meta, err := cred.getProjectMetaInternal(ctx, params.Arguments.ProjectName)
-	if err != nil {
-		return nil, err
-	}
-
-	jsonBytes, err := json.MarshalIndent(meta, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
-	}, nil
+func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params GetProjectMetaParam) (*mcp.CallToolResult, *ProjectMeta, error) {
+	res, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
+	return nil, res, err
 }
 
 type SetProjectMetaParam struct {
@@ -140,33 +124,37 @@ type SetProjectMetaParam struct {
 	Repositories []Repository `json:"repositories" jsonschema:"List of repositories for the project."`
 }
 
-func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[SetProjectMetaParam]) (toolRes *mcp.CallToolResultFor[any], err error) {
-	if params.Arguments.ProjectName == "" {
-		return nil, fmt.Errorf("project name cannot be empty")
+type SetProjectMetaResult struct {
+	Message string `json:"message"`
+}
+
+func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params SetProjectMetaParam) (*mcp.CallToolResult, SetProjectMetaResult, error) {
+	if params.ProjectName == "" {
+		return nil, SetProjectMetaResult{}, fmt.Errorf("project name cannot be empty")
 	}
-	if len(params.Arguments.Repositories) == 0 {
-		return nil, fmt.Errorf("at least one repository must be provided")
+	if len(params.Repositories) == 0 {
+		return nil, SetProjectMetaResult{}, fmt.Errorf("at least one repository must be provided")
 	}
 
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	project := doc.CreateElement("project")
-	project.CreateAttr("name", params.Arguments.ProjectName)
+	project.CreateAttr("name", params.ProjectName)
 
-	if params.Arguments.Title != "" {
-		project.CreateElement("title").SetText(params.Arguments.Title)
+	if params.Title != "" {
+		project.CreateElement("title").SetText(params.Title)
 	}
-	if params.Arguments.Description != "" {
-		project.CreateElement("description").SetText(params.Arguments.Description)
+	if params.Description != "" {
+		project.CreateElement("description").SetText(params.Description)
 	}
 
-	for _, maintainer := range params.Arguments.Maintainers {
+	for _, maintainer := range params.Maintainers {
 		person := project.CreateElement("person")
 		person.CreateAttr("userid", maintainer)
 		person.CreateAttr("role", "maintainer")
 	}
 
-	for _, repo := range params.Arguments.Repositories {
+	for _, repo := range params.Repositories {
 		repository := project.CreateElement("repository")
 		repository.CreateAttr("name", repo.Name)
 		if repo.PathProject != "" {
@@ -184,50 +172,44 @@ func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, cc *mcp.ServerSe
 	doc.Indent(2)
 	metaString, err := doc.WriteToString()
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate XML: %w", err)
+		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to generate XML: %w", err)
 	}
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, params.Arguments.ProjectName))
+	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, params.ProjectName))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to parse API URL: %w", err)
 	}
 
-	if params.Arguments.Comment != "" {
+	if params.Comment != "" {
 		q := apiURL.Query()
-		q.Set("comment", params.Arguments.Comment)
+		q.Set("comment", params.Comment)
 		apiURL.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "PUT", apiURL.String(), strings.NewReader(metaString))
+	httpReq, err := http.NewRequestWithContext(ctx, "PUT", apiURL.String(), strings.NewReader(metaString))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.SetBasicAuth(cred.Name, cred.Passwd)
-	req.Header.Set("Content-Type", "application/xml; charset=utf-8")
-	req.Header.Set("Accept", "application/xml; charset=utf-8")
+	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
+	httpReq.Header.Set("Content-Type", "application/xml; charset=utf-8")
+	httpReq.Header.Set("Accept", "application/xml; charset=utf-8")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(httpReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("api request failed with status: %s\nbody:\n%s", resp.Status, string(body))
+		return nil, SetProjectMetaResult{}, fmt.Errorf("api request failed with status: %s\nbody:\n%s", resp.Status, string(body))
 	}
 
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(body),
-			},
-		},
-	}, nil
+	return nil, SetProjectMetaResult{Message: string(body)}, nil
 }

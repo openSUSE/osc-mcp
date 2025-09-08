@@ -3,7 +3,6 @@ package osc
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os/exec"
@@ -23,37 +22,45 @@ type BuildParam struct {
 	Arch              string `json:"arch,omitempty" jsonschema:"Architecture to build for (e.g., x86_64)."`
 }
 
-func (cred *OSCCredentials) Build(ctx context.Context, cc *mcp.ServerSession, params *mcp.CallToolParamsFor[BuildParam]) (*mcp.CallToolResultFor[any], error) {
-	if params.Arguments.ProjectName == "" {
-		return nil, fmt.Errorf("project name must be specified")
+type BuildResult struct {
+	Error         string             `json:"error,omitempty"`
+	Success       bool               `json:"success"`
+	PackagesBuilt []string           `json:"packages_built,omitempty"`
+	RpmLint       map[string]any     `json:"lint_report,omitempty"`
+	ParsedLog     *buildlog.BuildLog `json:"parsed_log,omitempty"`
+}
+
+func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest, params BuildParam) (*mcp.CallToolResult, BuildResult, error) {
+	if params.ProjectName == "" {
+		return nil, BuildResult{}, fmt.Errorf("project name must be specified")
 	}
-	if params.Arguments.PackageName == "" {
-		return nil, fmt.Errorf("package name must be specified")
+	if params.PackageName == "" {
+		return nil, BuildResult{}, fmt.Errorf("package name must be specified")
 	}
 
 	args := []string{"build", "--clean", "--trust-all-projects"}
 
-	if params.Arguments.VmType != "" {
-		args = append(args, "--vm-type", params.Arguments.VmType)
+	if params.VmType != "" {
+		args = append(args, "--vm-type", params.VmType)
 	}
-	if params.Arguments.MultibuildPackage != "" {
-		args = append(args, "-M", params.Arguments.MultibuildPackage)
+	if params.MultibuildPackage != "" {
+		args = append(args, "-M", params.MultibuildPackage)
 	}
 
-	dist := params.Arguments.Distribution
-	arch := params.Arguments.Arch
+	dist := params.Distribution
+	arch := params.Arch
 
 	if dist == "" || arch == "" {
-		meta, err := cred.getProjectMetaInternal(ctx, params.Arguments.ProjectName)
+		meta, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get project meta to determine distribution and arch: %w", err)
+			return nil, BuildResult{}, fmt.Errorf("failed to get project meta to determine distribution and arch: %w", err)
 		}
 
 		if dist == "" {
 			if len(meta.Repositories) > 0 {
 				dist = meta.Repositories[0].Name
 			} else {
-				return nil, fmt.Errorf("no distribution specified and could not determine one from project meta")
+				return nil, BuildResult{}, fmt.Errorf("no distribution specified and could not determine one from project meta")
 			}
 		}
 		if arch == "" {
@@ -78,7 +85,7 @@ func (cred *OSCCredentials) Build(ctx context.Context, cc *mcp.ServerSession, pa
 					slog.Info("no architecture specified, using first available architecture", slog.String("arch", arch))
 				}
 			} else {
-				return nil, fmt.Errorf("no architecture specified and could not determine one from project meta")
+				return nil, BuildResult{}, fmt.Errorf("no architecture specified and could not determine one from project meta")
 			}
 		}
 	}
@@ -90,7 +97,7 @@ func (cred *OSCCredentials) Build(ctx context.Context, cc *mcp.ServerSession, pa
 		args = append(args, arch)
 	}
 
-	cmdDir := filepath.Join(cred.TempDir, params.Arguments.ProjectName, params.Arguments.PackageName)
+	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.PackageName)
 	oscCmd := exec.CommandContext(ctx, "osc", args...)
 	oscCmd.Dir = cmdDir
 
@@ -107,45 +114,25 @@ func (cred *OSCCredentials) Build(ctx context.Context, cc *mcp.ServerSession, pa
 		slog.Error("failed to parse build log", "error", err)
 		// Continue without a parsed log
 	}
-	buildKey := fmt.Sprintf("%s/%s:%s:%s", params.Arguments.ProjectName, params.Arguments.PackageName, arch, dist)
+	buildKey := fmt.Sprintf("%s/%s:%s:%s", params.ProjectName, params.PackageName, arch, dist)
 	if cred.BuildLogs == nil {
 		cred.BuildLogs = make(map[string]*buildlog.BuildLog)
 	}
 	cred.BuildLogs[buildKey] = buildLog
 	cred.LastBuildKey = buildKey
 
-	var resultData any
 	if err != nil {
 		slog.Error("failed to run osc build", slog.String("command", oscCmd.String()), slog.String("output", out.String()))
-		resultData = struct {
-			Error     string             `json:"error"`
-			ParsedLog *buildlog.BuildLog `json:"parsed_log"`
-		}{
+		return nil, BuildResult{
 			Error:     err.Error(),
 			ParsedLog: buildLog,
-		}
-	} else {
-		resultData = struct {
-			Success       bool           `json:"success"`
-			PackagesBuilt []string       `json:"packages_built"`
-			RpmLint       map[string]any `json:"lint_report"`
-		}{
-			Success:       true,
-			PackagesBuilt: []string{},       // This needs to be populated
-			RpmLint:       map[string]any{}, // This needs to be populated
-		}
+			Success:   false,
+		}, nil
 	}
 
-	jsonBytes, err := json.MarshalIndent(resultData, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %w", err)
-	}
-
-	return &mcp.CallToolResultFor[any]{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: string(jsonBytes),
-			},
-		},
+	return nil, BuildResult{
+		Success:       true,
+		PackagesBuilt: []string{},       // This needs to be populated
+		RpmLint:       map[string]any{}, // This needs to be populated
 	}, nil
 }
