@@ -46,7 +46,7 @@ func main() {
 	}
 	slog.SetDefault(logger)
 	server := mcp.NewServer(&mcp.Implementation{
-		Name:    "OS software management",
+		Name:    "OSC LLM bridge",
 		Version: "0.0.1"},
 		nil)
 
@@ -87,37 +87,41 @@ func main() {
 	}
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "search_packages",
-		Description: "Search packages on remote instance.",
-	}, obsCred.SearchSrcPkg)
+		Name:        "search_bundle",
+		Description: fmt.Sprintf("Search bundles on remote open build (OBS) instance %s. A bundle is also known as source package. A bundle must be built to create installable packages.", obsCred.Apiaddr),
+	}, obsCred.SearchSrcBundle)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_source_files",
-		Description: "List source files of a remote package.",
+		Description: fmt.Sprintf("List source files of given bundle on %s.", obsCred.Apiaddr),
 	}, obsCred.ListSrcFiles)
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "branch_package",
-		Description: fmt.Sprintf("Branch a package and check it out as local package under the path %s", workDir),
-	}, obsCred.BranchPackage)
+	/*
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "branch_package",
+			Description: fmt.Sprintf("Branch a package and check it out as local package under the path %s", workDir),
+		}, obsCred.BranchPackage)
+	*/
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "build_package",
-		Description: "Build a package.",
+		Description: "Build a source bundle also known as source package.",
 	}, obsCred.Build)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_project_meta",
-		Description: "Get the metadata of a remote project.",
+		Description: "Get the metadata of a project. The metadata defines for which project a source bundle can be built",
 	}, obsCred.GetProjectMeta)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "set_project_meta",
-		Description: "Write project's meta file. Create the project if it doesn't exist.",
+		Description: "Set the metadata for the project. Create the project if it doesn't exist.",
 	}, obsCred.SetProjectMeta)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create_package",
-		Description: "Create a new local package. Will also create a project if it does not exist. Before commit this package can't be checked out.",
+		Description: "Create a new local bundle. Will also create a project if it does not exist. Before commit this package can't be checked out.",
 	}, obsCred.CreatePackage)
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "delete_project",
-		Description: "Deletes a remote project and all the packages of this project.",
-	}, obsCred.DeleteProject)
+	/*
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "delete_project",
+			Description: "Deletes a remote project and all the packages of this project.",
+		}, obsCred.DeleteProject)
+	*/
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_local_packages",
 		Description: fmt.Sprintf("List all local packages which are located under the path %s", workDir),

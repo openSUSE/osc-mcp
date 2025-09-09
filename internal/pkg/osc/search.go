@@ -11,19 +11,19 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type SearchSrcPkgParam struct {
+type SearchSrcBundleParam struct {
 	Name     string   `json:"package_name" jsonschema:"Name of the source package to search"`
 	Projects []string `json:"projects,omitempty" jsonschema:"Optional list of projects to search in"`
 }
 
-type PackageInfo struct {
+type BundleInfo struct {
 	Name        string `json:"name"`
 	Project     string `json:"project"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 }
 
-func (cred OSCCredentials) SearchSrcPkg(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcPkgParam) (*mcp.CallToolResult, []PackageInfo, error) {
+func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, []BundleInfo, error) {
 	if params.Name == "" {
 		return nil, nil, fmt.Errorf("package name to search cannot be empty")
 	}
@@ -69,9 +69,9 @@ func (cred OSCCredentials) SearchSrcPkg(ctx context.Context, req *mcp.CallToolRe
 		return nil, nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var packages []PackageInfo
+	var packages []BundleInfo
 	for _, pkg := range doc.FindElements("//package") {
-		p := PackageInfo{
+		p := BundleInfo{
 			Name:    pkg.SelectAttrValue("name", ""),
 			Project: pkg.SelectAttrValue("project", ""),
 		}
