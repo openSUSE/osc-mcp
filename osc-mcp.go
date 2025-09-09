@@ -25,6 +25,8 @@ func main() {
 	pflag.Bool("print-creds", false, "Just print the retreived credentials and exit")
 	pflag.Bool("clean-workdir", false, "Cleans the workdir before usage")
 	pflag.String("logfile", "", "if set, log to this file instead of stderr")
+	pflag.BoolP("verbose", "v", false, "Enable verbose logging")
+	pflag.BoolP("debug", "d", false, "Enable debug logging")
 
 	pflag.Parse()
 	viper.SetEnvPrefix("OSC_MCP")
@@ -32,6 +34,16 @@ func main() {
 	viper.AutomaticEnv()
 	viper.BindPFlags(pflag.CommandLine)
 
+	logLevel := slog.LevelWarn
+	if viper.GetBool("verbose") {
+		logLevel = slog.LevelInfo
+	}
+	if viper.GetBool("debug") {
+		logLevel = slog.LevelDebug
+	}
+	handlerOpts := &slog.HandlerOptions{
+		Level: logLevel,
+	}
 	var logger *slog.Logger
 	if viper.GetString("logfile") != "" {
 		f, err := os.OpenFile(viper.GetString("logfile"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
@@ -40,9 +52,9 @@ func main() {
 			os.Exit(1)
 		}
 		defer f.Close()
-		logger = slog.New(slog.NewTextHandler(f, nil))
+		logger = slog.New(slog.NewTextHandler(f, handlerOpts))
 	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+		logger = slog.New(slog.NewTextHandler(os.Stderr, handlerOpts))
 	}
 	slog.SetDefault(logger)
 	server := mcp.NewServer(&mcp.Implementation{
