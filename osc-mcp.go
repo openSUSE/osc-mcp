@@ -105,7 +105,7 @@ func main() {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_source_files",
-		Description: fmt.Sprintf("List source files of given bundle on %s.", obsCred.Apiaddr),
+		Description: "List source files of given bundle.",
 	}, obsCred.ListSrcFiles)
 	// /*
 	// 	mcp.AddTool(server, &mcp.Tool{

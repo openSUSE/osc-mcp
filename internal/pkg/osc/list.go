@@ -2,9 +2,14 @@ package osc
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 
 	"github.com/beevik/etree"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -12,7 +17,8 @@ import (
 
 type ListSrcFilesParam struct {
 	ProjectName string `json:"project_name" jsonschema:"Name of the project"`
-	PackageName string `json:"package_name" jsonschema:"Name of the package"`
+	PackageName string `json:"package_name" jsonschema:"Name of the bundle or source package"`
+	Local       bool   `json:"local" jsonschema:"List source files of local bundle"`
 }
 
 type FileInfo struct {
@@ -24,8 +30,9 @@ type FileInfo struct {
 
 type ReturnedInfo struct {
 	ProjectName string     `json:"project_name" jsonschema:"Name of the project"`
-	PackageName string     `json:"package_name" jsonschema:"Name of the package"`
+	PackageName string     `json:"package_name" jsonschema:"Name of the bundle or source package"`
 	Files       []FileInfo `json:"files" jsonschema:"List of files"`
+	Local       bool       `json:"local" jsonschema:"Is local package"`
 }
 
 func IgnoredDirs() []string {
@@ -38,6 +45,64 @@ func (cred OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRe
 	}
 	if params.PackageName == "" {
 		return nil, nil, fmt.Errorf("package name cannot be empty")
+	}
+
+	if params.Local {
+		packagePath := filepath.Join(cred.TempDir, params.ProjectName, params.PackageName)
+		entries, err := os.ReadDir(packagePath)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to read local package directory %s: %w", packagePath, err)
+		}
+
+		var files []FileInfo
+		ignored := IgnoredDirs()
+
+		for _, entry := range entries {
+			isIgnored := false
+			for _, ignoredDir := range ignored {
+				if entry.Name() == ignoredDir {
+					isIgnored = true
+					break
+				}
+			}
+			if isIgnored || entry.IsDir() {
+				continue
+			}
+
+			filePath := filepath.Join(packagePath, entry.Name())
+			info, err := entry.Info()
+			if err != nil {
+				continue
+			}
+
+			file, err := os.Open(filePath)
+			if err != nil {
+				continue
+			}
+
+			hash := md5.New()
+			_, err = io.Copy(hash, file)
+			file.Close()
+			if err != nil {
+				continue
+			}
+			md5sum := hex.EncodeToString(hash.Sum(nil))
+
+			f := FileInfo{
+				Name:  entry.Name(),
+				Size:  fmt.Sprintf("%d", info.Size()),
+				MD5:   md5sum,
+				MTime: fmt.Sprintf("%d", info.ModTime().Unix()),
+			}
+			files = append(files, f)
+		}
+
+		return nil, ReturnedInfo{
+			ProjectName: params.ProjectName,
+			PackageName: params.PackageName,
+			Files:       files,
+			Local:       true,
+		}, nil
 	}
 
 	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, params.ProjectName, params.PackageName))
@@ -84,6 +149,7 @@ func (cred OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRe
 		ProjectName: params.ProjectName,
 		PackageName: params.PackageName,
 		Files:       files,
+		Local:       false,
 	}, nil
 }
 
