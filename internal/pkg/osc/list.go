@@ -25,11 +25,17 @@ type FileInfo struct {
 	MTime string `json:"mtime"`
 }
 
+type ReturnedInfo struct {
+	ProjectName string     `json:"project_name" jsonschema:"Name of the project"`
+	PackageName string     `json:"package_name" jsonschema:"Name of the package"`
+	Files       []FileInfo `json:"files" jsonschema:"List of files"`
+}
+
 func IgnoredDirs() []string {
 	return []string{".osc", ".git"}
 }
 
-func (cred OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRequest, params ListSrcFilesParam) (*mcp.CallToolResult, []FileInfo, error) {
+func (cred OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRequest, params ListSrcFilesParam) (*mcp.CallToolResult, any, error) {
 	if params.ProjectName == "" {
 		return nil, nil, fmt.Errorf("project name cannot be empty")
 	}
@@ -77,7 +83,11 @@ func (cred OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRe
 		files = append(files, f)
 	}
 
-	return nil, files, nil
+	return nil, ReturnedInfo{
+		ProjectName: params.ProjectName,
+		PackageName: params.PackageName,
+		Files:       files,
+	}, nil
 }
 
 type ListLocalParams struct {
@@ -90,7 +100,7 @@ type LocalPackage struct {
 	Path        string `json:"path"`
 }
 
-func (cred OSCCredentials) ListLocalPackages(ctx context.Context, req *mcp.CallToolRequest, params ListLocalParams) (*mcp.CallToolResult, []LocalPackage, error) {
+func (cred OSCCredentials) ListLocalPackages(ctx context.Context, req *mcp.CallToolRequest, params ListLocalParams) (*mcp.CallToolResult, any, error) {
 	packages := []LocalPackage{}
 	projectDirs, err := os.ReadDir(cred.TempDir)
 	if err != nil {

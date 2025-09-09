@@ -30,7 +30,7 @@ type BuildResult struct {
 	ParsedLog     *buildlog.BuildLog `json:"parsed_log,omitempty"`
 }
 
-func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest, params BuildParam) (*mcp.CallToolResult, BuildResult, error) {
+func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest, params BuildParam) (*mcp.CallToolResult, any, error) {
 	if params.ProjectName == "" {
 		return nil, BuildResult{}, fmt.Errorf("project name must be specified")
 	}

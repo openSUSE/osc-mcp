@@ -23,7 +23,11 @@ type BundleInfo struct {
 	Description string `json:"description"`
 }
 
-func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, []BundleInfo, error) {
+type BundleOut struct {
+	Result []BundleInfo `json:"result" jsonschema:"List of found bundles."`
+}
+
+func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, any, error) {
 	if params.Name == "" {
 		return nil, nil, fmt.Errorf("package name to search cannot be empty")
 	}
@@ -84,5 +88,7 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 		packages = append(packages, p)
 	}
 
-	return nil, packages, nil
+	return nil, BundleOut{
+		Result: packages,
+	}, nil
 }

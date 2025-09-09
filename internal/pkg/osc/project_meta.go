@@ -124,16 +124,12 @@ type SetProjectMetaParam struct {
 	Repositories []Repository `json:"repositories" jsonschema:"List of repositories for the project."`
 }
 
-type SetProjectMetaResult struct {
-	Message string `json:"message"`
-}
-
-func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params SetProjectMetaParam) (*mcp.CallToolResult, SetProjectMetaResult, error) {
+func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params SetProjectMetaParam) (*mcp.CallToolResult, *ProjectMeta, error) {
 	if params.ProjectName == "" {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("project name cannot be empty")
+		return nil, nil, fmt.Errorf("project name cannot be empty")
 	}
 	if len(params.Repositories) == 0 {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("at least one repository must be provided")
+		return nil, nil, fmt.Errorf("at least one repository must be provided")
 	}
 
 	doc := etree.NewDocument()
@@ -172,12 +168,12 @@ func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToo
 	doc.Indent(2)
 	metaString, err := doc.WriteToString()
 	if err != nil {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to generate XML: %w", err)
+		return nil, nil, fmt.Errorf("failed to generate XML: %w", err)
 	}
 
 	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, params.ProjectName))
 	if err != nil {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to parse API URL: %w", err)
+		return nil, nil, fmt.Errorf("failed to parse API URL: %w", err)
 	}
 
 	if params.Comment != "" {
@@ -188,7 +184,7 @@ func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToo
 
 	httpReq, err := http.NewRequestWithContext(ctx, "PUT", apiURL.String(), strings.NewReader(metaString))
 	if err != nil {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to create request: %w", err)
+		return nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
@@ -198,18 +194,18 @@ func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToo
 	client := &http.Client{}
 	resp, err := client.Do(httpReq)
 	if err != nil {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to execute request: %w", err)
+		return nil, nil, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("failed to read response body: %w", err)
+		return nil, nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, SetProjectMetaResult{}, fmt.Errorf("api request failed with status: %s\nbody:\n%s", resp.Status, string(body))
+		return nil, nil, fmt.Errorf("api request failed with status: %s\nbody:\n%s", resp.Status, string(body))
 	}
-
-	return nil, SetProjectMetaResult{Message: string(body)}, nil
+	res, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
+	return nil, res, err
 }

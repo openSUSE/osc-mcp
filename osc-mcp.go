@@ -90,16 +90,17 @@ func main() {
 		Name:        "search_bundle",
 		Description: fmt.Sprintf("Search bundles on remote open build (OBS) instance %s. A bundle is also known as source package. A bundle must be built to create installable packages.", obsCred.Apiaddr),
 	}, obsCred.SearchSrcBundle)
+
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_source_files",
 		Description: fmt.Sprintf("List source files of given bundle on %s.", obsCred.Apiaddr),
 	}, obsCred.ListSrcFiles)
-	/*
-		mcp.AddTool(server, &mcp.Tool{
-			Name:        "branch_package",
-			Description: fmt.Sprintf("Branch a package and check it out as local package under the path %s", workDir),
-		}, obsCred.BranchPackage)
-	*/
+	// /*
+	// 	mcp.AddTool(server, &mcp.Tool{
+	// 		Name:        "branch_package",
+	// 		Description: fmt.Sprintf("Branch a package and check it out as local package under the path %s", workDir),
+	// 	}, obsCred.BranchPackage)
+	// */
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "build_package",
 		Description: "Build a source bundle also known as source package.",
@@ -116,16 +117,16 @@ func main() {
 		Name:        "create_package",
 		Description: "Create a new local bundle. Will also create a project if it does not exist. Before commit this package can't be checked out.",
 	}, obsCred.CreatePackage)
-	/*
-		mcp.AddTool(server, &mcp.Tool{
-			Name:        "delete_project",
-			Description: "Deletes a remote project and all the packages of this project.",
-		}, obsCred.DeleteProject)
-	*/
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "list_local_packages",
-		Description: fmt.Sprintf("List all local packages which are located under the path %s", workDir),
-	}, obsCred.ListLocalPackages)
+	// /*
+	// 	mcp.AddTool(server, &mcp.Tool{
+	// 		Name:        "delete_project",
+	// 		Description: "Deletes a remote project and all the packages of this project.",
+	// 	}, obsCred.DeleteProject)
+	// */
+	// mcp.AddTool(server, &mcp.Tool{
+	// 	Name:        "list_local_packages",
+	// 	Description: fmt.Sprintf("List all local packages which are located under the path %s", workDir),
+	// }, obsCred.ListLocalPackages)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "checkout_package",
 		Description: fmt.Sprintf("Checkout a package from the online repostory. After this step the package is available as local package under %s", workDir),
