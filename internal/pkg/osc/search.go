@@ -3,8 +3,11 @@ package osc
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/beevik/etree"
@@ -12,7 +15,7 @@ import (
 )
 
 type SearchSrcBundleParam struct {
-	Name     string   `json:"package_name" jsonschema:"Name of the source package to search"`
+	Name     string   `json:"package_name,omitempty" jsonschema:"Name of the source package to search"`
 	Projects []string `json:"projects,omitempty" jsonschema:"Optional list of projects to search in"`
 }
 
@@ -27,19 +30,55 @@ type BundleOut struct {
 	Result []BundleInfo `json:"result" jsonschema:"List of found bundles."`
 }
 
+func listLocalPackages(path string, packageName string) ([]BundleInfo, error) {
+	var bundles []BundleInfo
+	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() && strings.HasSuffix(path, "/.osc") {
+			prjDir := filepath.Dir(path)
+			prjName := filepath.Base(prjDir)
+			if packageName != "" && prjName != packageName {
+				return nil
+			}
+			bundles = append(bundles, BundleInfo{Project: prjDir, Name: prjName})
+			return filepath.SkipDir
+		}
+		return nil
+	})
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+	return bundles, nil
+}
+
 func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, any, error) {
-	if params.Name == "" {
-		return nil, nil, fmt.Errorf("package name to search cannot be empty")
+	isLocal := false
+	if len(params.Projects) == 1 && strings.EqualFold("local", strings.ToLower(params.Projects[0])) || (len(params.Projects) == 0 && params.Name == "") {
+		isLocal = true
+	}
+	if isLocal {
+		var bundles []BundleInfo
+		bundles, err := listLocalPackages(cred.TempDir, params.Name)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to list local packages in '%s': %w", cred.TempDir, err)
+		}
+		return nil, BundleOut{Result: bundles}, nil
 	}
 
-	match := fmt.Sprintf("@name='%s'", params.Name)
+	var matches []string
+	if params.Name != "" {
+		matches = append(matches, fmt.Sprintf("@name='%s'", params.Name))
+	}
 	if len(params.Projects) > 0 {
 		var projectMatches []string
 		for _, p := range params.Projects {
 			projectMatches = append(projectMatches, fmt.Sprintf("@project='%s'", p))
 		}
-		match = fmt.Sprintf("%s and (%s)", match, strings.Join(projectMatches, " or "))
+		matches = append(matches, fmt.Sprintf("(%s)", strings.Join(projectMatches, " or ")))
 	}
+	match := strings.Join(matches, " and ")
 
 	apiURL, err := url.Parse(fmt.Sprintf("https://%s/search/package", cred.Apiaddr))
 	if err != nil {

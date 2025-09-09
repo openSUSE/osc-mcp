@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
-	"slices"
 
 	"github.com/beevik/etree"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -98,41 +95,4 @@ type LocalPackage struct {
 	PackageName string `json:"package_name"`
 	ProjectName string `json:"project_name"`
 	Path        string `json:"path"`
-}
-
-func (cred OSCCredentials) ListLocalPackages(ctx context.Context, req *mcp.CallToolRequest, params ListLocalParams) (*mcp.CallToolResult, any, error) {
-	packages := []LocalPackage{}
-	projectDirs, err := os.ReadDir(cred.TempDir)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to read temp directory %s: %w", cred.TempDir, err)
-	}
-
-	for _, projectDir := range projectDirs {
-		if !projectDir.IsDir() {
-			continue
-		}
-		if slices.Contains(IgnoredDirs(), projectDir.Name()) {
-			continue
-		}
-		projectPath := filepath.Join(cred.TempDir, projectDir.Name())
-		packageDirs, err := os.ReadDir(projectPath)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to read project directory %s: %w", projectPath, err)
-		}
-		for _, packageDir := range packageDirs {
-			if !packageDir.IsDir() {
-				continue
-			}
-			if slices.Contains(IgnoredDirs(), packageDir.Name()) {
-				continue
-			}
-			packages = append(packages, LocalPackage{
-				PackageName: projectDir.Name(),
-				ProjectName: packageDir.Name(),
-				Path:        packageDir.Name(),
-			})
-		}
-	}
-
-	return nil, packages, nil
 }

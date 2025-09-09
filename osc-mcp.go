@@ -100,7 +100,7 @@ func main() {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_bundle",
-		Description: fmt.Sprintf("Search bundles on remote open build (OBS) instance %s. A bundle is also known as source package. A bundle must be built to create installable packages.", obsCred.Apiaddr),
+		Description: fmt.Sprintf("Search bundles on remote open build (OBS) instance %s or local bundles. A bundle is also known as source package. Use the prohect name 'local' to list local packages. If project and bundle name is empty local packages will be listed. A bundle must be built to create installable packages.", obsCred.Apiaddr),
 	}, obsCred.SearchSrcBundle)
 
 	mcp.AddTool(server, &mcp.Tool{
@@ -135,10 +135,6 @@ func main() {
 	// 		Description: "Deletes a remote project and all the packages of this project.",
 	// 	}, obsCred.DeleteProject)
 	// */
-	// mcp.AddTool(server, &mcp.Tool{
-	// 	Name:        "list_local_packages",
-	// 	Description: fmt.Sprintf("List all local packages which are located under the path %s", workDir),
-	// }, obsCred.ListLocalPackages)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "checkout_package",
 		Description: fmt.Sprintf("Checkout a package from the online repostory. After this step the package is available as local package under %s", workDir),
