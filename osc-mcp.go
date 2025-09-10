@@ -154,8 +154,7 @@ func main() {
 		slog.Info("MCP handler listening at", slog.String("address", viper.GetString("http")))
 		http.ListenAndServe(viper.GetString("http"), handler)
 	} else {
-		t := mcp.NewLoggingTransport(mcp.NewStdioTransport(), os.Stdout)
-		if err := server.Run(context.Background(), t); err != nil {
+		if err := server.Run(context.Background(), &mcp.SSEServerTransport{}); err != nil {
 			slog.Error("Server failed", slog.Any("error", err))
 		}
 	}
