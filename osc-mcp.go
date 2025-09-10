@@ -105,7 +105,7 @@ func main() {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_source_files",
-		Description: "List source files of given bundle.",
+		Description: "List source files of given bundle in local or remote location. Also retunrs basic infomration of the files and if they are modified locally. The content of small files is returned and also the content of all relevant control files which are files with .spec and .kiwi suffix. Prefer this tool read command file bedore checking them out. If a file name is given only the requested file is shown, regardless it's size.",
 	}, obsCred.ListSrcFiles)
 	// /*
 	// 	mcp.AddTool(server, &mcp.Tool{
