@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -38,13 +39,22 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 		return nil, BuildResult{}, fmt.Errorf("package name must be specified")
 	}
 
-	args := []string{"build", "--clean", "--trust-all-projects"}
+	cmdline := []string{"osc"}
+	configFile, err := cred.writeTempOscConfig()
+	if err != nil {
+		slog.Warn("failed to write osc config", "error", err)
+	} else {
+		defer os.Remove(configFile)
+		cmdline = append(cmdline, "--config", configFile)
+	}
+
+	cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
 
 	if params.VmType != "" {
-		args = append(args, "--vm-type", params.VmType)
+		cmdline = append(cmdline, "--vm-type", params.VmType)
 	}
 	if params.MultibuildPackage != "" {
-		args = append(args, "-M", params.MultibuildPackage)
+		cmdline = append(cmdline, "-M", params.MultibuildPackage)
 	}
 
 	dist := params.Distribution
@@ -91,14 +101,14 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	}
 
 	if dist != "" {
-		args = append(args, dist)
+		cmdline = append(cmdline, dist)
 	}
 	if arch != "" {
-		args = append(args, arch)
+		cmdline = append(cmdline, arch)
 	}
 
 	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.PackageName)
-	oscCmd := exec.CommandContext(ctx, "osc", args...)
+	oscCmd := exec.CommandContext(ctx, cmdline[0], cmdline[1:]...)
 	oscCmd.Dir = cmdDir
 
 	var out bytes.Buffer
@@ -107,7 +117,7 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 
 	slog.Info("executing osc build", slog.String("command", oscCmd.String()), slog.String("dir", cmdDir))
 
-	err := oscCmd.Run()
+	err = oscCmd.Run()
 
 	buildLog := buildlog.Parse(out.String())
 	if err != nil {

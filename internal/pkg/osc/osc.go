@@ -2,13 +2,15 @@ package osc
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/godbus/dbus/v5"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 	"github.com/openSUSE/osc-mcp/internal/pkg/config"
 	keyring "github.com/ppacher/go-dbus-keyring"
@@ -195,4 +197,35 @@ Check remote log first for build failues, only built a package after it was modi
 `}},
 		},
 	}, nil
+}
+
+var ErrNoUserOrPassword = errors.New("bundle or project not found")
+
+// writeTempOscConfig creates a temporary osc configuration file with credentials
+// and returns the path to the file. It's the caller's responsibility to remove the file.
+func (cred *OSCCredentials) writeTempOscConfig() (string, error) {
+	if cred.Name == "" || cred.Passwd == "" {
+		// No credentials, so no config file needed.
+		// The command will use the default config.
+		return "", ErrNoUserOrPassword
+	}
+
+	configFile, err := os.CreateTemp(cred.TempDir, "osc-config-")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temporary config file: %w", err)
+	}
+
+	configContent := fmt.Sprintf("[general]\napi=https://%s\n[https://%s]\nuser=%s\npass=%s\n", cred.Apiaddr, cred.Apiaddr, cred.Name, cred.Passwd)
+	slog.Debug("configuration file content", "content", configContent)
+	if _, err := configFile.WriteString(configContent); err != nil {
+		configFile.Close() // Close the file before removing it.
+		os.Remove(configFile.Name())
+		return "", fmt.Errorf("failed to write to temporary config file: %w", err)
+	}
+	if err := configFile.Close(); err != nil {
+		os.Remove(configFile.Name())
+		return "", fmt.Errorf("failed to close temporary config file: %w", err)
+	}
+	slog.Warn("temporary configuration with credentials written", "path", configFile.Name())
+	return configFile.Name(), nil
 }

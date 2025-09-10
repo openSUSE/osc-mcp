@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
 	"path"
 
@@ -27,7 +28,17 @@ func (cred *OSCCredentials) CheckoutPackage(ctx context.Context, req *mcp.CallTo
 		return nil, CheckoutPackageResult{}, fmt.Errorf("project and package must be specified")
 	}
 
-	oscCmd := exec.CommandContext(ctx, "osc", "checkout", params.Project, params.Package)
+	cmdline := []string{"osc"}
+	configFile, err := cred.writeTempOscConfig()
+	if err != nil {
+		slog.Warn("failed to write osc config", "error", err)
+	} else {
+		defer os.Remove(configFile)
+		cmdline = append(cmdline, "--config", configFile)
+	}
+	cmdline = append(cmdline, "checkout", params.Project, params.Package)
+	slog.Debug("running osc command", "command", cmdline)
+	oscCmd := exec.CommandContext(ctx, cmdline[0], cmdline[1:]...)
 	oscCmd.Dir = cred.TempDir
 	var out bytes.Buffer
 	oscCmd.Stdout = &out
