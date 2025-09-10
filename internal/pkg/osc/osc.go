@@ -215,7 +215,7 @@ func (cred *OSCCredentials) writeTempOscConfig() (string, error) {
 		return "", fmt.Errorf("failed to create temporary config file: %w", err)
 	}
 
-	configContent := fmt.Sprintf("[general]\napi=https://%s\n[https://%s]\nuser=%s\npass=%s\n", cred.Apiaddr, cred.Apiaddr, cred.Name, cred.Passwd)
+	configContent := fmt.Sprintf("[general]\napi=https://%s\nuser=%s\n[https://%s]\nuser=%s\npass=%s\n", cred.Apiaddr, cred.Name, cred.Apiaddr, cred.Name, cred.Passwd)
 	slog.Debug("configuration file content", "content", configContent)
 	if _, err := configFile.WriteString(configContent); err != nil {
 		configFile.Close() // Close the file before removing it.
