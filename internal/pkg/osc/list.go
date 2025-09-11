@@ -65,10 +65,6 @@ type ReturnedInfoLocal struct {
 	Files     []FileInfoLocal `json:"files" jsonschema:"List of files"`
 }
 
-func IgnoredDirs() []string {
-	return []string{".osc", ".git"}
-}
-
 func (cred OSCCredentials) getRemoteList(ctx context.Context, projectName string, packageName string) ([]FileInfo, error) {
 	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, projectName, packageName))
 	if err != nil {

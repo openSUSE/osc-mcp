@@ -17,6 +17,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+func IgnoredDirs() []string {
+	return []string{".osc", ".git", ".cache"}
+}
+
 type OSCCredentials struct {
 	Name         string
 	Passwd       string

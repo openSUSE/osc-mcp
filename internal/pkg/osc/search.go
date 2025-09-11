@@ -1,13 +1,18 @@
 package osc
 
 import (
+	"bufio"
+	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/beevik/etree"
@@ -130,4 +135,181 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 	return nil, BundleOut{
 		Result: packages,
 	}, nil
+}
+
+type SearchPackagesParams struct {
+	Path            string `json:"path"`
+	Path_repository string `json:"path_repository"`
+	Arch            string `json:"arch,omitempty"`
+	Pattern         string `json:"pattern" jsonschema:"package name to serach for, matches any package for which pattern is substring."`
+	ExactMatch      bool   `json:"exact,omitempty" jsonschema:"treat pattern as exact match"`
+	Regexp          bool   `json:"regexp,omitempty" jsonschema:"treat pattern as regexp"`
+}
+
+type SearchPackagesResult struct {
+	Packages []rpm_pack `json:"packages"`
+}
+
+type rpm_pack struct {
+	Name    string
+	Arch    string
+	Version string
+}
+
+// parseRPMFileName extracts the package name from an RPM filename.
+// e.g. "pkg-name-1.2.3-1.x86_64.rpm" -> "rpm_pack {Name: pkg-name, Version 1.2.3-1, Arch: x86_64}"
+func parseRPMFileName(filename string) rpm_pack {
+	if !strings.HasSuffix(filename, ".rpm") {
+		return rpm_pack{}
+	}
+	s := filename[:len(filename)-4]
+
+	lastDot := strings.LastIndex(s, ".")
+	if lastDot == -1 {
+		return rpm_pack{}
+	}
+	arch := s[lastDot+1:]
+	s = s[:lastDot] // <name>-<version>-<release>
+
+	// From <name>-<version>-<release> string, remove release
+	lastDash := strings.LastIndex(s, "-")
+	if lastDash == -1 {
+		return rpm_pack{Name: s, Arch: arch}
+	}
+	release := s[lastDash+1:]
+	s = s[:lastDash] // <name>-<version>
+
+	// Now from <name>-<version> string, find the split between name and version.
+	// We iterate backwards from the end of the string, looking for a dash followed by a digit.
+	i := strings.LastIndex(s, "-")
+	for i != -1 {
+		if i+1 < len(s) && s[i+1] >= '0' && s[i+1] <= '9' {
+			// This is the separator
+			name := s[:i]
+			version := s[i+1:]
+			return rpm_pack{Name: name, Arch: arch, Version: version + "-" + release}
+		}
+		i = strings.LastIndex(s[:i], "-")
+	}
+
+	// No version found in s, so s is the name.
+	return rpm_pack{Name: s, Arch: arch, Version: "-" + release}
+}
+
+func (cred OSCCredentials) SearchPackages(ctx context.Context, req *mcp.CallToolRequest, params SearchPackagesParams) (*mcp.CallToolResult, any, error) {
+	if params.ExactMatch && params.Regexp {
+		return nil, nil, fmt.Errorf("pattern can't be matched exactly and as a regexp at the same time")
+	}
+	if !strings.HasPrefix(cred.Apiaddr, "api.") {
+		return nil, nil, fmt.Errorf("unexpected api address format: %s", cred.Apiaddr)
+	}
+	apiaddr := "download." + strings.TrimPrefix(cred.Apiaddr, "api.")
+
+	repoPath := "/repositories/" + strings.ReplaceAll(params.Path, ":", ":/")
+	if params.Path_repository != "" {
+		repoPath = repoPath + "/" + params.Path_repository
+	}
+
+	downloadURL, err := url.Parse(fmt.Sprintf("https://%s%s/INDEX.gz", apiaddr, repoPath))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse download URL: %w", err)
+	}
+
+	cacheDir := filepath.Join(cred.TempDir, ".cache")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		return nil, nil, fmt.Errorf("failed to create cache directory: %w", err)
+	}
+
+	cacheKey := strings.ReplaceAll(downloadURL.Path, "/", "_")
+	cacheFile := filepath.Join(cacheDir, cacheKey)
+
+	if _, err := os.Stat(cacheFile); os.IsNotExist(err) {
+		httpReq, err := http.NewRequestWithContext(ctx, "GET", downloadURL.String(), nil)
+		slog.Debug("downloading", "url", downloadURL.String())
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create request: %w", err)
+		}
+
+		client := &http.Client{}
+		resp, err := client.Do(httpReq)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to execute request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, nil, fmt.Errorf("download failed with status: %s", resp.Status)
+		}
+
+		f, err := os.Create(cacheFile)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create cache file: %w", err)
+		}
+		if _, err := io.Copy(f, resp.Body); err != nil {
+			f.Close()
+			return nil, nil, fmt.Errorf("failed to write to cache file: %w", err)
+		}
+		f.Close()
+	}
+
+	f, err := os.Open(cacheFile)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open cache file: %w", err)
+	}
+	defer f.Close()
+
+	gz, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	defer gz.Close()
+
+	var re *regexp.Regexp
+	if params.Regexp {
+		re, err = regexp.Compile(params.Pattern)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid regexp pattern: %w", err)
+		}
+	}
+
+	result := SearchPackagesResult{}
+	scanner := bufio.NewScanner(gz)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.HasSuffix(line, ".rpm") {
+			continue
+		}
+		rpmFile := filepath.Base(line)
+
+		actualPackage := parseRPMFileName(rpmFile)
+		if actualPackage.Name == "" {
+			continue
+		}
+
+		match := false
+		if params.Pattern == "" {
+			match = true
+		} else if params.Regexp {
+			if re.MatchString(actualPackage.Name) {
+				match = true
+			}
+		} else if params.ExactMatch {
+			if actualPackage.Name == params.Pattern {
+				match = true
+			}
+		} else {
+			if strings.Contains(actualPackage.Name, params.Pattern) {
+				match = true
+			}
+		}
+
+		if match {
+			result.Packages = append(result.Packages, actualPackage)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, nil, fmt.Errorf("error reading gzipped index: %w", err)
+	}
+	return nil, result, nil
 }

@@ -141,6 +141,10 @@ func main() {
 		Name:        "get_build_log",
 		Description: "Get the remote or local build log of a package.",
 	}, obsCred.BuildLog)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "search_packages",
+		Description: "Serach the available packages for a remote repository. This are the allreadu built packages and are required by bundles or source packages for building.",
+	}, obsCred.SearchPackages)
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "basic_information",
 		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",
