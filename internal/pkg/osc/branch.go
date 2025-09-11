@@ -22,7 +22,7 @@ type BranchResult struct {
 	CheckoutDir   string `json:"checkout_dir"`
 }
 
-func (cred OSCCredentials) BranchPackage(ctx context.Context, req *mcp.CallToolRequest, params BranchPackageParam) (*mcp.CallToolResult, BranchResult, error) {
+func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRequest, params BranchPackageParam) (*mcp.CallToolResult, BranchResult, error) {
 	if params.Project == "" {
 		return nil, BranchResult{}, fmt.Errorf("project name cannot be empty")
 	}

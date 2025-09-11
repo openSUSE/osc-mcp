@@ -87,49 +87,49 @@ func (cred OSCCredentials) createProject(ctx context.Context, projectName string
 	return nil
 }
 
-type CreatePackageParam struct {
+type CreateBundleParam struct {
 	PackageName string `json:"package_name" jsonschema:"The name of the package to create."`
 }
 
-type CreatePackageResult struct {
+type CreateBundleResult struct {
 	Project string `json:"project"`
 	Package string `json:"package"`
 	Path    string `json:"path"`
 }
 
-func (cred OSCCredentials) CreatePackage(ctx context.Context, req *mcp.CallToolRequest, params CreatePackageParam) (*mcp.CallToolResult, CreatePackageResult, error) {
+func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRequest, params CreateBundleParam) (*mcp.CallToolResult, CreateBundleResult, error) {
 	if params.PackageName == "" {
-		return nil, CreatePackageResult{}, fmt.Errorf("package name cannot be empty")
+		return nil, CreateBundleResult{}, fmt.Errorf("package name cannot be empty")
 	}
 
 	projectName := fmt.Sprintf("home:%s:osc-mpc:%s", cred.Name, cred.SessionId)
 
 	meta, err := cred.getProjectMetaInternal(ctx, projectName)
 	if err != nil {
-		return nil, CreatePackageResult{}, fmt.Errorf("failed to check if project exists: %w", err)
+		return nil, CreateBundleResult{}, fmt.Errorf("failed to check if project exists: %w", err)
 	}
 	if !meta.Exists {
 		var defaults DefaultRepositories
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return nil, CreatePackageResult{}, fmt.Errorf("could not get user home directory: %w", err)
+			return nil, CreateBundleResult{}, fmt.Errorf("could not get user home directory: %w", err)
 		}
 		configPath := filepath.Join(home, ".config", "osc-mcp", "defaults.yaml")
 		if _, err := os.Stat(configPath); os.IsNotExist(err) {
 			configPath = "defaults.yaml"
 			if _, err := os.Stat(configPath); os.IsNotExist(err) {
-				return nil, CreatePackageResult{}, fmt.Errorf("defaults.yaml not found in ~/.config/osc-mcp/ or current directory")
+				return nil, CreateBundleResult{}, fmt.Errorf("defaults.yaml not found in ~/.config/osc-mcp/ or current directory")
 			}
 		}
 
 		yamlFile, err := os.ReadFile(configPath)
 		if err != nil {
-			return nil, CreatePackageResult{}, fmt.Errorf("failed to read defaults.yaml: %w", err)
+			return nil, CreateBundleResult{}, fmt.Errorf("failed to read defaults.yaml: %w", err)
 		}
 
 		err = yaml.Unmarshal(yamlFile, &defaults)
 		if err != nil {
-			return nil, CreatePackageResult{}, fmt.Errorf("failed to unmarshal defaults.yaml: %w", err)
+			return nil, CreateBundleResult{}, fmt.Errorf("failed to unmarshal defaults.yaml: %w", err)
 		}
 
 		err = cred.createProject(ctx, projectName,
@@ -138,7 +138,7 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, req *mcp.CallToolR
 			defaults.Repositories,
 		)
 		if err != nil {
-			return nil, CreatePackageResult{}, fmt.Errorf("failed to create project: %w", err)
+			return nil, CreateBundleResult{}, fmt.Errorf("failed to create project: %w", err)
 		}
 	}
 
@@ -146,7 +146,7 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, req *mcp.CallToolR
 	cmd.Dir = cred.TempDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, CreatePackageResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+		return nil, CreateBundleResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
 
 	projectDir := filepath.Join(cred.TempDir, projectName)
@@ -155,10 +155,10 @@ func (cred OSCCredentials) CreatePackage(ctx context.Context, req *mcp.CallToolR
 	cmd.Dir = projectDir
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		return nil, CreatePackageResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+		return nil, CreateBundleResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
 
-	return nil, CreatePackageResult{
+	return nil, CreateBundleResult{
 		Project: projectName,
 		Package: params.PackageName,
 		Path:    filepath.Join(projectDir, params.PackageName),

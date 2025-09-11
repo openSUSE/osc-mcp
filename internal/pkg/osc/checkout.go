@@ -23,7 +23,7 @@ type CheckoutPackageResult struct {
 	ProjectName string `json:"project_name"`
 }
 
-func (cred *OSCCredentials) CheckoutPackage(ctx context.Context, req *mcp.CallToolRequest, params CheckoutPackageCmd) (*mcp.CallToolResult, CheckoutPackageResult, error) {
+func (cred *OSCCredentials) CheckoutBundle(ctx context.Context, req *mcp.CallToolRequest, params CheckoutPackageCmd) (*mcp.CallToolResult, CheckoutPackageResult, error) {
 	if params.Project == "" || params.Package == "" {
 		return nil, CheckoutPackageResult{}, fmt.Errorf("project and package must be specified")
 	}

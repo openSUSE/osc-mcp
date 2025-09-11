@@ -107,14 +107,12 @@ func main() {
 		Name:        "list_source_files",
 		Description: "List source files of given bundle in local or remote location. Also retunrs basic infomration of the files and if they are modified locally. The content of small files is returned and also the content of all relevant control files which are files with .spec and .kiwi suffix. Prefer this tool read command file bedore checking them out. If a file name is given only the requested file is shown, regardless it's size.",
 	}, obsCred.ListSrcFiles)
-	// /*
-	// 	mcp.AddTool(server, &mcp.Tool{
-	// 		Name:        "branch_package",
-	// 		Description: fmt.Sprintf("Branch a package and check it out as local package under the path %s", workDir),
-	// 	}, obsCred.BranchPackage)
-	// */
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "build_package",
+		Name:        "branch_bundle",
+		Description: fmt.Sprintf("Branch a bundle and check it out as local bundle under the path %s", workDir),
+	}, obsCred.BranchBundle)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "build_bundle",
 		Description: "Build a source bundle also known as source package.",
 	}, obsCred.Build)
 	mcp.AddTool(server, &mcp.Tool{
@@ -126,9 +124,9 @@ func main() {
 		Description: "Set the metadata for the project. Create the project if it doesn't exist.",
 	}, obsCred.SetProjectMeta)
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "create_package",
+		Name:        "create_bundle",
 		Description: "Create a new local bundle. Will also create a project if it does not exist. Before commit this package can't be checked out.",
-	}, obsCred.CreatePackage)
+	}, obsCred.CreateBundle)
 	// /*
 	// 	mcp.AddTool(server, &mcp.Tool{
 	// 		Name:        "delete_project",
@@ -136,9 +134,9 @@ func main() {
 	// 	}, obsCred.DeleteProject)
 	// */
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "checkout_package",
+		Name:        "checkout_bundle",
 		Description: fmt.Sprintf("Checkout a package from the online repostory. After this step the package is available as local package under %s", workDir),
-	}, obsCred.CheckoutPackage)
+	}, obsCred.CheckoutBundle)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_build_log",
 		Description: "Get the remote or local build log of a package.",
