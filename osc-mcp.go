@@ -145,6 +145,10 @@ func main() {
 		Name:        "search_packages",
 		Description: "Serach the available packages for a remote repository. This are the allreadu built packages and are required by bundles or source packages for building.",
 	}, obsCred.SearchPackages)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "commit",
+		Description: "Commits changed files. If a .spec file is staged, the corresponding .changes file will be updated.",
+	}, obsCred.Commit)
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "basic_information",
 		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",

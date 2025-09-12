@@ -9,7 +9,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -65,24 +64,11 @@ type ReturnedInfoLocal struct {
 	Files     []FileInfoLocal `json:"files" jsonschema:"List of files"`
 }
 
-func (cred OSCCredentials) getRemoteList(ctx context.Context, projectName string, packageName string) ([]FileInfo, error) {
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, projectName, packageName))
+func (cred *OSCCredentials) getRemoteList(ctx context.Context, projectName string, packageName string) ([]FileInfo, error) {
+	path := fmt.Sprintf("source/%s/%s", projectName, packageName)
+	resp, err := cred.apiGetRequest(ctx, path, map[string]string{"Accept": "application/xml; charset=utf-8"})
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse API URL: %w", err)
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
-	httpReq.Header.Set("Accept", "application/xml; charset=utf-8")
-
-	client := &http.Client{}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, fmt.Errorf("failed to get remote file list: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -111,23 +97,11 @@ func (cred OSCCredentials) getRemoteList(ctx context.Context, projectName string
 	return files, nil
 }
 
-func (cred OSCCredentials) getRemoteFileContent(ctx context.Context, projectName, packageName, fileName string) ([]byte, error) {
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s/%s", cred.Apiaddr, projectName, packageName, fileName))
+func (cred *OSCCredentials) getRemoteFileContent(ctx context.Context, projectName, packageName, fileName string) ([]byte, error) {
+	path := fmt.Sprintf("source/%s/%s/%s", projectName, packageName, fileName)
+	resp, err := cred.apiGetRequest(ctx, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse API URL: %w", err)
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
-
-	client := &http.Client{}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, fmt.Errorf("failed to get remote file content: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -138,7 +112,7 @@ func (cred OSCCredentials) getRemoteFileContent(ctx context.Context, projectName
 	return io.ReadAll(resp.Body)
 }
 
-func (cred OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRequest, params ListSrcFilesParam) (*mcp.CallToolResult, any, error) {
+func (cred *OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRequest, params ListSrcFilesParam) (*mcp.CallToolResult, any, error) {
 	if params.ProjectName == "" {
 		return nil, nil, fmt.Errorf("project name cannot be empty")
 	}

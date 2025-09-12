@@ -1,9 +1,12 @@
 package osc
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -211,4 +214,31 @@ func (cred *OSCCredentials) writeTempOscConfig() (string, error) {
 	}
 	slog.Warn("temporary configuration with credentials written", "path", configFile.Name())
 	return configFile.Name(), nil
+}
+
+func (cred *OSCCredentials) buildRequest(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(cred.Name, cred.Passwd)
+	return req, nil
+}
+
+func (cred *OSCCredentials) apiGetRequest(ctx context.Context, path string, headers map[string]string) (*http.Response, error) {
+	apiURL := fmt.Sprintf("https://%s/%s", cred.Apiaddr, path)
+	req, err := cred.buildRequest(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	return resp, nil
 }
