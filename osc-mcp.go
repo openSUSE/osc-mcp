@@ -149,6 +149,10 @@ func main() {
 		Name:        "basic_information",
 		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",
 	}, obsCred.PromptOSC)
+	server.AddPrompt(&mcp.Prompt{
+		Name:        "package_missing",
+		Description: "Steps on what to do when a build failed because of a missing package.",
+	}, obsCred.PromptPackage)
 	if viper.GetString("http") != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server

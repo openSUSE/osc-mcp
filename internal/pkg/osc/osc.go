@@ -1,7 +1,6 @@
 package osc
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -10,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 	"github.com/openSUSE/osc-mcp/internal/pkg/config"
 	keyring "github.com/ppacher/go-dbus-keyring"
@@ -182,25 +180,6 @@ func useKeyringCreds(apiAddr string) (cred OSCCredentials, err error) {
 		}
 	}
 	return cred, fmt.Errorf("could not find credentials for %s in any keyring", apiAddr)
-}
-
-func (cred *OSCCredentials) PromptOSC(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
-	return &mcp.GetPromptResult{
-		Description: "Source Package management in the OpenBuild Service",
-		Messages: []*mcp.PromptMessage{
-			{Role: "user", Content: &mcp.TextContent{Text: `Build and amange software in OpenBuild Service.
-After a build a package can have several binary packages as a result.
-Package builds happen offline, no software can be installed during package build.
-A project can contain serveral source packages.
-Project names most likely contains colons.
-The remote home project name is "home:` + cred.Name + `
-A package must be checked out before it can be compiled.
-Packages and projects are checked out to ` + cred.TempDir + `
-Packages must be checked out before they can be built.
-Check remote log first for build failues, only built a package after it was modified.
-`}},
-		},
-	}, nil
 }
 
 var ErrNoUserOrPassword = errors.New("bundle or project not found")
