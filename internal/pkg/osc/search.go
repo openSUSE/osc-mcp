@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/beevik/etree"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -162,38 +163,41 @@ func parseRPMFileName(filename string) rpm_pack {
 	if !strings.HasSuffix(filename, ".rpm") {
 		return rpm_pack{}
 	}
-	s := filename[:len(filename)-4]
+	workstring := filename[:len(filename)-4]
 
-	lastDot := strings.LastIndex(s, ".")
+	lastDot := strings.LastIndex(workstring, ".")
 	if lastDot == -1 {
 		return rpm_pack{}
 	}
-	arch := s[lastDot+1:]
-	s = s[:lastDot] // <name>-<version>-<release>
+	arch := workstring[lastDot+1:]
+	workstring = workstring[:lastDot] // <name>-<version>-<release>
 
-	// From <name>-<version>-<release> string, remove release
-	lastDash := strings.LastIndex(s, "-")
-	if lastDash == -1 {
-		return rpm_pack{Name: s, Arch: arch}
-	}
-	release := s[lastDash+1:]
-	s = s[:lastDash] // <name>-<version>
-
-	// Now from <name>-<version> string, find the split between name and version.
-	// We iterate backwards from the end of the string, looking for a dash followed by a digit.
-	i := strings.LastIndex(s, "-")
-	for i != -1 {
-		if i+1 < len(s) && s[i+1] >= '0' && s[i+1] <= '9' {
-			// This is the separator
-			name := s[:i]
-			version := s[i+1:]
-			return rpm_pack{Name: name, Arch: arch, Version: version + "-" + release}
-		}
-		i = strings.LastIndex(s[:i], "-")
+	releaseDash := strings.LastIndex(workstring, "-")
+	if releaseDash == -1 {
+		return rpm_pack{Name: workstring, Arch: arch}
 	}
 
-	// No version found in s, so s is the name.
-	return rpm_pack{Name: s, Arch: arch, Version: "-" + release}
+	// Heuristic: if the "release" part contains no digits, it's part of the name
+	release := workstring[releaseDash+1:]
+	if !strings.ContainsAny(release, "0123456789") {
+		return rpm_pack{Name: workstring, Arch: arch}
+	}
+
+	versionCand := workstring[:releaseDash]
+	versionDash := strings.LastIndex(versionCand, "-")
+
+	if versionDash == -1 {
+		return rpm_pack{Name: versionCand, Arch: arch, Version: release}
+	}
+
+	// Heuristic: if the "version" part does not start with a digit, it's part of the name
+	version := versionCand[versionDash+1:]
+	if len(version) == 0 || !unicode.IsDigit(rune(version[0])) {
+		return rpm_pack{Name: versionCand, Arch: arch, Version: release}
+	}
+
+	name := versionCand[:versionDash]
+	return rpm_pack{Name: name, Arch: arch, Version: version + "-" + release}
 }
 
 func (cred OSCCredentials) SearchPackages(ctx context.Context, req *mcp.CallToolRequest, params SearchPackagesParams) (*mcp.CallToolResult, any, error) {
