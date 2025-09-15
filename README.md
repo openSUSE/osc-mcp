@@ -1,5 +1,5 @@
-# MCP server for openBuild service
-This project aims to offer a MCP service for the openBuild service. The Model Context Protocol (MCP) is an open-source framework designed to standardize how artificial intelligence systems, such as large language models (LLMs), connect and share data with external tools and data sources.
+# MCP server for Open Build Service
+This project aims to offer a MCP service for the [Open Build Service](https://openbuildservice.org/) (OBS). The Model Context Protocol (MCP) is an open-source framework designed to standardize how artificial intelligence systems, such as large language models (LLMs), connect and share data with external tools and data sources.
 
 An example conversation is [here](example.md)
 
@@ -61,7 +61,7 @@ Create a configuration file `~/.mcphost.yml` and add the following lines to add 
 
 # Available tools for the LLM
 
-- **search_bundle**: Search bundles on remote open build (OBS) instance or local bundles.
+- **search_bundle**: Search bundles on remote OBS instance or local bundles.
 - **list_source_files**: List source files of given bundle in local or remote location.
 - **branch_bundle**: Branch a bundle and check it out as a local bundle.
 - **build_bundle**: Build a source bundle.
