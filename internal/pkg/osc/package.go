@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -104,6 +105,7 @@ type CreateBundleResult struct {
 }
 
 func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRequest, params CreateBundleParam) (*mcp.CallToolResult, CreateBundleResult, error) {
+	slog.Debug("mcp tool call: CreateBundle", "params", params)
 	if params.PackageName == "" {
 		return nil, CreateBundleResult{}, fmt.Errorf("package name cannot be empty")
 	}

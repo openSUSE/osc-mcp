@@ -113,6 +113,7 @@ func (cred *OSCCredentials) getRemoteFileContent(ctx context.Context, projectNam
 }
 
 func (cred *OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolRequest, params ListSrcFilesParam) (*mcp.CallToolResult, any, error) {
+	slog.Debug("mcp tool call: ListSrcFiles", "params", params)
 	if params.ProjectName == "" {
 		return nil, nil, fmt.Errorf("project name cannot be empty")
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -158,6 +159,7 @@ const defRepo = "openSUSE_Tumbleweed"
 const defArch = "x86_64"
 
 func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolRequest, params BuildLogParam) (*mcp.CallToolResult, map[string]any, error) {
+	slog.Debug("mcp tool call: BuildLog", "params", params)
 	if params.ProjectName == "" {
 		return nil, nil, fmt.Errorf("project name must be specified")
 	}

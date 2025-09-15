@@ -3,6 +3,7 @@ package osc
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os/exec"
@@ -23,6 +24,7 @@ type BranchResult struct {
 }
 
 func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRequest, params BranchPackageParam) (*mcp.CallToolResult, BranchResult, error) {
+	slog.Debug("mcp tool call: BranchBundle", "params", params)
 	if params.Project == "" {
 		return nil, BranchResult{}, fmt.Errorf("project name cannot be empty")
 	}

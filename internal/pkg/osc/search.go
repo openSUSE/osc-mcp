@@ -60,6 +60,7 @@ func listLocalPackages(path string, packageName string) ([]BundleInfo, error) {
 }
 
 func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, any, error) {
+	slog.Debug("mcp tool call: SearchSrcBundle", "params", params)
 	isLocal := false
 	if len(params.Projects) == 1 && strings.EqualFold("local", strings.ToLower(params.Projects[0])) || (len(params.Projects) == 0 && params.Name == "") {
 		isLocal = true
@@ -202,6 +203,7 @@ func parseRPMFileName(filename string) rpm_pack {
 }
 
 func (cred OSCCredentials) SearchPackages(ctx context.Context, req *mcp.CallToolRequest, params SearchPackagesParams) (*mcp.CallToolResult, any, error) {
+	slog.Debug("mcp tool call: SearchPackages", "params", params)
 	if params.ExactMatch && params.Regexp {
 		return nil, nil, fmt.Errorf("pattern can't be matched exactly and as a regexp at the same time")
 	}

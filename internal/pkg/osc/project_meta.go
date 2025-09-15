@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -112,6 +113,7 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 }
 
 func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params GetProjectMetaParam) (*mcp.CallToolResult, *ProjectMeta, error) {
+	slog.Debug("mcp tool call: GetProjectMeta", "params", params)
 	res, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
 	return nil, res, err
 }
@@ -126,6 +128,7 @@ type SetProjectMetaParam struct {
 }
 
 func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params SetProjectMetaParam) (*mcp.CallToolResult, *ProjectMeta, error) {
+	slog.Debug("mcp tool call: SetProjectMeta", "params", params)
 	if params.ProjectName == "" {
 		return nil, nil, fmt.Errorf("project name cannot be empty")
 	}

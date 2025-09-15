@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 
@@ -22,6 +23,7 @@ type DeleteProjectResult struct {
 }
 
 func (cred OSCCredentials) DeleteProject(ctx context.Context, req *mcp.CallToolRequest, params DeleteProjectParam) (*mcp.CallToolResult, DeleteProjectResult, error) {
+	slog.Debug("mcp tool call: DeleteProject", "params", params)
 	projectName := params.ProjectName
 	if projectName == "" {
 		projectName = fmt.Sprintf("home:%s:%s", cred.Name, cred.SessionId)
