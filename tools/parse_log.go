@@ -69,7 +69,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if jsonOutput {
-			jsonResult, err := json.MarshalIndent(log.FormatJson(nrLines, printSucceded), "", "  ")
+			jsonResult, err := json.MarshalIndent(log.FormatJson(nrLines, printSucceeded), "", "  ")
 			if err != nil {
 				slog.Error("failed to marshal to json", "error", err)
 				os.Exit(1)

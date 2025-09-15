@@ -10,14 +10,17 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/beevik/etree"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"gopkg.in/yaml.v3"
 )
 
-type DefaultRepositories struct {
-	Repositories []Repository `yaml:"repositories"`
+type Defaults struct {
+	Repositories    []Repository      `yaml:"repositories"`
+	CopyrightHeader string            `yaml:"copyright_header"`
+	Specs           map[string]string `yaml:"specs"`
 }
 
 func (cred OSCCredentials) createProject(ctx context.Context, projectName string, title string, description string, repositories []Repository) error {
@@ -68,7 +71,7 @@ func (cred OSCCredentials) createProject(ctx context.Context, projectName string
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.UserAgent('osc-mcp')
+	req.Header.Set("User-Agent", "osc-mcp")
 	req.SetBasicAuth(cred.Name, cred.Passwd)
 	req.Header.Set("Content-Type", "application/xml; charset=utf-8")
 	req.Header.Set("Accept", "application/xml; charset=utf-8")
@@ -90,6 +93,8 @@ func (cred OSCCredentials) createProject(ctx context.Context, projectName string
 
 type CreateBundleParam struct {
 	PackageName string `json:"package_name" jsonschema:"The name of the package to create."`
+	Flavor      string `json:"flavor,omitempty" jsonschema:"The flavor of the package (e.g., python, go, java, lua, c, cpp). Determines the generated spec file."`
+	ProvideSpec bool   `json:"provide_spec,omitempty" jsonschema:"Provide a spec file"`
 }
 
 type CreateBundleResult struct {
@@ -109,30 +114,31 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 	if err != nil {
 		return nil, CreateBundleResult{}, fmt.Errorf("failed to check if project exists: %w", err)
 	}
-	if !meta.Exists {
-		var defaults DefaultRepositories
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, CreateBundleResult{}, fmt.Errorf("could not get user home directory: %w", err)
-		}
-		configPath := filepath.Join(home, ".config", "osc-mcp", "defaults.yaml")
+
+	var defaults Defaults
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, CreateBundleResult{}, fmt.Errorf("could not get user home directory: %w", err)
+	}
+	configPath := filepath.Join(home, ".config", "osc-mcp", "defaults.yaml")
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		configPath = "defaults.yaml"
 		if _, err := os.Stat(configPath); os.IsNotExist(err) {
-			configPath = "defaults.yaml"
-			if _, err := os.Stat(configPath); os.IsNotExist(err) {
-				return nil, CreateBundleResult{}, fmt.Errorf("defaults.yaml not found in ~/.config/osc-mcp/ or current directory")
-			}
+			return nil, CreateBundleResult{}, fmt.Errorf("defaults.yaml not found in ~/.config/osc-mcp/ or current directory")
 		}
+	}
 
-		yamlFile, err := os.ReadFile(configPath)
-		if err != nil {
-			return nil, CreateBundleResult{}, fmt.Errorf("failed to read defaults.yaml: %w", err)
-		}
+	yamlFile, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, CreateBundleResult{}, fmt.Errorf("failed to read defaults.yaml: %w", err)
+	}
 
-		err = yaml.Unmarshal(yamlFile, &defaults)
-		if err != nil {
-			return nil, CreateBundleResult{}, fmt.Errorf("failed to unmarshal defaults.yaml: %w", err)
-		}
+	err = yaml.Unmarshal(yamlFile, &defaults)
+	if err != nil {
+		return nil, CreateBundleResult{}, fmt.Errorf("failed to unmarshal defaults.yaml: %w", err)
+	}
 
+	if !meta.Exists {
 		err = cred.createProject(ctx, projectName,
 			fmt.Sprintf("Project for %s session %s", cred.Name, cred.SessionId),
 			"Auto-generated project by osc-mcp.",
@@ -158,7 +164,32 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 	if err != nil {
 		return nil, CreateBundleResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
 	}
+	if params.ProvideSpec {
+		flavor := params.Flavor
+		if flavor == "" || flavor == "c" || flavor == "cpp" {
+			flavor = "default"
+		}
 
+		specTemplate, ok := defaults.Specs[flavor]
+		if !ok {
+			specTemplate, ok = defaults.Specs["default"]
+			if !ok {
+				return nil, CreateBundleResult{}, fmt.Errorf("no spec template for flavor '%s' and no default spec found in defaults.yaml", params.Flavor)
+			}
+		}
+
+		fullSpecTemplate := defaults.CopyrightHeader + specTemplate
+		specContent := strings.ReplaceAll(fullSpecTemplate, "__PACKAGE_NAME__", params.PackageName)
+		specContent = strings.ReplaceAll(specContent, "__YEAR__", fmt.Sprintf("%d", time.Now().Year()))
+
+		packageDir := filepath.Join(projectDir, params.PackageName)
+		specFilePath := filepath.Join(packageDir, params.PackageName+".spec")
+
+		err = os.WriteFile(specFilePath, []byte(specContent), 0644)
+		if err != nil {
+			return nil, CreateBundleResult{}, fmt.Errorf("failed to write spec file: %w", err)
+		}
+	}
 	return nil, CreateBundleResult{
 		Project: projectName,
 		Package: params.PackageName,

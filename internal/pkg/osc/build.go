@@ -16,12 +16,13 @@ import (
 )
 
 type BuildParam struct {
-	ProjectName       string `json:"project_name" jsonschema:"Name of the project"`
-	PackageName       string `json:"package_name" jsonschema:"Name of the package"`
-	VmType            string `json:"vm_type,omitempty" jsonschema:"VM type to use for build (e.g., chroot, kvm, podman, docker)"`
-	MultibuildPackage string `json:"multibuild_package,omitempty" jsonschema:"Specify the flavor of a multibuild package"`
-	Distribution      string `json:"distribution,omitempty" jsonschema:"Distribution to build against (e.g., openSUSE_Tumbleweed)."`
-	Arch              string `json:"arch,omitempty" jsonschema:"Architecture to build for (e.g., x86_64)."`
+	ProjectName       string   `json:"project_name" jsonschema:"Name of the project"`
+	PackageName       string   `json:"package_name" jsonschema:"Name of the package"`
+	VmType            string   `json:"vm_type,omitempty" jsonschema:"VM type to use for build (e.g., chroot, kvm, podman, docker)"`
+	MultibuildPackage string   `json:"multibuild_package,omitempty" jsonschema:"Specify the flavor of a multibuild package"`
+	Distribution      string   `json:"distribution,omitempty" jsonschema:"Distribution to build against (e.g., openSUSE_Tumbleweed)."`
+	Arch              string   `json:"arch,omitempty" jsonschema:"Architecture to build for (e.g., x86_64)."`
+	RunService        []string `json:"run_service,omitempty" jsonschema:"A list of services which are run before the build. Useful services are: download_files which downloads the source files reference via an URI in the spec file, go_modules which creates a vendor directory for go files."`
 }
 
 type BuildResult struct {
@@ -47,6 +48,23 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	} else {
 		defer os.Remove(configFile)
 		cmdline = append(cmdline, "--config", configFile)
+	}
+
+	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.PackageName)
+	if len(params.RunService) > 0 {
+		for _, service := range params.RunService {
+			serviceCmdLine := append([]string{}, cmdline...)
+			serviceCmdLine = append(serviceCmdLine, "service", "run", service)
+			oscServiceCmd := exec.CommandContext(ctx, serviceCmdLine[0], serviceCmdLine[1:]...)
+			oscServiceCmd.Dir = cmdDir
+			slog.Info("running osc service run", slog.String("command", oscServiceCmd.String()), slog.String("dir", cmdDir))
+			output, err := oscServiceCmd.CombinedOutput()
+			if err != nil {
+				slog.Error("failed to run osc service", "service", service, "error", err, "output", string(output))
+				return nil, BuildResult{Error: fmt.Sprintf("failed to run service %s: %s\n%s", service, err, string(output)), Success: false}, nil
+			}
+			slog.Info("osc service run finished successfully", "service", service, "output", string(output))
+		}
 	}
 
 	cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
@@ -108,7 +126,6 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 		cmdline = append(cmdline, arch)
 	}
 
-	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.PackageName)
 	oscCmd := exec.CommandContext(ctx, cmdline[0], cmdline[1:]...)
 	oscCmd.Dir = cmdDir
 

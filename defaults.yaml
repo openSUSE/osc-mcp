@@ -1,6 +1,185 @@
+
 repositories:
   - name: "openSUSE_Tumbleweed"
     path_project: "openSUSE:Factory"
     path_repository: "snapshot"
     arches:
       - "x86_64"
+copyright_header: |
+  #
+  # spec file for package __PACKAGE_NAME__
+  #
+  # Copyright (c) __YEAR__ SUSE LLC and contributors
+  #
+  # All modifications and additions to the file contributed by third parties
+  # remain the property of their copyright owners, unless otherwise agreed
+  # upon. The license for this file, and modifications and additions to the
+  # file, is the same license as for the pristine package itself (unless the
+  # license for the pristine package is not an Open Source License, in which
+  # case the license is the MIT License). An "Open Source License" is a
+  # license that conforms to the Open Source Definition (Version 1.9)
+  # published by the Open Source Initiative.
+
+  # Please submit bugfixes or comments via https://bugs.opensuse.org/
+  #
+
+specs:
+  default: |
+    Name:           __PACKAGE_NAME__
+    Version:        
+    Release:        0
+    Summary:
+    License:        
+    URL:            
+    
+    # needs to run service download_files to download files
+    Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
+    BuildRequires:  
+
+    %description
+
+    %prep
+    %autosetup -p1
+
+    %build
+    %configure
+    %make_build
+
+    %install
+    %make_install
+
+    %check
+    %make_build check
+
+    %files
+    # list files here
+
+    %changelog
+  python: |
+    Name:           __PACKAGE_NAME__
+    Version:        
+    Release:        0
+    Summary:        
+    License:        
+    URL:            
+    
+    # needs to run service download_files to download files
+    Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
+    BuildRequires:  python-rpm-macros
+    BuildRequires:  python3-setuptools
+    BuildArch:      noarch
+
+    %description
+
+    %prep
+    %autosetup -p1
+
+    %build
+    %python3_build
+
+    %install
+    %python3_install
+
+    %check
+    # not all packages have tests
+    #%python3_test
+
+    %files
+    # list files here
+
+    %changelog
+  go: |
+    %global goipath         github.com/user/__PACKAGE_NAME__
+    Name:           __PACKAGE_NAME__
+    Version:        
+    Release:        0
+    Summary:        
+    License:        
+    URL:            
+    
+    # needs to run service download_files to download files
+    Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
+    BuildRequires:  golang-packaging
+    BuildRequires:  golang(API) >= 1.16
+
+    %description
+
+    %prep
+    %autosetup -p1
+
+    %build
+    %goprep
+    %gobuild
+
+    %install
+    %goinstall
+
+    %check
+    %gocheck
+
+    %files
+    %{_bindir}/__PACKAGE_NAME__
+
+    %changelog
+  java: |
+    Name:           __PACKAGE_NAME__
+    Version:        
+    Release:        0
+    Summary:        
+    License:        
+    URL:            
+    
+    # needs to run service download_files to download files
+    Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
+    BuildRequires:  java-devel >= 11
+    BuildRequires:  maven-local
+    BuildRequires:  mvn(org.apache.maven.plugins:maven-compiler-plugin)
+    BuildRequires:  mvn(org.apache.maven.plugins:maven-jar-plugin)
+    BuildRequires:  mvn(org.apache.maven.plugins:maven-surefire-plugin)
+    BuildArch:      noarch
+
+    %description
+
+    %prep
+    %setup -q
+
+    %build
+    %mvn_build
+
+    %install
+    %mvn_install
+
+    %files
+    %license LICENSE
+    %doc README.md
+    %mvn_artifact pom.xml target/%{name}-%{version}.jar
+
+    %changelog
+  lua: |
+    %global lua_name        __PACKAGE_NAME__
+    %global lua_version     5.4
+    Name:           lua%{lua_version}-%{lua_name}
+    Version:        
+    Release:        0
+    Summary:        
+    License:        
+    URL:            
+    
+    # needs to run service download_files to download files
+    Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
+    BuildRequires:  lua%{lua_version}-devel
+
+    %description
+
+    %prep
+    %autosetup -p1
+
+    %build
+    # build steps here
+
+    %install
+    # install steps here
+
+    %files
+
+    %changelog
