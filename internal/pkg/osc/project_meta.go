@@ -47,7 +47,7 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.UserAgent('osc-mcp')
+	req.Header.Set("User-Agent", "osc-mcp")
 	req.SetBasicAuth(cred.Name, cred.Passwd)
 	req.Header.Set("Accept", "application/xml; charset=utf-8")
 
@@ -188,7 +188,7 @@ func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToo
 		return nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	httpReq.UserAgent('osc-mcp')
+	httpReq.Header.Set("User-Agent", "osc-mcp")
 	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
 	httpReq.Header.Set("Content-Type", "application/xml; charset=utf-8")
 	httpReq.Header.Set("Accept", "application/xml; charset=utf-8")

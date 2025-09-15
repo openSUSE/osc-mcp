@@ -221,7 +221,7 @@ func (cred *OSCCredentials) buildRequest(ctx context.Context, method, url string
 	if err != nil {
 		return nil, err
 	}
-	req.UserAgent('osc-mcp')
+	req.Header.Set("User-Agent", "osc-mcp")
 	req.SetBasicAuth(cred.Name, cred.Passwd)
 	return req, nil
 }
