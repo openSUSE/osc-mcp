@@ -68,6 +68,7 @@ func (cred OSCCredentials) createProject(ctx context.Context, projectName string
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
+	req.UserAgent('osc-mcp')
 	req.SetBasicAuth(cred.Name, cred.Passwd)
 	req.Header.Set("Content-Type", "application/xml; charset=utf-8")
 	req.Header.Set("Accept", "application/xml; charset=utf-8")

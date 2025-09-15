@@ -99,6 +99,7 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 		return nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
+	httpReq.UserAgent('osc-mcp')
 	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
 	httpReq.Header.Set("Accept", "application/xml; charset=utf-8")
 
