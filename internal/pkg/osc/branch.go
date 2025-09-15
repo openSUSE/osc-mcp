@@ -48,6 +48,7 @@ func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRe
 		return nil, BranchResult{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
+	httpReq.UserAgent('osc-mcp')
 	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
 
 	client := &http.Client{}

@@ -46,6 +46,7 @@ func (cred OSCCredentials) DeleteProject(ctx context.Context, req *mcp.CallToolR
 		return nil, DeleteProjectResult{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
+	httpReq.UserAgent('osc-mcp')
 	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
 	httpReq.Header.Set("Accept", "application/xml; charset=utf-8")
 

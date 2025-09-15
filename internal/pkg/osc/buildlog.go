@@ -17,6 +17,7 @@ func (cred *OSCCredentials) getFromApi(ctx context.Context, url string) ([]byte,
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to create request: %w", err)
 	}
+	req.UserAgent('osc-mcp')
 	req.SetBasicAuth(cred.Name, cred.Passwd)
 
 	client := &http.Client{}
