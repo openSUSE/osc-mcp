@@ -22,7 +22,7 @@ func main() {
 	pflag.String("workdir", "", "if set, use this directory as temporary directory")
 	pflag.String("user", "", "OBS username")
 	pflag.String("password", "", "OBS password")
-	pflag.Bool("print-creds", false, "Just print the retreived credentials and exit")
+	pflag.Bool("print-creds", false, "Just print the retrieved credentials and exit")
 	pflag.Bool("clean-workdir", false, "Cleans the workdir before usage")
 	pflag.String("logfile", "", "if set, log to this file instead of stderr")
 	pflag.BoolP("verbose", "v", false, "Enable verbose logging")
@@ -100,12 +100,12 @@ func main() {
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_bundle",
-		Description: fmt.Sprintf("Search bundles on remote open build (OBS) instance %s or local bundles. A bundle is also known as source package. Use the prohect name 'local' to list local packages. If project and bundle name is empty local packages will be listed. A bundle must be built to create installable packages.", obsCred.Apiaddr),
+		Description: fmt.Sprintf("Search bundles on remote open build (OBS) instance %s or local bundles. A bundle is also known as source package. Use the project name 'local' to list local packages. If project and bundle name is empty local packages will be listed. A bundle must be built to create installable packages.", obsCred.Apiaddr),
 	}, obsCred.SearchSrcBundle)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_source_files",
-		Description: "List source files of given bundle in local or remote location. Also retunrs basic infomration of the files and if they are modified locally. The content of small files is returned and also the content of all relevant control files which are files with .spec and .kiwi suffix. Prefer this tool read command file bedore checking them out. If a file name is given only the requested file is shown, regardless it's size.",
+		Description: "List source files of given bundle in local or remote location. Also returns basic information of the files and if they are modified locally. The content of small files is returned and also the content of all relevant control files which are files with .spec and .kiwi suffix. Prefer this tool read command file before checking them out. If a file name is given only the requested file is shown, regardless it's size.",
 	}, obsCred.ListSrcFiles)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "branch_bundle",
@@ -135,7 +135,7 @@ func main() {
 	// */
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "checkout_bundle",
-		Description: fmt.Sprintf("Checkout a package from the online repostory. After this step the package is available as local package under %s", workDir),
+		Description: fmt.Sprintf("Checkout a package from the online repository. After this step the package is available as local package under %s", workDir),
 	}, obsCred.CheckoutBundle)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_build_log",
@@ -143,7 +143,7 @@ func main() {
 	}, obsCred.BuildLog)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_packages",
-		Description: "Serach the available packages for a remote repository. This are the allreadu built packages and are required by bundles or source packages for building.",
+		Description: "Search the available packages for a remote repository. This are the allreadu built packages and are required by bundles or source packages for building.",
 	}, obsCred.SearchPackages)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "commit",

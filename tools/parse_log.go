@@ -18,7 +18,7 @@ import (
 var jsonOutput bool
 var project, pkg, arch, distro string
 var nrLines int
-var printSucceded bool
+var printSucceeded bool
 
 var rootCmd = &cobra.Command{
 	Use:   "parse_log [file]",
@@ -99,7 +99,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&arch, "arch", "a", "x86_64", "architecture to fetch build log for")
 	rootCmd.Flags().StringVarP(&distro, "distro", "d", "openSUSE_Tumbleweed", "distribution to fetch build log for")
 	rootCmd.Flags().IntVarP(&nrLines, "lines", "l", 100, "Number of log lines to print")
-	rootCmd.Flags().BoolVarP(&printSucceded, "succeded", "s", false, "print also the lines of succeded phases")
+	rootCmd.Flags().BoolVarP(&printSucceeded, "succeeded", "s", false, "print also the lines of succeeded phases")
 }
 
 func main() {

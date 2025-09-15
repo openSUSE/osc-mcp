@@ -44,7 +44,7 @@ func (p BuildPhase) String() string {
 }
 
 type Phase struct {
-	Sucedded bool
+	Succeeded bool
 	Lines    []string
 	Duration int
 }
@@ -141,13 +141,13 @@ func Parse(logContent string) *BuildLog {
 			currentPhaseDetails.Duration = lastTime - phaseStartTime
 			log.Phases[phase] = currentPhaseDetails
 			currentPhaseDetails = Phase{
-				Sucedded: true,
+				Succeeded: true,
 			}
 			phase = newPhase
 			phaseStartTime = lastTime
 		}
 		if strings.Contains(line, " FAILED") || strings.Contains(line, " ERROR") {
-			currentPhaseDetails.Sucedded = false
+			currentPhaseDetails.Succeeded = false
 		}
 		currentPhaseDetails.Lines = append(currentPhaseDetails.Lines, line)
 	}
@@ -169,22 +169,22 @@ func (log *BuildLog) FormatJson(nrLines int, printSucceded bool) map[string]any 
 	for phase, phaseDetails := range log.Phases {
 		phases[phase.String()] = map[string]any{
 			"Duration": phaseDetails.Duration,
-			"Success":  phaseDetails.Sucedded,
+			"Success":  phaseDetails.Succeeded,
 		}
-		if printSucceded || !phaseDetails.Sucedded {
+		if printSucceded || !phaseDetails.Succeeded {
 			printLines := nrLines
 			if nrLines > len(phaseDetails.Lines) || nrLines == 0 {
 				printLines = len(phaseDetails.Lines)
 			}
 			phases[phase.String()] = map[string]any{
 				"Duration": phaseDetails.Duration,
-				"Success":  phaseDetails.Sucedded,
+				"Success":  phaseDetails.Succeeded,
 				"Lines":    phaseDetails.Lines[:printLines],
 			}
 		} else {
 			phases[phase.String()] = map[string]any{
 				"Duration": phaseDetails.Duration,
-				"Success":  phaseDetails.Sucedded,
+				"Success":  phaseDetails.Succeeded,
 			}
 		}
 	}

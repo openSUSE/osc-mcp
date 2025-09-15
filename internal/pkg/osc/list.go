@@ -249,7 +249,7 @@ func (cred *OSCCredentials) ListSrcFiles(ctx context.Context, req *mcp.CallToolR
 		if err != nil {
 			remoteFiles = []FileInfo{}
 			if !errors.Is(err, ErrBundleOrProjectNotFound) {
-				slog.Warn("error when getting reote file", "error", err)
+				slog.Warn("error when getting remote file", "error", err)
 			}
 		}
 		remoteFilesMap := make(map[string]FileInfo)

@@ -142,7 +142,7 @@ type SearchPackagesParams struct {
 	Path            string `json:"path"`
 	Path_repository string `json:"path_repository"`
 	Arch            string `json:"arch,omitempty"`
-	Pattern         string `json:"pattern" jsonschema:"package name to serach for, matches any package for which pattern is substring."`
+	Pattern         string `json:"pattern" jsonschema:"package name to search for, matches any package for which pattern is substring."`
 	ExactMatch      bool   `json:"exact,omitempty" jsonschema:"treat pattern as exact match"`
 	Regexp          bool   `json:"regexp,omitempty" jsonschema:"treat pattern as regexp"`
 }

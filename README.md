@@ -7,7 +7,7 @@ An example conversation is [here](example.md)
 >The project is in a very early stage, so things may break.
 
 >[!CAUTION]
->It uses the credentials found in you configuration and keyring if not configured per command line in another way!
+>It uses the credentials found in your configuration and keyring if not configured per command line in another way!
 
 ## Building
 
@@ -30,7 +30,7 @@ You can now use `gemini-cli` or `mcphost` to access this server
 
 ### [gemini-cli](https://github.com/google-gemini/gemini-cli)
 
-Add following configuration to `~/.gemini/settings.json`
+Add the following configuration to `~/.gemini/settings.json`
 ```
   "mcpServers": {
     "osc-mcp": {
@@ -59,11 +59,25 @@ Create a configuration file `~/.mcphost.yml` and add the following lines to add 
   
 ```
 
+# Available tools for the LLM
+
+- **search_bundle**: Search bundles on remote open build (OBS) instance or local bundles.
+- **list_source_files**: List source files of given bundle in local or remote location.
+- **branch_bundle**: Branch a bundle and check it out as a local bundle.
+- **build_bundle**: Build a source bundle.
+- **get_project_meta**: Get the metadata of a project.
+- **set_project_meta**: Set the metadata for the project.
+- **create_bundle**: Create a new local bundle.
+- **checkout_bundle**: Checkout a package from the online repository.
+- **get_build_log**: Get the remote or local build log of a package.
+- **search_packages**: Search the available packages for a remote repository.
+- **commit**: Commits changed files.
+
 # Useful tools
 
 ## [mctool](https://github.com/f/mcptools)
 
-This porgramm can be used to check the available tools.
+This program can be used to check the available tools.
 
 
 # Other functionality
@@ -71,10 +85,10 @@ This porgramm can be used to check the available tools.
 For all options use
 
 ```
-go build osc-mpc.go --help
+go build osc-mcp.go --help
 ```
 
-This project includes a parser for a build log and can output some more strucutured information. It can be build with
+This project includes a parser for a build log and can output some more structured information. It can be built with
 ```
   go build tools/parse_log.go
 ```
@@ -83,7 +97,7 @@ and be used like
   osc lbl | parse_log
 ```
 which analyzes/parses the last build log.
-The parser can also retreive remote build logs with
+The parser can also retrieve remote build logs with
 ```
   parse_log -k dolly -p home:mslacken:p
 ```

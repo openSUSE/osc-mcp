@@ -150,7 +150,7 @@ type BuildLogParam struct {
 	RepositoryName   string `json:"repository_name,omitempty" jsonschema:"Repository name"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
-	ShowSucceded     bool   `json:"show_succeded,omitempty" jsonschema:"Also show succeded logs"`
+	ShowSucceeded     bool   `json:"show_succeeded,omitempty" jsonschema:"Also show succeeded logs"`
 }
 
 const defRepo = "openSUSE_Tumbleweed"
@@ -175,5 +175,5 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolReque
 		return nil, nil, err
 	}
 	log := buildlog.Parse(rawLog)
-	return nil, log.FormatJson(params.NrLines, params.ShowSucceded), nil
+	return nil, log.FormatJson(params.NrLines, params.ShowSucceeded), nil
 }
