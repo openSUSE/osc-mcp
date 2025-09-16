@@ -6,7 +6,7 @@ require (
 	github.com/beevik/etree v1.5.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/jaevor/go-nanoid v1.4.0
-	github.com/modelcontextprotocol/go-sdk v0.4.0
+	github.com/modelcontextprotocol/go-sdk v0.5.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ppacher/go-dbus-keyring v1.0.1
 	github.com/spf13/cobra v1.9.1
@@ -20,7 +20,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/google/jsonschema-go v0.2.1-0.20250825175020-748c325cec76 // indirect
+	github.com/google/jsonschema-go v0.2.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
