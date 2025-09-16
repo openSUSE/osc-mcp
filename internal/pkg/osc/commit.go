@@ -46,7 +46,7 @@ type Entry struct {
 }
 
 func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest, params CommitCmd) (*mcp.CallToolResult, CommitResult, error) {
-	slog.Debug("mcp tool call: Commit", "params", params)
+	slog.Debug("mcp tool call: Commit", "session", req.Session.ID(), "params", params)
 	if params.Message == "" {
 		return nil, CommitResult{}, fmt.Errorf("commit message must be specified")
 	}

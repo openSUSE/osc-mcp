@@ -3,17 +3,13 @@ package osc
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
-	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/beevik/etree"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"gopkg.in/yaml.v3"
 )
@@ -22,74 +18,6 @@ type Defaults struct {
 	Repositories    []Repository      `yaml:"repositories"`
 	CopyrightHeader string            `yaml:"copyright_header"`
 	Specs           map[string]string `yaml:"specs"`
-}
-
-func (cred OSCCredentials) createProject(ctx context.Context, projectName string, title string, description string, repositories []Repository) error {
-	doc := etree.NewDocument()
-	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
-	project := doc.CreateElement("project")
-	project.CreateAttr("name", projectName)
-
-	if title != "" {
-		project.CreateElement("title").SetText(title)
-	}
-	if description != "" {
-		project.CreateElement("description").SetText(description)
-	}
-
-	person := project.CreateElement("person")
-	person.CreateAttr("userid", cred.Name)
-	person.CreateAttr("role", "maintainer")
-
-	for _, repo := range repositories {
-		repository := project.CreateElement("repository")
-		repository.CreateAttr("name", repo.Name)
-		if repo.PathProject != "" {
-			path := repository.CreateElement("path")
-			path.CreateAttr("project", repo.PathProject)
-			if repo.PathRepository != "" {
-				path.CreateAttr("repository", repo.PathRepository)
-			}
-		}
-		for _, arch := range repo.Arches {
-			repository.CreateElement("arch").SetText(arch)
-		}
-	}
-
-	doc.Indent(2)
-	metaString, err := doc.WriteToString()
-	if err != nil {
-		return fmt.Errorf("failed to generate XML: %w", err)
-	}
-
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, projectName))
-	if err != nil {
-		return fmt.Errorf("failed to parse API URL: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "PUT", apiURL.String(), strings.NewReader(metaString))
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("User-Agent", "osc-mcp")
-	req.SetBasicAuth(cred.Name, cred.Passwd)
-	req.Header.Set("Content-Type", "application/xml; charset=utf-8")
-	req.Header.Set("Accept", "application/xml; charset=utf-8")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to execute request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("api request failed with status: %s\nbody:\n%s", resp.Status, string(body))
-	}
-
-	return nil
 }
 
 type CreateBundleParam struct {
@@ -105,12 +33,15 @@ type CreateBundleResult struct {
 }
 
 func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRequest, params CreateBundleParam) (*mcp.CallToolResult, CreateBundleResult, error) {
-	slog.Debug("mcp tool call: CreateBundle", "params", params)
+	slog.Debug("mcp tool call: CreateBundle", "session", req.Session.ID(), "params", params)
 	if params.PackageName == "" {
 		return nil, CreateBundleResult{}, fmt.Errorf("package name cannot be empty")
 	}
 
-	projectName := fmt.Sprintf("home:%s:osc-mpc:%s", cred.Name, cred.SessionId)
+	projectName := params.ProjectName
+	if projectName == "" {
+		projectName = fmt.Sprintf("home:%s:osc-mpc:%s", cred.Name, params.Description)
+	}
 
 	meta, err := cred.getProjectMetaInternal(ctx, projectName)
 	if err != nil {
@@ -140,6 +71,7 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 		return nil, CreateBundleResult{}, fmt.Errorf("failed to unmarshal defaults.yaml: %w", err)
 	}
 
+<<<<<<< HEAD
 	if !meta.Exists {
 		err = cred.createProject(ctx, projectName,
 			fmt.Sprintf("Project for %s session %s", cred.Name, cred.SessionId),
@@ -147,6 +79,28 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 			defaults.Repositories,
 		)
 		if err != nil {
+=======
+	if len(meta.Maintainers) == 0 {
+		title := params.Title
+		if title == "" {
+			title = fmt.Sprintf("Project for %s session %s", req.Session.ID())
+		}
+		description := params.Description
+		if description == "" {
+			description = "Auto-generated project by osc-mcp."
+		}
+		repositories := params.Repositories
+		if len(repositories) == 0 {
+			repositories = defaults.Repositories
+		}
+		if err := (&cred).setProjectMetaInternal(ctx, ProjectMeta{
+			ProjectName:  projectName,
+			Title:        title,
+			Description:  description,
+			Repositories: repositories,
+			Maintainers:  []string{cred.Name},
+		}); err != nil {
+>>>>>>> 4ac734b (use seesion id instead of nanoId)
 			return nil, CreateBundleResult{}, fmt.Errorf("failed to create project: %w", err)
 		}
 	}

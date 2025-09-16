@@ -34,7 +34,7 @@ type BuildResult struct {
 }
 
 func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest, params BuildParam) (*mcp.CallToolResult, any, error) {
-	slog.Debug("mcp tool call: Build", "params", params)
+	slog.Debug("mcp tool call: Build", "session", req.Session.ID(), "params", params)
 	if params.ProjectName == "" {
 		return nil, BuildResult{}, fmt.Errorf("project name must be specified")
 	}

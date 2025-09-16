@@ -26,7 +26,6 @@ type OSCCredentials struct {
 	Name         string
 	Passwd       string
 	Apiaddr      string
-	SessionId    string
 	TempDir      string
 	BuildLogs    map[string]*buildlog.BuildLog
 	LastBuildKey string
@@ -37,9 +36,8 @@ type OSCCredentials struct {
 // It will try to read ~/.config/osc/oscrc, ~/.oscrc and ./.oscrc.
 // It first tries to read the user and password from the config file. If a
 // password is not found, it will try to read the credentials from the keyring.
-func GetCredentials(tempDir string, id string) (creds OSCCredentials, err error) {
+func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	creds.TempDir = tempDir
-	creds.SessionId = id
 	creds.BuildLogs = make(map[string]*buildlog.BuildLog)
 	home, err := os.UserHomeDir()
 	if err != nil {

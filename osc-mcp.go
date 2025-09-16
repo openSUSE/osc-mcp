@@ -60,18 +60,20 @@ func main() {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "OSC LLM bridge",
 		Version: "0.0.1"},
-		nil)
-
+		&mcp.ServerOptions{
+			InitializedHandler: func(ctx context.Context, req *mcp.InitializedRequest) {
+				slog.Info("Session started", "ID", req.Session.ID())
+			},
+		})
 	noTempClean := true
 	id, err := nanoid.Canonic()
 	if err != nil {
 		slog.Error("failed to generate nano id", "error", err)
 		os.Exit(1)
 	}
-	id_str := id()
 	workDir := viper.GetString("workdir")
 	if workDir == "" {
-		workDir = filepath.Join(os.TempDir(), id_str)
+		workDir = filepath.Join(os.TempDir(), id())
 		noTempClean = false
 	}
 
@@ -88,7 +90,7 @@ func main() {
 		defer os.RemoveAll(workDir)
 	}
 
-	obsCred, err := osc.GetCredentials(workDir, id_str)
+	obsCred, err := osc.GetCredentials(workDir)
 	if err != nil {
 		slog.Error("failed to get OBS credentials", slog.Any("error", err))
 		os.Exit(1)
@@ -164,6 +166,7 @@ func main() {
 		slog.Info("MCP handler listening at", slog.String("address", viper.GetString("http")))
 		http.ListenAndServe(viper.GetString("http"), handler)
 	} else {
+		slog.Info("New client has connected via stdin/stdout")
 		if err := server.Run(context.Background(), &mcp.SSEServerTransport{}); err != nil {
 			slog.Error("Server failed", slog.Any("error", err))
 		}

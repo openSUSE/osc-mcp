@@ -24,7 +24,7 @@ type CheckoutPackageResult struct {
 }
 
 func (cred *OSCCredentials) CheckoutBundle(ctx context.Context, req *mcp.CallToolRequest, params CheckoutPackageCmd) (*mcp.CallToolResult, CheckoutPackageResult, error) {
-	slog.Debug("mcp tool call: CheckoutBundle", "params", params)
+	slog.Debug("mcp tool call: CheckoutBundle", "session", req.Session.ID(), "params", params)
 	if params.Project == "" || params.Package == "" {
 		return nil, CheckoutPackageResult{}, fmt.Errorf("project and package must be specified")
 	}
