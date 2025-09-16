@@ -59,28 +59,14 @@ func listLocalPackages(path string, packageName string) ([]BundleInfo, error) {
 	return bundles, nil
 }
 
-func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, any, error) {
-	slog.Debug("mcp tool call: SearchSrcBundle", "session", req.Session.ID(), "params", params)
-	isLocal := false
-	if len(params.Projects) == 1 && strings.EqualFold("local", strings.ToLower(params.Projects[0])) || (len(params.Projects) == 0 && params.Name == "") {
-		isLocal = true
-	}
-	if isLocal {
-		var bundles []BundleInfo
-		bundles, err := listLocalPackages(cred.TempDir, params.Name)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to list local packages in '%s': %w", cred.TempDir, err)
-		}
-		return nil, BundleOut{Result: bundles}, nil
-	}
-
+func (cred OSCCredentials) searchRemoteSrcBundle(ctx context.Context, bundleName string, projects []string) ([]BundleInfo, error) {
 	var matches []string
-	if params.Name != "" {
-		matches = append(matches, fmt.Sprintf("@name='%s'", params.Name))
+	if bundleName != "" {
+		matches = append(matches, fmt.Sprintf("@name='%s'", bundleName))
 	}
-	if len(params.Projects) > 0 {
+	if len(projects) > 0 {
 		var projectMatches []string
-		for _, p := range params.Projects {
+		for _, p := range projects {
 			projectMatches = append(projectMatches, fmt.Sprintf("@project='%s'", p))
 		}
 		matches = append(matches, fmt.Sprintf("(%s)", strings.Join(projectMatches, " or ")))
@@ -89,7 +75,7 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 
 	apiURL, err := url.Parse(fmt.Sprintf("https://%s/search/package", cred.Apiaddr))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse API URL: %w", err)
+		return nil, fmt.Errorf("failed to parse API URL: %w", err)
 	}
 	q := apiURL.Query()
 	q.Set("match", match)
@@ -97,7 +83,7 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	httpReq.Header.Set("User-Agent", "osc-mcp")
@@ -107,17 +93,17 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 	client := &http.Client{}
 	resp, err := client.Do(httpReq)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("api request failed with status: %s", resp.Status)
+		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
 	}
 
 	doc := etree.NewDocument()
 	if _, err := doc.ReadFrom(resp.Body); err != nil {
-		return nil, nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var packages []BundleInfo
@@ -133,6 +119,31 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 			p.Description = description.Text()
 		}
 		packages = append(packages, p)
+	}
+	return packages, nil
+}
+
+func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, any, error) {
+	slog.Debug("mcp tool call: SearchSrcBundle", "session", req.Session.ID(), "params", params)
+	isLocal := false
+	if len(params.Projects) == 1 && strings.EqualFold("local", strings.ToLower(params.Projects[0])) || (len(params.Projects) == 0 && params.Name == "") {
+		isLocal = true
+	}
+	if isLocal {
+		var bundles []BundleInfo
+		bundles, err := listLocalPackages(cred.TempDir, params.Name)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to list local packages in '%s': %w", cred.TempDir, err)
+		}
+		return nil, BundleOut{Result: bundles}, nil
+	}
+
+	packages, err := cred.searchRemoteSrcBundle(ctx, params.Name, params.Projects)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(packages) == 0 {
+		return nil, nil, ErrBundleOrProjectNotFound
 	}
 
 	return nil, BundleOut{

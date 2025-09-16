@@ -25,8 +25,7 @@ type Repository struct {
 }
 
 type ProjectMeta struct {
-	Name         string       `json:"name"`
-	Exists       bool         `json:"exists"`
+	ProjectName  string       `json:"project_name"`
 	Title        string       `json:"title,omitempty"`
 	Description  string       `json:"description,omitempty"`
 	Maintainers  []string     `json:"maintainers,omitempty"`
@@ -60,10 +59,7 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return &ProjectMeta{
-			Name:   projectName,
-			Exists: false,
-		}, nil
+		return nil, ErrBundleOrProjectNotFound
 	} else if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
 	}
@@ -79,7 +75,7 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 	}
 
 	meta := &ProjectMeta{
-		Name: projectElement.SelectAttrValue("name", ""),
+		ProjectName: projectElement.SelectAttrValue("name", ""),
 	}
 
 	if title := projectElement.SelectElement("title"); title != nil {
@@ -118,23 +114,7 @@ func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, req *mcp.CallToo
 	return nil, res, err
 }
 
-type SetProjectMetaParam struct {
-	ProjectName  string       `json:"project_name" jsonschema:"Name of the project"`
-	Comment      string       `json:"comment,omitempty" jsonschema:"Comment that explains the changes you made in meta file."`
-	Title        string       `json:"title,omitempty" jsonschema:"The title of the project."`
-	Description  string       `json:"description,omitempty" jsonschema:"The description of the project."`
-	Maintainers  []string     `json:"maintainers,omitempty" jsonschema:"List of user IDs for project maintainers."`
-	Repositories []Repository `json:"repositories" jsonschema:"List of repositories for the project."`
-}
-
-func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params SetProjectMetaParam) (*mcp.CallToolResult, *ProjectMeta, error) {
-	slog.Debug("mcp tool call: SetProjectMeta", "params", params)
-	if params.ProjectName == "" {
-		return nil, nil, fmt.Errorf("project name cannot be empty")
-	}
-	if len(params.Repositories) == 0 {
-		return nil, nil, fmt.Errorf("at least one repository must be provided")
-
+func (cred *OSCCredentials) setProjectMetaInternal(ctx context.Context, params ProjectMeta) error {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	project := doc.CreateElement("project")
@@ -179,12 +159,6 @@ func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToo
 		return fmt.Errorf("failed to parse API URL: %w", err)
 	}
 
-	if params.Comment != "" {
-		q := apiURL.Query()
-		q.Set("comment", params.Comment)
-		apiURL.RawQuery = q.Encode()
-	}
-
 	httpReq, err := http.NewRequestWithContext(ctx, "PUT", apiURL.String(), strings.NewReader(metaString))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -219,7 +193,7 @@ func (cred *OSCCredentials) SetProjectMeta(ctx context.Context, req *mcp.CallToo
 			{
 				Name:        "openSUSE_Tumbleweed",
 				PathProject: "openSUSE:Factory",
-				Arches:      []string{"x86_64", "i586"},
+				Arches:      []string{"x86_64"},
 			},
 		}
 	}
