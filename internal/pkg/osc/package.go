@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"gopkg.in/yaml.v3"
 )
@@ -23,8 +24,7 @@ type Defaults struct {
 
 type CreateBundleParam struct {
 	PackageName  string       `json:"package_name" jsonschema:"The name of the package to create."`
-	Flavor       string       `json:"flavor,omitempty" jsonschema:"The flavor of the package (e.g., python, go, java, lua, c, cpp). Determines the generated spec file."`
-	ProvideSpec  bool         `json:"provide_spec,omitempty" jsonschema:"Provide a spec file"`
+	Flavor       string       `json:"flavor,omitempty"`
 	ProjectName  string       `json:"project_name,omitempty" jsonschema:"Name of the project. If not provided, a project name is generated."`
 	Title        string       `json:"title,omitempty" jsonschema:"The title of the project."`
 	Description  string       `json:"description,omitempty" jsonschema:"The description of the project."`
@@ -128,9 +128,9 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 
 	projectDir := filepath.Join(cred.TempDir, projectName)
 
-	if params.ProvideSpec {
+	if params.Flavor != "" {
 		flavor := params.Flavor
-		if flavor == "" || flavor == "c" || flavor == "cpp" {
+		if flavor == "c" || flavor == "cpp" {
 			flavor = "default"
 		}
 
@@ -159,4 +159,21 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 		Package: params.PackageName,
 		Path:    filepath.Join(projectDir, params.PackageName),
 	}, nil
+}
+
+func CreateBundleInputSchema() *jsonschema.Schema {
+	defaults, err := readDefaults()
+	var flavors []any
+	if err != nil {
+		slog.Warn("could not read defaults for creating input schema", "err", err)
+	} else {
+		for k := range defaults.Specs {
+			flavors = append(flavors, k)
+		}
+	}
+	inputSchema, _ := jsonschema.For[CreateBundleParam](nil)
+	inputSchema.Properties["flavor"].Enum = flavors
+	inputSchema.Properties["flavor"].Description = "The flavor of the bundle so that a spec with proper defaults for this flavor is generated."
+
+	return inputSchema
 }

@@ -128,6 +128,7 @@ func main() {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create_bundle",
 		Description: "Create a new local bundle. Will also create a project if it does not exist. Before commit this package can't be checked out.",
+		InputSchema: osc.CreateBundleInputSchema(),
 	}, obsCred.CreateBundle)
 	// /*
 	// 	mcp.AddTool(server, &mcp.Tool{
