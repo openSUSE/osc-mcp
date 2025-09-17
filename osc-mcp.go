@@ -11,6 +11,7 @@ import (
 
 	"github.com/jaevor/go-nanoid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/openSUSE/osc-mcp/internal/pkg/licenses"
 	"github.com/openSUSE/osc-mcp/internal/pkg/osc"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -160,6 +161,10 @@ func main() {
 		Name:        "package_missing",
 		Description: "Steps on what to do when a build failed because of a missing package.",
 	}, obsCred.PromptPackage)
+	server.AddResource(&mcp.Resource{
+		Name:        "spdx_licenses",
+		Description: "List of SPDX licenses which can be used a identifier.",
+	}, licenses.GetLicenseIdentifiers)
 	if viper.GetString("http") != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
