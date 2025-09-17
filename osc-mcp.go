@@ -173,7 +173,8 @@ func main() {
 		http.ListenAndServe(viper.GetString("http"), handler)
 	} else {
 		slog.Info("New client has connected via stdin/stdout")
-		if err := server.Run(context.Background(), &mcp.SSEServerTransport{}); err != nil {
+
+		if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 			slog.Error("Server failed", slog.Any("error", err))
 		}
 	}
