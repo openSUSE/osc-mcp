@@ -21,8 +21,12 @@ import (
 //go:embed data/defaults.yaml
 var defaultsYaml []byte
 
+//go:embed data/licenses.json
+var licensesJson []byte
+
 func main() {
 	osc.SetDefaultsYaml(defaultsYaml)
+	licenses.SetLicensesJson(licensesJson)
 
 
 	pflag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")

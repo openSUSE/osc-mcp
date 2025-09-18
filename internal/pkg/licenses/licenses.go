@@ -3,8 +3,10 @@ package licenses
 import (
 	"context"
 	"encoding/json"
-	"io"
+	"fmt"
+	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -17,20 +19,53 @@ type LicenseList struct {
 	Licenses []License `json:"licenses"`
 }
 
-func GetLicenseIdentifiers(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
-	jsonFile, err := os.Open("data/licenses.json")
-	if err != nil {
-		return nil, err
-	}
-	defer jsonFile.Close()
+var licensesJson []byte
 
-	byteValue, err := io.ReadAll(jsonFile)
-	if err != nil {
-		return nil, err
-	}
+func SetLicensesJson(data []byte) {
+	licensesJson = data
+}
 
+func readLicenses() (LicenseList, error) {
 	var licenseList LicenseList
-	if err := json.Unmarshal(byteValue, &licenseList); err != nil {
+	var jsonFile []byte
+	var err error
+
+	configPaths := []string{}
+	if home, err := os.UserHomeDir(); err == nil {
+		configPaths = append(configPaths, filepath.Join(home, ".config", "osc-mcp", "licenses.json"))
+	} else {
+		slog.Warn("could not get user home directory, skipping user config", "err", err)
+	}
+	configPaths = append(configPaths, "/etc/osc-mcp/licenses.json", "/usr/etc/osc-mcp/licenses.json")
+
+	var found bool
+	for _, configPath := range configPaths {
+		if _, err := os.Stat(configPath); err == nil {
+			jsonFile, err = os.ReadFile(configPath)
+			if err != nil {
+				return LicenseList{}, fmt.Errorf("failed to read %s: %w", configPath, err)
+			}
+			slog.Debug("using licenses from", "path", configPath)
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		slog.Debug("using embedded licenses")
+		jsonFile = licensesJson
+	}
+
+	err = json.Unmarshal(jsonFile, &licenseList)
+	if err != nil {
+		return LicenseList{}, fmt.Errorf("failed to unmarshal licenses.json: %w", err)
+	}
+	return licenseList, nil
+}
+
+func GetLicenseIdentifiers(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+	licenseList, err := readLicenses()
+	if err != nil {
 		return nil, err
 	}
 
