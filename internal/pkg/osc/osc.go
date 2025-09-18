@@ -31,6 +31,16 @@ type OSCCredentials struct {
 	LastBuildKey string
 }
 
+func normalizeAPIURL(raw string) (string, error) {
+    if raw == "" {
+        return "", fmt.Errorf("API URL is empty")
+    }
+    if !strings.HasPrefix(raw, "http://") && !strings.HasPrefix(raw, "https://") {
+	return strings.TrimRight(fmt.Sprintf("https://%s", strings.TrimLeft(raw, "/")), "/"), nil
+    }
+    return strings.TrimRight(raw, "/"), nil
+}
+
 // GetCredentials reads the osc configuration, determines the api url and
 // returns the stored credentials.
 // It will try to read ~/.config/osc/oscrc, ~/.oscrc and ./.oscrc.
