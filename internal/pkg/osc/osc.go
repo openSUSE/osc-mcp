@@ -24,6 +24,7 @@ func IgnoredDirs() []string {
 
 type OSCCredentials struct {
 	Name         string
+	EMail        string
 	Passwd       string
 	Apiaddr      string
 	TempDir      string
@@ -47,6 +48,20 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	if err != nil {
 		err = fmt.Errorf("could not get user home directory: %w", err)
 		return
+	}
+
+	if viper.GetString("email") != "" {
+		creds.EMail = viper.GetString("email")
+	} else {
+		gitConfigPath := filepath.Join(home, ".gitconfig")
+		if _, err := os.Stat(gitConfigPath); err == nil {
+			gitCfg, err := config.NewConfig(gitConfigPath)
+			if err == nil {
+				creds.EMail = gitCfg.GetString("user", "email")
+			} else {
+				slog.Warn("failed to parse .gitconfig", "path", gitConfigPath, "error", err)
+			}
+		}
 	}
 
 	configDir, err := os.UserConfigDir()

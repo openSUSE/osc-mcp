@@ -22,6 +22,7 @@ func main() {
 	pflag.String("api", "https://api.opensuse.org", "address of the api of the OBS instance to interact with")
 	pflag.String("workdir", "", "if set, use this directory as temporary directory")
 	pflag.String("user", "", "OBS username")
+	pflag.String("email", "", "user's email address")
 	pflag.String("password", "", "OBS password")
 	pflag.Bool("print-creds", false, "Just print the retrieved credentials and exit")
 	pflag.Bool("clean-workdir", false, "Cleans the workdir before usage")

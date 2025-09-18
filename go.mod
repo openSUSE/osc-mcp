@@ -6,6 +6,7 @@ require (
 	github.com/beevik/etree v1.5.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/google/jsonschema-go v0.2.3
+	github.com/hbollon/go-edlib v1.7.0
 	github.com/jaevor/go-nanoid v1.4.0
 	github.com/modelcontextprotocol/go-sdk v0.5.0
 	github.com/olekukonko/tablewriter v0.0.5
