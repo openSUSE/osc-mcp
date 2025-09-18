@@ -16,6 +16,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var defaultsYaml []byte
+
+func SetDefaultsYaml(data []byte) {
+	defaultsYaml = data
+}
+
 type Defaults struct {
 	Repositories    []Repository      `yaml:"repositories"`
 	CopyrightHeader string            `yaml:"copyright_header"`
@@ -39,21 +45,33 @@ type CreateBundleResult struct {
 
 func readDefaults() (Defaults, error) {
 	var defaults Defaults
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return Defaults{}, fmt.Errorf("could not get user home directory: %w", err)
+	var yamlFile []byte
+	var err error
+
+	configPaths := []string{}
+	if home, err := os.UserHomeDir(); err == nil {
+		configPaths = append(configPaths, filepath.Join(home, ".config", "osc-mcp", "defaults.yaml"))
+	} else {
+		slog.Warn("could not get user home directory, skipping user config", "err", err)
 	}
-	configPath := filepath.Join(home, ".config", "osc-mcp", "defaults.yaml")
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		configPath = "defaults.yaml"
-		if _, err := os.Stat(configPath); os.IsNotExist(err) {
-			return Defaults{}, fmt.Errorf("defaults.yaml not found in ~/.config/osc-mcp/ or current directory")
+	configPaths = append(configPaths, "/etc/osc-mcp/defaults.yaml", "/usr/etc/osc-mcp/defaults.yaml")
+
+	var found bool
+	for _, configPath := range configPaths {
+		if _, err := os.Stat(configPath); err == nil {
+			yamlFile, err = os.ReadFile(configPath)
+			if err != nil {
+				return Defaults{}, fmt.Errorf("failed to read %s: %w", configPath, err)
+			}
+			slog.Debug("using defaults from", "path", configPath)
+			found = true
+			break
 		}
 	}
 
-	yamlFile, err := os.ReadFile(configPath)
-	if err != nil {
-		return Defaults{}, fmt.Errorf("failed to read defaults.yaml: %w", err)
+	if !found {
+		slog.Debug("using embedded defaults")
+		yamlFile = defaultsYaml
 	}
 
 	err = yaml.Unmarshal(yamlFile, &defaults)

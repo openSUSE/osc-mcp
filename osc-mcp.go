@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -17,7 +18,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+//go:embed data/defaults.yaml
+var defaultsYaml []byte
+
 func main() {
+	osc.SetDefaultsYaml(defaultsYaml)
+
+
 	pflag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
 	pflag.String("api", "https://api.opensuse.org", "address of the api of the OBS instance to interact with")
 	pflag.String("workdir", "", "if set, use this directory as temporary directory")
