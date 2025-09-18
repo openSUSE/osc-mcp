@@ -241,11 +241,7 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 }
 
 func (cred *OSCCredentials) getRemoteFileList(ctx context.Context, project, pkg string) (*Directory, error) {
-	if cred.Apiaddr == "" {
-		cred.Apiaddr = "https://api.opensuse.org"
-	}
-	normalizedAPI, err := normalizeAPIURL(cred.Apiaddr)
-	url := fmt.Sprintf("%s/source/%s/%s", normalizedAPI, project, pkg)
+	url := fmt.Sprintf("%s/source/%s/%s", cred.GetAPiAddr(), project, pkg)
 	req, err := cred.buildRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -293,11 +289,7 @@ func (cred *OSCCredentials) uploadFile(ctx context.Context, project, pkg, fileNa
 	}
 	defer file.Close()
 
-	if cred.Apiaddr == "" {
-		cred.Apiaddr = "https://api.opensuse.org"
-	}
-	normalizedAPI, err := normalizeAPIURL(cred.Apiaddr)
-	url := fmt.Sprintf("%s/source/%s/%s/%s", normalizedAPI, project, pkg, fileName)
+	url := fmt.Sprintf("%s/source/%s/%s/%s", cred.GetAPiAddr(), project, pkg, fileName)
 	req, err := cred.buildRequest(ctx, "PUT", url, file)
 	if err != nil {
 		return err
@@ -319,14 +311,7 @@ func (cred *OSCCredentials) uploadFile(ctx context.Context, project, pkg, fileNa
 
 func (cred *OSCCredentials) commitFiles(ctx context.Context, project, pkg, message string, xmlData []byte) error {
 	escapedMessage := url.QueryEscape(message)
-	if cred.Apiaddr == "" {
-		cred.Apiaddr = "https://api.opensuse.org"
-	}
-	normalizedAPI, err := normalizeAPIURL(cred.Apiaddr)
-	if err != nil {
-	    return fmt.Errorf("invalid API address: %w", err)
-	}
-	url := fmt.Sprintf("%s/source/%s/%s?cmd=commit&comment=%s", normalizedAPI, project, pkg, escapedMessage)
+	url := fmt.Sprintf("%s/source/%s/%s?cmd=commit&comment=%s", cred.GetAPiAddr(), project, pkg, escapedMessage)
 	slog.Debug("Committing to OBS", "url", url)
 	req, err := cred.buildRequest(ctx, "POST", url, bytes.NewReader(xmlData))
 	if err != nil {

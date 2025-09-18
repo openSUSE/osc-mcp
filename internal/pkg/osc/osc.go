@@ -31,14 +31,8 @@ type OSCCredentials struct {
 	LastBuildKey string
 }
 
-func normalizeAPIURL(raw string) (string, error) {
-    if raw == "" {
-        return "", fmt.Errorf("API URL is empty")
-    }
-    if !strings.HasPrefix(raw, "http://") && !strings.HasPrefix(raw, "https://") {
-	return strings.TrimRight(fmt.Sprintf("https://%s", strings.TrimLeft(raw, "/")), "/"), nil
-    }
-    return strings.TrimRight(raw, "/"), nil
+func (cred *OSCCredentials) GetAPiAddr() string {
+	return fmt.Sprintf("https://%s", cred.Apiaddr)
 }
 
 // GetCredentials reads the osc configuration, determines the api url and
@@ -91,8 +85,7 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 		apiurl = viper.GetString("api")
 	}
 	if apiurl == "" {
-		err = fmt.Errorf("apiurl not set in general section of .oscrc")
-		return
+		apiurl = "api.opensuse.org"
 	}
 	creds.Apiaddr = apiurl
 	user := cfg.GetString(apiurl, "user")
@@ -209,7 +202,7 @@ func (cred *OSCCredentials) writeTempOscConfig() (string, error) {
 		return "", fmt.Errorf("failed to create temporary config file: %w", err)
 	}
 
-	configContent := fmt.Sprintf("[general]\napi=https://%s\nuser=%s\n[https://%s]\nuser=%s\npass=%s\n", cred.Apiaddr, cred.Name, cred.Apiaddr, cred.Name, cred.Passwd)
+	configContent := fmt.Sprintf("[general]\napi=%s\nuser=%s\n[%s]\nuser=%s\npass=%s\n", cred.GetAPiAddr(), cred.Name, cred.GetAPiAddr(), cred.Name, cred.Passwd)
 	slog.Debug("configuration file content", "content", configContent)
 	if _, err := configFile.WriteString(configContent); err != nil {
 		configFile.Close() // Close the file before removing it.
@@ -235,7 +228,7 @@ func (cred *OSCCredentials) buildRequest(ctx context.Context, method, url string
 }
 
 func (cred *OSCCredentials) apiGetRequest(ctx context.Context, path string, headers map[string]string) (*http.Response, error) {
-	apiURL := fmt.Sprintf("https://%s/%s", cred.Apiaddr, path)
+	apiURL := fmt.Sprintf("%s/%s", cred.GetAPiAddr(), path)
 	req, err := cred.buildRequest(ctx, "GET", apiURL, nil)
 	if err != nil {
 		return nil, err

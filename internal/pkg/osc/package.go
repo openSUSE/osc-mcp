@@ -82,7 +82,7 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 	if errors.Is(err, ErrBundleOrProjectNotFound) {
 		title := params.Title
 		if title == "" {
-			title = fmt.Sprintf("Project for %s session %s", req.Session.ID())
+			title = fmt.Sprintf("Project for %s session %s", cred.Name, req.Session.ID())
 		}
 		description := params.Description
 		if description == "" {

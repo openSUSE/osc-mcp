@@ -152,7 +152,7 @@ type BuildLogParam struct {
 	RepositoryName   string `json:"repository_name,omitempty" jsonschema:"Repository name"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
-	ShowSucceeded     bool   `json:"show_succeeded,omitempty" jsonschema:"Also show succeeded logs"`
+	ShowSucceeded    bool   `json:"show_succeeded,omitempty" jsonschema:"Also show succeeded logs"`
 }
 
 const defRepo = "openSUSE_Tumbleweed"

@@ -45,8 +45,8 @@ func (p BuildPhase) String() string {
 
 type Phase struct {
 	Succeeded bool
-	Lines    []string
-	Duration int
+	Lines     []string
+	Duration  int
 }
 
 type BuildLog struct {
