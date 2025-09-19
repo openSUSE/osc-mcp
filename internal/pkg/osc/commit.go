@@ -25,7 +25,7 @@ type CommitCmd struct {
 	Directory           string `json:"directory" jsonschema:"Directory of the package to commit"`
 	ProjectName         string `json:"project_name,omitempty" jsonschema:"Project name. If not provided, it will be derived from the directory path."`
 	BundleName          string `json:"bundle_name,omitemtpy" jsonschema:"Bundle name also known as source package name. If not provided, it will be derived from the directory path."`
-	SkipChangesCreation bool   `json:"skip_changes:omitempyt" jsonschema:"Skip the automatic update of the changes file."`
+	SkipChangesCreation bool   `json:"skip_changes,omitempyt" jsonschema:"Skip the automatic update of the changes file."`
 }
 
 type CommitResult struct {

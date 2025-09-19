@@ -32,6 +32,7 @@ specs:
     License:        
     URL:            
     
+    # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
     # needs to run service download_files to download files
     Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
     BuildRequires:  
@@ -39,6 +40,12 @@ specs:
     %description
 
     %prep
+    # The autosetup macro unpacks the source archive and applies any patches.
+    # Common options:
+    # -p1: Strip the first leading component from file names in patches (e.g., a/dir/file -> dir/file).
+    # -n <name>: Set the name of the source directory if it's different from the package name.
+    # -a <number>: Unpack the specified source archive (e.g., -a 1 for Source1).
+    # -N: Do not apply patches automatically. Use macro autopatch later.
     %autosetup -p1
 
     %build
@@ -63,15 +70,17 @@ specs:
     License:        
     URL:            
     
+    # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
     # needs to run service download_files to download files
     Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
     BuildRequires:  python-rpm-macros
-    BuildRequires:  python3-setuptools
-    BuildArch:      noarch
-
-    %description
-
     %prep
+    # The autosetup macro unpacks the source archive and applies any patches.
+    # Common options:
+    # -p1: Strip the first leading component from file names in patches (e.g., a/dir/file -> dir/file).
+    # -n <name>: Set the name of the source directory if it's different from the package name.
+    # -a <number>: Unpack the specified source archive (e.g., -a 1 for Source1).
+    # -N: Do not apply patches automatically. Use macro autopatch later.
     %autosetup -p1
 
     %build
@@ -89,7 +98,7 @@ specs:
 
     %changelog
   go: |
-    %global goipath         github.com/user/__PACKAGE_NAME__
+    %global goipath         github.com/!REPLACE!/__PACKAGE_NAME__
     Name:           __PACKAGE_NAME__
     Version:        
     Release:        0
@@ -97,19 +106,29 @@ specs:
     License:        
     URL:            
     
+    BuildRequires:       
     # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
     # needs to run service download_files to download files
-    Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
+    Source0:        https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
+    # **IMPORTANT**: If the source doesn't include a vendor.tar.xz create one via go_modules service
+    # **IMPORTANT**: Make sure that the Source0 exists as this file is used to get the modules and inlcude it -a1 for autosetup
+    # Source1: vendor.tar.gz
+
     BuildRequires:  golang-packaging
-    BuildRequires:  golang(API) >= 1.16
+    BuildRequires:  golang(API)
 
     %description
 
     %prep
+    # The autosetup macro unpacks the source archive and applies any patches.
+    # Common options:
+    # -p1: Strip the first leading component from file names in patches (e.g., a/dir/file -> dir/file).
+    # -n <name>: Set the name of the source directory if it's different from the package name.
+    # -a <number>: Unpack the specified source archive (e.g., -a 1 for Source1).
+    # -N: Do not apply patches automatically. Use macro autopatch later.
     %autosetup -p1
 
     %build
-    %goprep
     %gobuild
 
     %install
@@ -130,6 +149,7 @@ specs:
     License:        
     URL:            
     
+    # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
     # needs to run service download_files to download files
     Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
     BuildRequires:  java-devel >= 11
@@ -166,6 +186,7 @@ specs:
     License:        
     URL:            
     
+    # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
     # needs to run service download_files to download files
     Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
     BuildRequires:  lua%{lua_version}-devel
@@ -173,6 +194,12 @@ specs:
     %description
 
     %prep
+    # The autosetup macro unpacks the source archive and applies any patches.
+    # Common options:
+    # -p1: Strip the first leading component from file names in patches (e.g., a/dir/file -> dir/file).
+    # -n <name>: Set the name of the source directory if it's different from the package name.
+    # -a <number>: Unpack the specified source archive (e.g., -a 1 for Source1).
+    # -N: Do not apply patches automatically. Use macro autopatch later.
     %autosetup -p1
 
     %build
