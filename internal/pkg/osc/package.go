@@ -38,9 +38,10 @@ type CreateBundleParam struct {
 }
 
 type CreateBundleResult struct {
-	Project string `json:"project"`
-	Package string `json:"package"`
-	Path    string `json:"path"`
+	Project        string            `json:"project"`
+	Package        string            `json:"package"`
+	Path           string            `json:"path"`
+	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
 }
 
 func readDefaults() (Defaults, error) {
@@ -145,6 +146,12 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 	}
 
 	projectDir := filepath.Join(cred.TempDir, projectName)
+	result := CreateBundleResult{
+		Project:        projectName,
+		Package:        params.PackageName,
+		Path:           filepath.Join(projectDir, params.PackageName),
+		GeneratedFiles: make(map[string]string),
+	}
 
 	if params.Flavor != "" {
 		flavor := params.Flavor
@@ -171,12 +178,9 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to write spec file: %w", err)
 		}
+		result.GeneratedFiles[specFilePath] = specContent
 	}
-	return nil, CreateBundleResult{
-		Project: projectName,
-		Package: params.PackageName,
-		Path:    filepath.Join(projectDir, params.PackageName),
-	}, nil
+	return nil, result, nil
 }
 
 func CreateBundleInputSchema() *jsonschema.Schema {

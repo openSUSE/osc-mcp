@@ -97,6 +97,7 @@ specs:
     License:        
     URL:            
     
+    # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
     # needs to run service download_files to download files
     Source: https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
     BuildRequires:  golang-packaging
