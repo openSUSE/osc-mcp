@@ -52,19 +52,50 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	}
 
 	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.PackageName)
+	progressToken := req.Params.GetProgressToken()
 	if len(params.RunService) > 0 {
 		for _, service := range params.RunService {
 			serviceCmdLine := append([]string{}, cmdline...)
-			serviceCmdLine = append(serviceCmdLine, "service", "run", service)
+			serviceCmdLine = append(serviceCmdLine, "service", "runall", service)
 			oscServiceCmd := exec.CommandContext(ctx, serviceCmdLine[0], serviceCmdLine[1:]...)
 			oscServiceCmd.Dir = cmdDir
-			slog.Info("running osc service run", slog.String("command", oscServiceCmd.String()), slog.String("dir", cmdDir))
-			output, err := oscServiceCmd.CombinedOutput()
+
+			stdout, err := oscServiceCmd.StdoutPipe()
 			if err != nil {
-				slog.Error("failed to run osc service", "service", service, "error", err, "output", string(output))
-				return nil, BuildResult{Error: fmt.Sprintf("failed to run service %s: %s\n%s", service, err, string(output)), Success: false}, nil
+				return nil, BuildResult{Error: "failed to get stdout pipe for service " + service + ": " + err.Error(), Success: false}, nil
 			}
-			slog.Info("osc service run finished successfully", "service", service, "output", string(output))
+			oscServiceCmd.Stderr = oscServiceCmd.Stdout
+
+			slog.Debug("running osc service run", slog.String("command", oscServiceCmd.String()), slog.String("dir", cmdDir))
+
+			if err := oscServiceCmd.Start(); err != nil {
+				slog.Error("failed to start osc service", "command", serviceCmdLine)
+				return nil, BuildResult{Error: "failed to start service " + service + ": " + err.Error(), Success: false}, nil
+			}
+
+			var serviceOut bytes.Buffer
+			scanner := bufio.NewScanner(stdout)
+			for scanner.Scan() {
+				line := scanner.Text()
+				serviceOut.WriteString(line)
+				serviceOut.WriteString("\n")
+				if progressToken != nil {
+					err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+						ProgressToken: progressToken,
+						Message:       line,
+					})
+					if err != nil {
+						slog.Warn("failed to send progress notification for service run", "service", service, "error", err)
+					}
+				}
+			}
+
+			err = oscServiceCmd.Wait()
+			if err != nil {
+				slog.Error("failed to run osc service", "service", service, "error", err, "output", serviceOut.String())
+				return nil, BuildResult{Error: fmt.Sprintf("failed to run service %s: %s\n%s", service, err, serviceOut.String()), Success: false}, nil
+			}
+			slog.Debug("osc service run finished successfully", "service", service, "output", serviceOut.String())
 		}
 	}
 
@@ -143,7 +174,6 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 		return nil, BuildResult{Error: "failed to start build: " + err.Error(), Success: false}, nil
 	}
 
-	progressToken := req.Params.GetProgressToken()
 	var out bytes.Buffer
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
@@ -174,7 +204,7 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 
 	var result BuildResult
 	if buildErr != nil {
-		slog.Error("failed to run osc build", slog.String("command", oscCmd.String()), slog.String("output", out.String()), "error", buildErr)
+		slog.Error("failed to run osc build", slog.String("command", oscCmd.String()), "error", buildErr)
 		result = BuildResult{
 			Error:     buildErr.Error(),
 			ParsedLog: buildLog,
