@@ -28,7 +28,6 @@ func main() {
 	osc.SetDefaultsYaml(defaultsYaml)
 	licenses.SetLicensesJson(licensesJson)
 
-
 	pflag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
 	pflag.String("api", "https://api.opensuse.org", "address of the api of the OBS instance to interact with")
 	pflag.String("workdir", "", "if set, use this directory as temporary directory")
@@ -163,7 +162,7 @@ func main() {
 	}, obsCred.SearchPackages)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "commit",
-		Description: "Commits changed files. If a .spec file is staged, the corresponding .changes file will be updated.",
+		Description: "Commits changed files. If a .spec file is staged, the corresponding .changes file will be updated or created accordingly to input.",
 	}, obsCred.Commit)
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "basic_information",

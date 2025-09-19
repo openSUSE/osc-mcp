@@ -26,7 +26,7 @@ copyright_header: |
 specs:
   default: |
     Name:           __PACKAGE_NAME__
-    Version:        
+    Version:        0.0.0        
     Release:        0
     Summary:
     License:        
@@ -61,10 +61,11 @@ specs:
     %files
     # list files here
 
+    # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically 
     %changelog
   python: |
     Name:           __PACKAGE_NAME__
-    Version:        
+    Version:        0.0.0        
     Release:        0
     Summary:        
     License:        
@@ -96,17 +97,17 @@ specs:
     %files
     # list files here
 
+    # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically 
     %changelog
   go: |
     %global goipath         github.com/!REPLACE!/__PACKAGE_NAME__
     Name:           __PACKAGE_NAME__
-    Version:        
+    Version:        0.0.0        
     Release:        0
     Summary:        
     License:        
     URL:            
     
-    BuildRequires:       
     # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
     # needs to run service download_files to download files
     Source0:        https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz         
@@ -140,10 +141,11 @@ specs:
     %files
     %{_bindir}/__PACKAGE_NAME__
 
+    # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically 
     %changelog
   java: |
     Name:           __PACKAGE_NAME__
-    Version:        
+    Version:        0.0.0        
     Release:        0
     Summary:        
     License:        
@@ -175,12 +177,13 @@ specs:
     %doc README.md
     %mvn_artifact pom.xml target/%{name}-%{version}.jar
 
+    # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically 
     %changelog
   lua: |
     %global lua_name        __PACKAGE_NAME__
     %global lua_version     5.4
     Name:           lua%{lua_version}-%{lua_name}
-    Version:        
+    Version:        0.0.0        
     Release:        0
     Summary:        
     License:        
@@ -210,4 +213,5 @@ specs:
 
     %files
 
+    # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically 
     %changelog
