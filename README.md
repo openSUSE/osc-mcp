@@ -28,6 +28,21 @@ which uses preset temporary working directory.
 
 You can now use `gemini-cli` or `mcphost` to access this server
 
+## Reference prompts
+
+Following prompts can be used and give you an example of what this tool can do
+
+### Self packaging
+
+```
+Check at first https://github.com/openSUSE/osc-mcp online for the actual version and used language. Then package it as osc-mcp in home:mslacken:ml. Download the source via a service and make sure that files are                
+correctly included in the spec file.                                                                                    
+Build the package to confirm success. Between builds, check if services correctly donwloaded. If a download fails check online in the github repo if the version is correct.
+After success commit the package.
+```
+
+You can see the result at [science:machinelearning:mcp/osc-mcp](https://build.opensuse.org/package/show/science:machinelearning:mcp/osc-mcp)
+
 ### [gemini-cli](https://github.com/google-gemini/gemini-cli)
 
 Add the following configuration to `~/.gemini/settings.json`
