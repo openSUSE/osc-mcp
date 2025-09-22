@@ -33,6 +33,9 @@ type OSCCredentials struct {
 }
 
 func (cred *OSCCredentials) GetAPiAddr() string {
+	if strings.HasPrefix(cred.Apiaddr, "http://") || strings.HasPrefix(cred.Apiaddr, "https://") {
+		return cred.Apiaddr
+	}
 	return fmt.Sprintf("https://%s", cred.Apiaddr)
 }
 

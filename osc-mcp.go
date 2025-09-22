@@ -164,6 +164,10 @@ func main() {
 		Name:        "commit",
 		Description: "Commits changed files. If a .spec file is staged, the corresponding .changes file will be updated or created accordingly to input.",
 	}, obsCred.Commit)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_requests",
+		Description: "Get all requests a user is involved in. The user can be creator, reviewer or is involved by being a maintainer of a target project/package",
+	}, obsCred.ListRequests)
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "basic_information",
 		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",
