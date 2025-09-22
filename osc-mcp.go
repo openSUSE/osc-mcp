@@ -165,9 +165,13 @@ func main() {
 		Description: "Commits changed files. If a .spec file is staged, the corresponding .changes file will be updated or created accordingly to input.",
 	}, obsCred.Commit)
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "get_requests",
-		Description: "Get all requests a user is involved in. The user can be creator, reviewer or is involved by being a maintainer of a target project/package",
+		Name:        "list_requests",
+		Description: fmt.Sprintf("Get a list of requests. Need to set one of the following: user, group, project, package, state, reviewstates, types, ids. If not package group or ids ist set %s will be set for user.", obsCred.Name),
 	}, obsCred.ListRequests)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_request",
+		Description: "Get a single request by its ID. Includes a diff to what has changed in that request.",
+	}, obsCred.GetRequest)
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "basic_information",
 		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",

@@ -14,17 +14,49 @@ import (
 )
 
 type ListRequestsCmd struct {
-	User            string `json:"user,omitempty" jsonschema:"Username to get requests for. If not provided, it will use the configured user."`
-	Group           string `json:"group,omitempty" jsonschema:"Group name to filter requests."`
-	Project         string `json:"project,omitempty" jsonschema:"Project name to filter requests."`
-	Package         string `json:"package,omitempty" jsonschema:"Package name to filter requests."`
-	States          string `json:"states,omitempty" jsonschema:"Comma-separated list of request states (e.g., 'new,review'). Defaults to 'new,review'"`
-	ReviewStates    string `json:"reviewstates,omitempty" jsonschema:"Comma-separated list of review states."`
-	Types           string `json:"types,omitempty" jsonschema:"Comma-separated list of action types."`
-	Roles           string `json:"roles,omitempty" jsonschema:"Comma-separated list of roles."`
-	WithHistory     bool   `json:"withhistory,omitempty" jsonschema:"Include history of request."`
-	WithFullHistory bool   `json:"withfullhistory,omitempty" jsonschema:"Include full history of request with all comments."`
-	Limit           int    `json:"limit,omitempty" jsonschema:"Limit number of requests."`
+	User         string `json:"user,omitempty" jsonschema:"Username to get requests for. If not provided, it will use the configured user."`
+	Group        string `json:"group,omitempty" jsonschema:"Group name to filter requests."`
+	Project      string `json:"project,omitempty" jsonschema:"Project name to filter requests."`
+	Package      string `json:"package,omitempty" jsonschema:"Package name to filter requests."`
+	States       string `json:"states,omitempty" jsonschema:"Comma-separated list of request states (e.g., 'new,review'). Defaults to 'new,review'"`
+	ReviewStates string `json:"reviewstates,omitempty" jsonschema:"Comma-separated list of review states."`
+	Types        string `json:"types,omitempty" jsonschema:"Comma-separated list of action types."`
+	Limit        int    `json:"limit,omitempty" jsonschema:"Limit number of requests."`
+	Ids          string `json:"ids,omitempty" jsonschema:"Comma-separated list of request IDs."`
+}
+
+type GetRequestCmd struct {
+	Id string `json:"id" jsonschema:"Request ID."`
+}
+
+type Request struct {
+	XMLName     xml.Name        `xml:"request"`
+	ID          string          `xml:"id,attr"`
+	Creator     string          `xml:"creator,attr"`
+	Created     string          `xml:"created,attr"`
+	Actions     []RequestAction `xml:"action"`
+	State       RequestState    `xml:"state"`
+	Description string          `xml:"description"`
+	Histories   []History       `xml:"history"`
+	Reviews     []Review        `xml:"review"`
+	Diff        string          `json:"diff,omitempty" xml:"-"`
+}
+
+type History struct {
+	Who     string `xml:"who,attr"`
+	When    string `xml:"when,attr"`
+	Comment string `xml:",chardata"`
+}
+
+type Review struct {
+	XMLName   xml.Name `xml:"review"`
+	State     string   `xml:"state,attr"`
+	Who       string   `xml:"who,attr"`
+	When      string   `xml:"when,attr"`
+	ByUser    string   `xml:"by_user,attr"`
+	ByGroup   string   `xml:"by_group,attr"`
+	ByProject string   `xml:"by_project,attr"`
+	ByPackage string   `xml:"by_package,attr"`
 }
 
 type RequestCollection struct {
@@ -89,22 +121,18 @@ func (cred *OSCCredentials) ListRequests(ctx context.Context, req *mcp.CallToolR
 	queryParams := url.Values{}
 	queryParams.Set("view", "collection")
 
-	user := params.User
-	if user == "" {
-		user = cred.Name
-	}
-	if user != "" {
-		queryParams.Set("user", user)
-	}
-
+	mustSetuser := true
 	if params.Group != "" {
 		queryParams.Set("group", params.Group)
+		mustSetuser = false
 	}
 	if params.Project != "" {
 		queryParams.Set("project", params.Project)
+		mustSetuser = false
 	}
 	if params.Package != "" {
 		queryParams.Set("package", params.Package)
+		mustSetuser = false
 	}
 	if params.States != "" {
 		queryParams.Set("states", params.States)
@@ -117,18 +145,16 @@ func (cred *OSCCredentials) ListRequests(ctx context.Context, req *mcp.CallToolR
 	if params.Types != "" {
 		queryParams.Set("types", params.Types)
 	}
-	if params.Roles != "" {
-		queryParams.Set("roles", params.Roles)
-	}
-	if params.WithHistory {
-		queryParams.Set("withhistory", "1")
-	}
-	if params.WithFullHistory {
-		queryParams.Set("withfullhistory", "1")
-	}
 	if params.Limit > 0 {
 		queryParams.Set("limit", strconv.Itoa(params.Limit))
 	}
+	user := params.User
+	if user == "" && mustSetuser {
+		user = cred.Name
+		queryParams.Set("user", user)
+	}
+	// always use full history
+	queryParams.Set("withfullhistory", "1")
 
 	fullURL := fmt.Sprintf("%s?%s", baseURL, queryParams.Encode())
 	slog.Debug("Getting requests from OBS", "url", fullURL)
@@ -172,4 +198,92 @@ func (cred *OSCCredentials) ListRequests(ctx context.Context, req *mcp.CallToolR
 		}
 	}
 	return nil, &requests, nil
+}
+
+func (cred *OSCCredentials) getRequestDiff(ctx context.Context, requestId string) (string, error) {
+	diffURL := fmt.Sprintf("%s/request/%s?cmd=diff", cred.GetAPiAddr(), requestId)
+	slog.Debug("Getting request diff from OBS", "url", diffURL)
+
+	oscReq, err := cred.buildRequest(ctx, "POST", diffURL, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := http.DefaultClient.Do(oscReq)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		if resp.StatusCode == http.StatusNotFound {
+			return string(body), nil
+		}
+		return "", fmt.Errorf("failed to get request diff: status %s, body: %s", resp.Status, string(body))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+func (cred *OSCCredentials) GetRequest(ctx context.Context, req *mcp.CallToolRequest, params GetRequestCmd) (*mcp.CallToolResult, *Request, error) {
+	baseURL := fmt.Sprintf("%s/request/%s", cred.GetAPiAddr(), params.Id)
+	queryParams := url.Values{}
+	// always get the history
+	queryParams.Set("withhistory", "1")
+	fullURL := baseURL
+	if len(queryParams) > 0 {
+		fullURL = fmt.Sprintf("%s?%s", baseURL, queryParams.Encode())
+	}
+	slog.Debug("Getting request from OBS", "url", fullURL)
+	oscReq, err := cred.buildRequest(ctx, "GET", fullURL, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := http.DefaultClient.Do(oscReq)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, nil, fmt.Errorf("failed to get request: status %s, body: %s", resp.Status, string(body))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	var request Request
+	if err := xml.Unmarshal(body, &request); err != nil {
+		slog.Debug("error on decode", "err", err, "xml", string(body))
+		return nil, nil, err
+	}
+
+	diff, err := cred.getRequestDiff(ctx, params.Id)
+	if err != nil {
+		slog.Warn("could not get request diff", "err", err, "request_id", params.Id)
+		request.Diff = fmt.Sprintf("Could not retrieve diff: %v", err)
+	} else {
+		request.Diff = diff
+	}
+
+	if request.Actions == nil {
+		request.Actions = make([]RequestAction, 0)
+	}
+	for i := range request.Actions {
+		if request.Actions[i].Persons == nil {
+			request.Actions[i].Persons = make([]RequestPerson, 0)
+		}
+		if request.Actions[i].Groups == nil {
+			request.Actions[i].Groups = make([]RequestGroup, 0)
+		}
+	}
+	if request.Histories == nil {
+		request.Histories = make([]History, 0)
+	}
+	if request.Reviews == nil {
+		request.Reviews = make([]Review, 0)
+	}
+	return nil, &request, nil
 }
