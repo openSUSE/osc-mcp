@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -39,20 +40,49 @@ func (cred *OSCCredentials) GetAPiAddr() string {
 	return fmt.Sprintf("https://%s", cred.Apiaddr)
 }
 
+func (cred *OSCCredentials) GetApiDomain() string {
+	addr := strings.TrimSuffix(cred.Apiaddr, "http://")
+	addr = strings.TrimSuffix(cred.Apiaddr, "https://")
+	return addr
+}
+
 // GetCredentials reads the osc configuration, determines the api url and
 // returns the stored credentials.
 // It will try to read ~/.config/osc/oscrc, ~/.oscrc and ./.oscrc.
 // It first tries to read the user and password from the config file. If a
 // password is not found, it will try to read the credentials from the keyring.
-func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
-	creds.TempDir = tempDir
-	creds.BuildLogs = make(map[string]*buildlog.BuildLog)
-	home, err := os.UserHomeDir()
-	if err != nil {
-		err = fmt.Errorf("could not get user home directory: %w", err)
-		return
+func GetCredentials() (OSCCredentials, error) {
+	creds := OSCCredentials{
+		BuildLogs: make(map[string]*buildlog.BuildLog),
 	}
-
+	var configPath string
+	home, err := os.UserHomeDir()
+	if err == nil {
+		configPaths := []string{filepath.Join(home, ".oscrc"), ".oscrc"}
+		configDir, err := os.UserConfigDir()
+		if err == nil {
+			configPaths = append([]string{filepath.Join(configDir, ".config", "osc", "oscrc")}, configPaths...)
+		}
+		for _, p := range configPaths {
+			if _, err := os.Stat(p); err == nil {
+				configPath = p
+				break
+			}
+		}
+	}
+	cfg, err := config.NewConfig(configPath)
+	// use system path as default
+	creds.TempDir = path.Join(os.TempDir(), "osc-mcp")
+	if viper.GetString("tempdir") != "" {
+		creds.TempDir = viper.GetString("tempdir")
+	}
+	creds.Apiaddr = cfg.GetString("general", "apiurl")
+	if creds.Apiaddr == "" {
+		creds.Apiaddr = viper.GetString("api")
+	}
+	if creds.Apiaddr == "" {
+		creds.Apiaddr = "api.opensuse.org"
+	}
 	if viper.GetString("email") != "" {
 		creds.EMail = viper.GetString("email")
 	} else {
@@ -67,49 +97,8 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 		}
 	}
 
-	configDir, err := os.UserConfigDir()
-	if err != nil {
-		configDir = filepath.Join(home, ".config")
-	}
-
-	configPaths := []string{
-		filepath.Join(configDir, "osc", "oscrc"),
-		filepath.Join(home, ".oscrc"),
-		".oscrc",
-	}
-
-	var configPath string
-	found := false
-	for _, p := range configPaths {
-		if _, err := os.Stat(p); err == nil {
-			configPath = p
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		err = fmt.Errorf(".oscrc not found in XDG config path, home directory or current directory")
-		return
-	}
-	cfg, err := config.NewConfig(configPath)
-	if err != nil {
-		err = fmt.Errorf("error loading config file: %w", err)
-		return
-	}
-
-	apiurl := cfg.GetString("general", "apiurl")
-	if viper.GetString("api") != "" {
-		apiurl = viper.GetString("api")
-	}
-	if apiurl == "" {
-		apiurl = "api.opensuse.org"
-	}
-	creds.Apiaddr = apiurl
-	user := cfg.GetString(apiurl, "user")
-	pass := cfg.GetString(apiurl, "pass")
-	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "https://")
-	creds.Apiaddr = strings.TrimPrefix(creds.Apiaddr, "http://")
+	user := cfg.GetString(creds.Apiaddr, "user")
+	pass := cfg.GetString(creds.Apiaddr, "pass")
 	// DO NOT REMOVE THIS CHECKS AS THIS COULD LEAD TO LEAKAGE OF EMBARGOED BUGS
 	if strings.Contains(creds.Apiaddr, "suse.de") {
 		return creds, fmt.Errorf("Oh no, A. G. was right, can't run on solar power only.")
@@ -127,20 +116,18 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	}
 	if pass != "" {
 		if user == "" {
-			err = fmt.Errorf("user not set for apiurl %s in .oscrc", apiurl)
-			return
+			return creds, fmt.Errorf("user not set for apiurl %s in .oscrc", creds.Apiaddr)
 		}
 		creds.Name = user
 		creds.Passwd = pass
-		return
+		return creds, nil
 	}
 
 	// fallback to keyring
 	var keyringCreds OSCCredentials
 	keyringCreds, err = useKeyringCreds(creds.Apiaddr)
 	if err != nil {
-		err = fmt.Errorf("password not found in %s and keyring access failed: %w", configPath, err)
-		return
+		return creds, fmt.Errorf("password not found in %s and keyring access failed: %w", configPath, err)
 	}
 
 	creds.Passwd = keyringCreds.Passwd
@@ -149,11 +136,10 @@ func GetCredentials(tempDir string) (creds OSCCredentials, err error) {
 	} else if user != "" {
 		creds.Name = user
 	} else {
-		err = fmt.Errorf("password found in keyring for %s, but username is missing from both keyring and config", creds.Apiaddr)
-		return
+		return creds, fmt.Errorf("password found in keyring for %s, but username is missing from both keyring and config", creds.Apiaddr)
 	}
 
-	return
+	return creds, nil
 }
 
 func useKeyringCreds(apiAddr string) (cred OSCCredentials, err error) {

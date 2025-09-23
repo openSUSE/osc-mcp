@@ -37,7 +37,7 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 		return nil, fmt.Errorf("project name cannot be empty")
 	}
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, projectName))
+	apiURL, err := url.Parse(fmt.Sprintf("%s/source/%s/_meta", cred.GetAPiAddr(), projectName))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse API URL: %w", err)
 	}
@@ -154,7 +154,7 @@ func (cred *OSCCredentials) setProjectMetaInternal(ctx context.Context, params P
 		return fmt.Errorf("failed to generate XML: %w", err)
 	}
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/_meta", cred.Apiaddr, params.ProjectName))
+	apiURL, err := url.Parse(fmt.Sprintf("%s/source/%s/_meta", cred.GetAPiAddr(), params.ProjectName))
 	if err != nil {
 		return fmt.Errorf("failed to parse API URL: %w", err)
 	}

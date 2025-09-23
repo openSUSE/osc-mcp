@@ -18,6 +18,9 @@ func NewConfig(path string) (newConf *Config, err error) {
 	newConf = &Config{
 		data: make(map[string]map[string]string),
 	}
+	if path == "" {
+		return newConf, nil
+	}
 	file, err := os.Open(path)
 	if err != nil {
 		return newConf, fmt.Errorf("failed to open config file: %w", err)

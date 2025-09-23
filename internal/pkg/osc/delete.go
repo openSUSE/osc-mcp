@@ -29,7 +29,7 @@ func (cred OSCCredentials) DeleteProject(ctx context.Context, req *mcp.CallToolR
 		projectName = fmt.Sprintf("home:%s:%s", cred.Name, req.Session.ID())
 	}
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s", cred.Apiaddr, projectName))
+	apiURL, err := url.Parse(fmt.Sprintf("%s/source/%s", cred.GetAPiAddr(), projectName))
 	if err != nil {
 		return nil, DeleteProjectResult{}, fmt.Errorf("failed to parse API URL: %w", err)
 	}

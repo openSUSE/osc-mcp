@@ -44,7 +44,7 @@ type BuildStatus struct {
 
 // GetBuildStatus retrieves the build status for a given package.
 func (cred *OSCCredentials) GetBuildStatus(ctx context.Context, projectName, repositoryName, architectureName, packageName string) (*BuildStatus, error) {
-	url := fmt.Sprintf("https://%s/build/%s/%s/%s/%s/_status", cred.Apiaddr, projectName, repositoryName, architectureName, packageName)
+	url := fmt.Sprintf("%s/build/%s/%s/%s/%s/_status", cred.GetAPiAddr(), projectName, repositoryName, architectureName, packageName)
 	body, statusCode, err := cred.getFromApi(ctx, url)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ type Dep struct {
 
 // GetBuildDepInfo retrieves the build dependency information for a project.
 func (cred *OSCCredentials) GetBuildDepInfo(ctx context.Context, projectName, repositoryName, architectureName string) (*BuildDepInfo, error) {
-	url := fmt.Sprintf("https://%s/build/%s/%s/%s/_builddepinfo", cred.Apiaddr, projectName, repositoryName, architectureName)
+	url := fmt.Sprintf("%s/build/%s/%s/%s/_builddepinfo", cred.GetAPiAddr(), projectName, repositoryName, architectureName)
 	body, statusCode, err := cred.getFromApi(ctx, url)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (cred *OSCCredentials) GetBuildDepInfo(ctx context.Context, projectName, re
 
 // GetBuildLogRaw retrieves the build log for a given package and returns the raw content.
 func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, repositoryName, architectureName, packageName string) (string, error) {
-	url := fmt.Sprintf("https://%s/build/%s/%s/%s/%s/_log", cred.Apiaddr, projectName, repositoryName, architectureName, packageName)
+	url := fmt.Sprintf("%s/build/%s/%s/%s/%s/_log", cred.GetAPiAddr(), projectName, repositoryName, architectureName, packageName)
 	bodyBytes, statusCode, err := cred.getFromApi(ctx, url)
 	if err != nil {
 		return "", err

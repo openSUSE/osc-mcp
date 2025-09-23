@@ -35,7 +35,7 @@ func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRe
 	targetProject := fmt.Sprintf("home:%s:branches:%s", cred.Name, params.Project)
 	targetPackage := params.Package
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/source/%s/%s", cred.Apiaddr, params.Project, params.Package))
+	apiURL, err := url.Parse(fmt.Sprintf("%s/source/%s/%s", cred.GetAPiAddr(), params.Project, params.Package))
 	if err != nil {
 		return nil, BranchResult{}, fmt.Errorf("failed to parse API URL: %w", err)
 	}

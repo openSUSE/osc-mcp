@@ -7,10 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/jaevor/go-nanoid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/licenses"
 	"github.com/openSUSE/osc-mcp/internal/pkg/osc"
@@ -28,8 +26,9 @@ func main() {
 	osc.SetDefaultsYaml(defaultsYaml)
 	licenses.SetLicensesJson(licensesJson)
 
+	// DO NOT SET DEFAULTS HERE
 	pflag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
-	pflag.String("api", "https://api.opensuse.org", "address of the api of the OBS instance to interact with")
+	pflag.String("api", "", "address of the api of the OBS instance to interact with")
 	pflag.String("workdir", "", "if set, use this directory as temporary directory")
 	pflag.String("user", "", "OBS username")
 	pflag.String("email", "", "user's email address")
@@ -78,31 +77,25 @@ func main() {
 			},
 		})
 	noTempClean := true
-	id, err := nanoid.Canonic()
+	obsCred, err := osc.GetCredentials()
 	if err != nil {
 		slog.Error("failed to generate nano id", "error", err)
 		os.Exit(1)
 	}
-	workDir := viper.GetString("workdir")
-	if workDir == "" {
-		workDir = filepath.Join(os.TempDir(), id())
-		noTempClean = false
-	}
 
 	if viper.GetBool("clean-workdir") {
-		if err = os.RemoveAll(workDir); err != nil {
+		if err = os.RemoveAll(obsCred.TempDir); err != nil {
 			slog.Error("failed to clean up workdir", "error", err)
 		}
 	}
-	if err := os.MkdirAll(workDir, 0755); err != nil {
-		slog.Error("failed to create temporary directory", "path", workDir, "error", err)
+	if err := os.MkdirAll(obsCred.TempDir, 0755); err != nil {
+		slog.Error("failed to create temporary directory", "path", obsCred.TempDir, "error", err)
 		os.Exit(1)
 	}
 	if !noTempClean {
-		defer os.RemoveAll(workDir)
+		defer os.RemoveAll(obsCred.TempDir)
 	}
 
-	obsCred, err := osc.GetCredentials(workDir)
 	if err != nil {
 		slog.Error("failed to get OBS credentials", slog.Any("error", err))
 		os.Exit(1)
@@ -123,7 +116,7 @@ func main() {
 	}, obsCred.ListSrcFiles)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "branch_bundle",
-		Description: fmt.Sprintf("Branch a bundle and check it out as local bundle under the path %s", workDir),
+		Description: fmt.Sprintf("Branch a bundle and check it out as local bundle under the path %s", obsCred.TempDir),
 	}, obsCred.BranchBundle)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "build_bundle",
@@ -150,7 +143,7 @@ func main() {
 	// */
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "checkout_bundle",
-		Description: fmt.Sprintf("Checkout a package from the online repository. After this step the package is available as local package under %s", workDir),
+		Description: fmt.Sprintf("Checkout a package from the online repository. After this step the package is available as local package under %s", obsCred.TempDir),
 	}, obsCred.CheckoutBundle)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_build_log",

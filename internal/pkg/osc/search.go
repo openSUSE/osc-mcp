@@ -73,7 +73,7 @@ func (cred OSCCredentials) searchRemoteSrcBundle(ctx context.Context, bundleName
 	}
 	match := strings.Join(matches, " and ")
 
-	apiURL, err := url.Parse(fmt.Sprintf("https://%s/search/package", cred.Apiaddr))
+	apiURL, err := url.Parse(fmt.Sprintf("%s/search/package", cred.GetAPiAddr()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse API URL: %w", err)
 	}
@@ -221,7 +221,7 @@ func (cred OSCCredentials) SearchPackages(ctx context.Context, req *mcp.CallTool
 	if !strings.HasPrefix(cred.Apiaddr, "api.") {
 		return nil, nil, fmt.Errorf("unexpected api address format: %s", cred.Apiaddr)
 	}
-	apiaddr := "download." + strings.TrimPrefix(cred.Apiaddr, "api.")
+	apiaddr := "download." + strings.TrimPrefix(cred.GetApiDomain(), "api.")
 
 	repoPath := "/repositories/" + strings.ReplaceAll(params.Path, ":", ":/")
 	if params.Path_repository != "" {
