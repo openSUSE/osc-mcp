@@ -17,12 +17,12 @@ import (
 
 type BuildParam struct {
 	ProjectName       string   `json:"project_name" jsonschema:"Name of the project"`
-	PackageName       string   `json:"package_name" jsonschema:"Name of the package"`
+	BundleName        string   `json:"bundle_name" jsonschema:"Name of the source package or bundle."`
 	VmType            string   `json:"vm_type,omitempty" jsonschema:"VM type to use for build (e.g., chroot, kvm, podman, docker)"`
 	MultibuildPackage string   `json:"multibuild_package,omitempty" jsonschema:"Specify the flavor of a multibuild package"`
 	Distribution      string   `json:"distribution,omitempty" jsonschema:"Distribution to build against (e.g., openSUSE_Tumbleweed)."`
 	Arch              string   `json:"arch,omitempty" jsonschema:"Architecture to build for (e.g., x86_64)."`
-	RunService        []string `json:"run_service,omitempty" jsonschema:"A list of services which are run before the build. Useful services are: download_files which downloads the source files reference via an URI in the spec file, go_modules which creates a vendor directory for go files."`
+	RunService        []string `json:"run_service,omitempty" jsonschema:"A list of services which are run before the build. Useful services are: download_files which downloads the source files reference via an URI in the spec file, go_modules which creates a vendor directory for go files. If empty only build is run. If other services are present, build must be explitly appended."`
 }
 
 type BuildResult struct {
@@ -38,8 +38,8 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	if params.ProjectName == "" {
 		return nil, BuildResult{}, fmt.Errorf("project name must be specified")
 	}
-	if params.PackageName == "" {
-		return nil, BuildResult{}, fmt.Errorf("package name must be specified")
+	if params.BundleName == "" {
+		return nil, BuildResult{}, fmt.Errorf("package or bundle name must be specified")
 	}
 
 	cmdline := []string{"osc"}
@@ -51,55 +51,27 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 		cmdline = append(cmdline, "--config", configFile)
 	}
 
-	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.PackageName)
+	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.BundleName)
 	progressToken := req.Params.GetProgressToken()
-	if len(params.RunService) > 0 {
-		for _, service := range params.RunService {
-			serviceCmdLine := append([]string{}, cmdline...)
-			serviceCmdLine = append(serviceCmdLine, "service", "runall", service)
-			oscServiceCmd := exec.CommandContext(ctx, serviceCmdLine[0], serviceCmdLine[1:]...)
-			oscServiceCmd.Dir = cmdDir
 
-			stdout, err := oscServiceCmd.StdoutPipe()
-			if err != nil {
-				return nil, BuildResult{Error: "failed to get stdout pipe for service " + service + ": " + err.Error(), Success: false}, nil
-			}
-			oscServiceCmd.Stderr = oscServiceCmd.Stdout
-
-			slog.Debug("running osc service run", slog.String("command", oscServiceCmd.String()), slog.String("dir", cmdDir))
-
-			if err := oscServiceCmd.Start(); err != nil {
-				slog.Error("failed to start osc service", "command", serviceCmdLine)
-				return nil, BuildResult{Error: "failed to start service " + service + ": " + err.Error(), Success: false}, nil
-			}
-
-			var serviceOut bytes.Buffer
-			scanner := bufio.NewScanner(stdout)
-			for scanner.Scan() {
-				line := scanner.Text()
-				serviceOut.WriteString(line)
-				serviceOut.WriteString("\n")
-				if progressToken != nil {
-					err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
-						ProgressToken: progressToken,
-						Message:       line,
-					})
-					if err != nil {
-						slog.Warn("failed to send progress notification for service run", "service", service, "error", err)
-					}
-				}
-			}
-
-			err = oscServiceCmd.Wait()
-			if err != nil {
-				slog.Error("failed to run osc service", "service", service, "error", err, "output", serviceOut.String())
-				return nil, BuildResult{Error: fmt.Sprintf("failed to run service %s: %s\n%s", service, err, serviceOut.String()), Success: false}, nil
-			}
-			slog.Debug("osc service run finished successfully", "service", service, "output", serviceOut.String())
+	skipBuild := true
+	// Remove "build" if it exists
+	filteredServices := []string{}
+	for _, s := range params.RunService {
+		if s != "build" {
+			filteredServices = append(filteredServices, s)
+		} else {
+			skipBuild = false
 		}
 	}
-
-	cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
+	if skipBuild {
+		cmdline = append(cmdline, "service", "runall")
+	} else {
+		cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
+	}
+	for _, service := range filteredServices {
+		cmdline = append(cmdline, "--servicerun", service)
+	}
 
 	if params.VmType != "" {
 		cmdline = append(cmdline, "--vm-type", params.VmType)
@@ -195,7 +167,7 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 
 	buildLog := buildlog.Parse(out.String())
 
-	buildKey := fmt.Sprintf("%s/%s:%s:%s", params.ProjectName, params.PackageName, arch, dist)
+	buildKey := fmt.Sprintf("%s/%s:%s:%s", params.ProjectName, params.BundleName, arch, dist)
 	if cred.BuildLogs == nil {
 		cred.BuildLogs = make(map[string]*buildlog.BuildLog)
 	}

@@ -79,7 +79,7 @@ func main() {
 	noTempClean := true
 	obsCred, err := osc.GetCredentials()
 	if err != nil {
-		slog.Error("failed to generate nano id", "error", err)
+		slog.Error("failed to get credentials", "error", err)
 		os.Exit(1)
 	}
 
