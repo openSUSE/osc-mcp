@@ -44,7 +44,7 @@ type CreateBundleResult struct {
 	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
 }
 
-func readDefaults() (Defaults, error) {
+func ReadDefaults() (Defaults, error) {
 	var defaults Defaults
 	var yamlFile []byte
 	var err error
@@ -92,7 +92,7 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 	if projectName == "" {
 		projectName = fmt.Sprintf("home:%s:osc-mpc:%s", cred.Name, req.Session.ID())
 	}
-	defaults, err := readDefaults()
+	defaults, err := ReadDefaults()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -184,7 +184,7 @@ func (cred OSCCredentials) CreateBundle(ctx context.Context, req *mcp.CallToolRe
 }
 
 func CreateBundleInputSchema() *jsonschema.Schema {
-	defaults, err := readDefaults()
+	defaults, err := ReadDefaults()
 	var flavors []any
 	if err != nil {
 		slog.Warn("could not read defaults for creating input schema", "err", err)

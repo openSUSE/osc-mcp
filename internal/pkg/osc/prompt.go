@@ -32,7 +32,7 @@ func (cred *OSCCredentials) PromptPackage(ctx context.Context, req *mcp.GetPromp
 	return &mcp.GetPromptResult{
 		Description: "Error package not found.",
 		Messages: []*mcp.PromptMessage{
-			{Role: "user", Content: &mcp.TextContent{Text: `If a apckage wasn't found check the log for which this error happends. Now the distributions can be searched for matching packages. At these packages to requires.`}},
+			{Role: "user", Content: &mcp.TextContent{Text: `If a package wasn't found check the log for which this error happends. Now the distributions can be searched for matching packages. At these packages to requires.`}},
 		},
 	}, nil
 }

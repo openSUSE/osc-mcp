@@ -64,6 +64,7 @@ func readLicenses() (LicenseList, error) {
 }
 
 func GetLicenseIdentifiers(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+	slog.Debug("Resource license requested", "session", req.Session.ID())
 	licenseList, err := readLicenses()
 	if err != nil {
 		return nil, err

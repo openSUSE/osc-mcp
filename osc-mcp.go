@@ -175,8 +175,34 @@ func main() {
 	}, obsCred.PromptPackage)
 	server.AddResource(&mcp.Resource{
 		Name:        "spdx_licenses",
+		MIMEType:    "text/plain",
+		URI:         "SPDX",
 		Description: "List of SPDX licenses which can be used a identifier.",
 	}, licenses.GetLicenseIdentifiers)
+	defaults, err := osc.ReadDefaults()
+	if err != nil {
+		slog.Warn("couldn't get defaults", "error", err)
+	}
+	for flavor, spec := range defaults.Specs {
+		slog.Info("Specs", "flavor", flavor)
+		server.AddResource(&mcp.Resource{
+			Name:        fmt.Sprintf("%s_spec", flavor),
+			MIMEType:    "text/plain",
+			URI:         fmt.Sprintf("spec/%s", flavor),
+			Description: fmt.Sprintf("best practice rpm spec file for %s", flavor),
+		}, func(ctx context.Context, rrr *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+			return &mcp.ReadResourceResult{
+				Contents: []*mcp.ResourceContents{
+					{
+						URI:      fmt.Sprintf("spec/%s", flavor),
+						Text:     spec,
+						MIMEType: "application/json",
+					},
+				},
+			}, nil
+		})
+	}
+
 	if viper.GetString("http") != "" {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
