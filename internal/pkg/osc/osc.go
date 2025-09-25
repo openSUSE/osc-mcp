@@ -73,8 +73,8 @@ func GetCredentials() (OSCCredentials, error) {
 	cfg, err := config.NewConfig(configPath)
 	// use system path as default
 	creds.TempDir = path.Join(os.TempDir(), "osc-mcp")
-	if viper.GetString("tempdir") != "" {
-		creds.TempDir = viper.GetString("tempdir")
+	if viper.GetString("workdir") != "" {
+		creds.TempDir = viper.GetString("workdir")
 	}
 	creds.Apiaddr = cfg.GetString("general", "apiurl")
 	if creds.Apiaddr == "" {

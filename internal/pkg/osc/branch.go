@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -73,17 +74,29 @@ func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRe
 		return nil, BranchResult{}, fmt.Errorf("api request failed with status: %s", resp.Status)
 	}
 
-	cmd := exec.CommandContext(ctx, "osc", "checkout", targetProject)
-	cmd.Dir = cred.TempDir
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, BranchResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+	checkoutDir := filepath.Join(cred.TempDir, targetProject)
+	if _, err := os.Stat(checkoutDir); err == nil { // directory exists
+		cmd := exec.CommandContext(ctx, "osc", "update")
+		cmd.Dir = checkoutDir
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return nil, BranchResult{}, fmt.Errorf("failed to run '%s' in '%s': %w\n%s", cmd.String(), checkoutDir, err, string(output))
+		}
+	} else if os.IsNotExist(err) { // directory does not exist
+		cmd := exec.CommandContext(ctx, "osc", "checkout", targetProject)
+		cmd.Dir = cred.TempDir
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return nil, BranchResult{}, fmt.Errorf("failed to run '%s': %w\n%s", cmd.String(), err, string(output))
+		}
+	} else { // some other error
+		return nil, BranchResult{}, fmt.Errorf("failed to check directory '%s': %w", checkoutDir, err)
 	}
 
 	result := BranchResult{
 		TargetProject: targetProject,
 		TargetPackage: targetPackage,
-		CheckoutDir:   filepath.Join(cred.TempDir, targetProject),
+		CheckoutDir:   checkoutDir,
 	}
 
 	return nil, result, nil

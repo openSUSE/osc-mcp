@@ -173,6 +173,10 @@ func main() {
 		Name:        "package_missing",
 		Description: "Steps on what to do when a build failed because of a missing package.",
 	}, obsCred.PromptPackage)
+	server.AddPrompt(&mcp.Prompt{
+		Name:        "service_usage",
+		Description: "How to use OBS source services.",
+	}, obsCred.Service)
 	server.AddResource(&mcp.Resource{
 		Name:        "spdx_licenses",
 		MIMEType:    "text/plain",
