@@ -13,9 +13,10 @@ import (
 )
 
 type BranchPackageParam struct {
-	Project string `json:"project_name" jsonschema:"The project from which the package is branched."`
-	Package string `json:"package_name" jsonschema:"The package that you want to branch"`
-	Copy    bool   `json:"copy,omitempty" jsonschema:"Copy the package instead of branching."`
+	Project       string `json:"project_name" jsonschema:"The project from which the package is branched."`
+	Bundle        string `json:"bundle_name" jsonschema:"The bundle or source package that you want to branch or copy."`
+	TargetProject string `json:"target_project,omitempty" jsonschema:"The target project to branch the package to. If not provided, a new project will be created."`
+	Copy          bool   `json:"copy,omitempty" jsonschema:"Copy the package instead of branching."`
 }
 
 type BranchResult struct {
@@ -29,14 +30,17 @@ func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRe
 	if params.Project == "" {
 		return nil, BranchResult{}, fmt.Errorf("project name cannot be empty")
 	}
-	if params.Package == "" {
+	if params.Bundle == "" {
 		return nil, BranchResult{}, fmt.Errorf("package name cannot be empty")
 	}
 
-	targetProject := fmt.Sprintf("home:%s:branches:%s", cred.Name, params.Project)
-	targetPackage := params.Package
+	targetProject := params.TargetProject
+	if targetProject == "" {
+		targetProject = fmt.Sprintf("home:%s:branches:%s", cred.Name, params.Project)
+	}
+	targetPackage := params.Bundle
 
-	apiURL, err := url.Parse(fmt.Sprintf("%s/source/%s/%s", cred.GetAPiAddr(), params.Project, params.Package))
+	apiURL, err := url.Parse(fmt.Sprintf("%s/source/%s/%s", cred.GetAPiAddr(), params.Project, params.Bundle))
 	if err != nil {
 		return nil, BranchResult{}, fmt.Errorf("failed to parse API URL: %w", err)
 	}
