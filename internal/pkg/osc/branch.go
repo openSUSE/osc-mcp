@@ -15,6 +15,7 @@ import (
 type BranchPackageParam struct {
 	Project string `json:"project_name" jsonschema:"The project from which the package is branched."`
 	Package string `json:"package_name" jsonschema:"The package that you want to branch"`
+	Copy    bool   `json:"copy,omitempty" jsonschema:"Copy the package instead of branching."`
 }
 
 type BranchResult struct {
@@ -40,7 +41,11 @@ func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRe
 		return nil, BranchResult{}, fmt.Errorf("failed to parse API URL: %w", err)
 	}
 	q := apiURL.Query()
-	q.Set("cmd", "branch")
+	if params.Copy {
+		q.Set("cmd", "copy")
+	} else {
+		q.Set("cmd", "branch")
+	}
 	q.Set("target_project", targetProject)
 	q.Set("target_package", targetPackage)
 	apiURL.RawQuery = q.Encode()

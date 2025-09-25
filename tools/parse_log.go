@@ -30,7 +30,7 @@ var rootCmd = &cobra.Command{
 		var err error
 
 		if project != "" && pkg != "" {
-			creds, err := osc.GetCredentials("")
+			creds, err := osc.GetCredentials()
 			if err != nil {
 				slog.Error("couldn't get osc credentials", "error", err)
 				os.Exit(1)
