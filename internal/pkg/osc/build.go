@@ -42,47 +42,30 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 		return nil, BuildResult{}, fmt.Errorf("package or bundle name must be specified")
 	}
 
-	cmdline := []string{"osc"}
+	cmdlineCfg := []string{"osc"}
 	configFile, err := cred.writeTempOscConfig()
 	if err != nil {
 		slog.Warn("failed to write osc config", "error", err)
 	} else {
 		defer os.Remove(configFile)
-		cmdline = append(cmdline, "--config", configFile)
+		cmdlineCfg = append(cmdlineCfg, "--config", configFile)
 	}
 
 	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.BundleName)
 	progressToken := req.Params.GetProgressToken()
 
-	skipBuild := true
 	// Remove "build" if it exists
 	filteredServices := []string{}
 	for _, s := range params.RunService {
 		if s != "build" {
 			filteredServices = append(filteredServices, s)
-		} else {
-			skipBuild = false
 		}
 	}
-	if skipBuild {
-		cmdline = append(cmdline, "service", "runall")
-	} else {
-		cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
+	if len(filteredServices) == 0 {
+		filteredServices = append(filteredServices, "build")
 	}
-	for _, service := range filteredServices {
-		cmdline = append(cmdline, "--servicerun", service)
-	}
-
-	if params.VmType != "" {
-		cmdline = append(cmdline, "--vm-type", params.VmType)
-	}
-	if params.MultibuildPackage != "" {
-		cmdline = append(cmdline, "-M", params.MultibuildPackage)
-	}
-
 	dist := params.Distribution
 	arch := params.Arch
-
 	if dist == "" || arch == "" {
 		meta, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
 		if err != nil {
@@ -122,73 +105,79 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 			}
 		}
 	}
+	var buildErr error
+	var result BuildResult
+	for _, buildStage := range filteredServices {
+		cmdline := cmdlineCfg
+		if buildStage == "build" {
+			cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
+			if params.VmType != "" {
+				cmdline = append(cmdline, "--vm-type", params.VmType, dist, arch)
+			}
+			if params.MultibuildPackage != "" {
+				cmdline = append(cmdline, "-M", params.MultibuildPackage)
+			}
 
-	if dist != "" {
-		cmdline = append(cmdline, dist)
-	}
-	if arch != "" {
-		cmdline = append(cmdline, arch)
-	}
+		} else {
+			cmdline = append(cmdline, "service", "runall", buildStage)
+		}
+		oscCmd := exec.CommandContext(ctx, cmdline[0], cmdline[1:]...)
+		oscCmd.Dir = cmdDir
 
-	oscCmd := exec.CommandContext(ctx, cmdline[0], cmdline[1:]...)
-	oscCmd.Dir = cmdDir
-
-	stdout, err := oscCmd.StdoutPipe()
-	if err != nil {
-		return nil, BuildResult{Error: "failed to get stdout pipe: " + err.Error(), Success: false}, nil
-	}
-	oscCmd.Stderr = oscCmd.Stdout
-
-	slog.Info("starting osc build", slog.String("command", oscCmd.String()), slog.String("dir", cmdDir))
-
-	if err := oscCmd.Start(); err != nil {
-		slog.Error("failed to start osc build", "error", err)
-		return nil, BuildResult{Error: "failed to start build: " + err.Error(), Success: false}, nil
-	}
-
-	var out bytes.Buffer
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		line := scanner.Text()
-		out.WriteString(line)
-		out.WriteString("\n")
-		if progressToken != nil {
-			err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
-				ProgressToken: progressToken,
-				Message:       line,
-			})
-			if err != nil {
-				slog.Warn("failed to send progress notification", "error", err)
+		stdout, err := oscCmd.StdoutPipe()
+		if err != nil {
+			return nil, BuildResult{Error: "failed to get stdout pipe: " + err.Error(), Success: false}, nil
+		}
+		oscCmd.Stderr = oscCmd.Stdout
+		slog.Info("starting osc build", slog.String("command", oscCmd.String()), slog.String("dir", cmdDir))
+		if err := oscCmd.Start(); err != nil {
+			slog.Error("failed to start osc build", "error", err)
+			return nil, BuildResult{Error: "failed to start build: " + err.Error(), Success: false}, nil
+		}
+		var out bytes.Buffer
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			line := scanner.Text()
+			out.WriteString(line)
+			out.WriteString("\n")
+			if progressToken != nil {
+				err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+					ProgressToken: progressToken,
+					Message:       line,
+				})
+				if err != nil {
+					slog.Warn("failed to send progress notification", "error", err)
+				}
 			}
 		}
-	}
 
-	buildErr := oscCmd.Wait()
+		buildErr = oscCmd.Wait()
 
-	buildLog := buildlog.Parse(out.String())
+		buildLog := buildlog.Parse(out.String())
 
-	buildKey := fmt.Sprintf("%s/%s:%s:%s", params.ProjectName, params.BundleName, arch, dist)
-	if cred.BuildLogs == nil {
-		cred.BuildLogs = make(map[string]*buildlog.BuildLog)
-	}
-	cred.BuildLogs[buildKey] = buildLog
-	cred.LastBuildKey = buildKey
-
-	var result BuildResult
-	if buildErr != nil {
-		slog.Error("failed to run osc build", slog.String("command", oscCmd.String()), "error", buildErr)
-		result = BuildResult{
-			Error:     buildErr.Error(),
-			ParsedLog: buildLog,
-			Success:   false,
+		if buildStage == "build" {
+			buildKey := fmt.Sprintf("%s/%s:%s:%s", params.ProjectName, params.BundleName, arch, dist)
+			if cred.BuildLogs == nil {
+				cred.BuildLogs = make(map[string]*buildlog.BuildLog)
+			}
+			cred.BuildLogs[buildKey] = buildLog
+			cred.LastBuildKey = buildKey
 		}
-	} else {
-		slog.Info("osc build finished successfully", slog.String("command", oscCmd.String()))
-		result = BuildResult{
-			Success:       true,
-			PackagesBuilt: []string{},
-			RpmLint:       map[string]any{},
-			ParsedLog:     buildLog,
+		if buildErr != nil {
+			slog.Error("failed to run service/build", slog.String("command", oscCmd.String()), "error", buildErr)
+			result = BuildResult{
+				Error:     buildErr.Error(),
+				ParsedLog: buildLog,
+				Success:   false,
+			}
+		} else {
+			slog.Debug("osc build/service finished successfully", slog.String("command", oscCmd.String()))
+			result = BuildResult{
+				Success:       true,
+				PackagesBuilt: []string{},
+				RpmLint:       map[string]any{},
+				ParsedLog:     buildLog,
+			}
 		}
 	}
 
