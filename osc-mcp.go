@@ -120,7 +120,7 @@ func main() {
 	}, obsCred.BranchBundle)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "build_bundle",
-		Description: "Build a source bundle also known as source package.",
+		Description: "Build a source bundle also known as source package or run a service.",
 	}, obsCred.Build)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_project_meta",
@@ -131,10 +131,10 @@ func main() {
 		Description: "Set the metadata for the project. Create the project if it doesn't exist.",
 	}, obsCred.SetProjectMeta)
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "create_bundle",
-		Description: "Create a new local bundle. Will also create a project if it does not exist. Before commit this package can't be checked out.",
+		Name:        "create",
+		Description: "Create a new local bundle or _service/.spec file. Will also create a project or bundle if it does not exist. Before commit this package can't be checked out. Prefer creating _service files with this tool.",
 		InputSchema: osc.CreateBundleInputSchema(),
-	}, obsCred.CreateBundle)
+	}, obsCred.Create)
 	// /*
 	// 	mcp.AddTool(server, &mcp.Tool{
 	// 		Name:        "delete_project",
@@ -188,7 +188,6 @@ func main() {
 		slog.Warn("couldn't get defaults", "error", err)
 	}
 	for flavor, spec := range defaults.Specs {
-		slog.Info("Specs", "flavor", flavor)
 		server.AddResource(&mcp.Resource{
 			Name:        fmt.Sprintf("%s_spec", flavor),
 			MIMEType:    "text/plain",

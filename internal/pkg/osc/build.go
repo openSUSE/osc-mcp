@@ -22,7 +22,8 @@ type BuildParam struct {
 	MultibuildPackage string   `json:"multibuild_package,omitempty" jsonschema:"Specify the flavor of a multibuild package"`
 	Distribution      string   `json:"distribution,omitempty" jsonschema:"Distribution to build against (e.g., openSUSE_Tumbleweed)."`
 	Arch              string   `json:"arch,omitempty" jsonschema:"Architecture to build for (e.g., x86_64)."`
-	RunService        []string `json:"run_service,omitempty" jsonschema:"A list of services which are run before the build. Useful services are: download_files which downloads the source files reference via an URI in the spec file, go_modules which creates a vendor directory for go files. If empty only build is run. If other services are present, build must be explitly appended."`
+	RunService        []string `json:"run_service,omitempty" jsonschema:"List of services which are run before the build. Without parameters only build is run. Useful services are: download_files: downloads the source files reference via an URI in the spec file with the pattern https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz, go_modules: which creates a vendor directory for go files if the source has the same name as the project.:w
+	"`
 }
 
 type BuildResult struct {

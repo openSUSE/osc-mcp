@@ -1,4 +1,3 @@
-
 repositories:
   - name: "openSUSE_Tumbleweed"
     path_project: "openSUSE:Factory"
@@ -215,3 +214,175 @@ specs:
 
     # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically 
     %changelog
+  cargo: |
+    Name:           __PACKAGE_NAME__
+    Version:        0.0.0
+    Release:        0
+    Summary:
+    License:
+    URL:
+
+    # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
+    # needs to run service download_files to download files
+    Source0:        https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz
+    # **IMPORTANT**: If the source doesn't include a vendor.tar.xz create one via cargo_vendor service
+    # **IMPORTANT**: Make sure that the Source0 exists as this file is used to get the modules and inlcude it -a1 for autosetup
+    # Source1:        vendor.tar.xz
+
+    BuildRequires:  rust
+    BuildRequires:  cargo
+    BuildRequires:  cargo-packaging
+
+    # If source includes vendor tarball use bcond_with vendored
+    %bcond_with vendored
+
+    %description
+
+    %prep
+    %if %{with vendored}
+    %autosetup -a1 -p1
+    %else
+    %autosetup -p1
+    %endif
+
+    %build
+    %if %{with vendored}
+    %cargo_build --offline
+    %else
+    %cargo_build
+    %endif
+
+    %install
+    %if %{with vendored}
+    %cargo_install --offline
+    %else
+    %cargo_install
+    %endif
+
+    %check
+    %if %{with vendored}
+    %cargo_test --offline
+    %else
+    %cargo_test
+    %endif
+
+    %files
+    %{_bindir}/__PACKAGE_NAME__
+
+    # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically
+    %changelog
+  node: |
+    Name:           __PACKAGE_NAME__
+    Version:        0.0.0
+    Release:        0
+    Summary:
+    License:
+    URL:
+
+    # **IMPORTANT**: Prefer downloading of a source file via a service over direct download!
+    # needs to run service download_files to download files
+    Source0:        https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz
+    # **IMPORTANT**: If the source doesn't include a node_modules.tar.xz create one via node_modules service
+    # **IMPORTANT**: Make sure that the Source0 exists as this file is used to get the modules and inlcude it -a1 for autosetup
+    # Source1:        node_modules.tar.xz
+
+    BuildRequires:  npm
+    BuildRequires:  nodejs-packaging
+    # Add additional build requires for packages in the package.json
+    # BuildRequires:  npm(form-data) >= 3
+    # BuildRequires:  npm(commander) >= 2.17.1
+    BuildArch:      noarch
+
+    # If source includes vendor tarball use bcond_with vendored
+    %bcond_with vendored
+
+    %description
+
+    %prep
+    %if %{with vendored}
+    %autosetup -a1 -p1
+    %else
+    %autosetup -p1
+    %endif
+
+    %build
+    %if %{with vendored}
+    npm install --offline
+    %else
+    npm install
+    %endif
+
+    %install
+    npm install --offline --prefix=%{buildroot}%{_prefix}
+
+    %check
+    npm test
+
+    %files
+    # list files here
+
+    # IMPORTANT: changelog goes to separare file __PACKAGE_NAME__.changes commit function may create it automatically
+    %changelog
+services:
+  tar_scm: |
+      <service name="tar_scm">
+        <param name="url">https://github.com/foo/__PACKAGE_NAME__</param>
+        <param name="scm">git</param>
+        <!-- <param name="revision">main</param> -->
+        <!-- <param name="revision">v0.0.0</param> -->
+        <!-- <param name="revision">__REPLACE_WITH_COMMIT_HASH__</param> -->
+        <!-- <param name="subdir">__PACKAGE_NAME__</param> -->
+        <!-- <param name="filename">__PACKAGE_NAME__</param> -->
+        <!-- <param name="versionprefix">__PACKAGE_NAME__</param> -->
+        <!-- <param name="versionformat">%y.%m</param> -->
+      </service>
+      <service name="recompress">
+        <param name="file">*.tar</param>
+        <param name="compression">xz</param>
+        <!-- <param name="keep">true</param> -->
+      </service>
+  download_files: |
+      <!--
+      <service name="download_files">
+        **IMPORTANT** This service parses the spec file for pattern
+        SourceN: https://github.com/foo/pkg_name/archive/v0.0.0.tar.gz#/NEW_NAME.tar.gz
+        PREFER THE USE OF URLS IN THE SPEC FILE!
+      </service>
+      -->
+  go_modules: |
+      <service name="go_modules">
+        <!-- <param name="archive">__PACKAGE_NAME__-%{version}.tar.gz</param> -->
+        <!-- <param name="basename">__PACKAGE_NAME__-%{version}</param> -->
+        <!-- <param name="compression">xz</param> -->
+        <!-- <param name="subdir">./</param> -->
+        <!-- <param name="vendorname">vendor</param> -->
+      </service>
+  cargo_vendor: |
+      <service name="cargo_vendor">
+        <param name="url">https://github.com/foo/__PACKAGE_NAME__</param>
+        <param name="compression">xz</param>
+        <!-- <param name="revision">main</param> -->
+        <!-- <param name="versioned-dirs">true</param> -->
+        <!-- <param name="respect-lockfile">true</param> -->
+        <!-- <param name="filter">true</param> -->
+      </service>
+      <service name="recompress">
+        <param name="file">*.tar</param>
+        <param name="compression">xz</param>
+      </service>
+  node_modules: |
+      <service name="node_modules">
+        <summary>download node modules</summary>
+        <description>download node modules</description>
+        <!-- <param name="cpio"> -->
+        <!--   <description>cpio file name to store all tarballs in</description> -->
+        <!-- </param> -->
+        <!-- <param name="output"> -->
+        <!--   <description>write rpm source lines to that file</description> -->
+        <!-- </param> -->
+        <!-- <param name="source-offset"> -->
+        <!--   <description>rpm source number to start with</description> -->
+        <!-- </param> -->
+      </service>
+
+
