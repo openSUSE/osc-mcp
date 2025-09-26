@@ -74,6 +74,9 @@ func GetCredentials() (OSCCredentials, error) {
 	// use system path as default
 	creds.TempDir = path.Join(os.TempDir(), "osc-mcp")
 	if viper.GetString("workdir") != "" {
+		if viper.GetString("workdir") == os.TempDir() {
+			return creds, fmt.Errorf("couldn't set workdir to %s, add at least one suffix dir", os.TempDir())
+		}
 		creds.TempDir = viper.GetString("workdir")
 	}
 	creds.Apiaddr = cfg.GetString("general", "apiurl")
@@ -201,9 +204,13 @@ func (cred *OSCCredentials) writeTempOscConfig() (string, error) {
 		return "", ErrNoUserOrPassword
 	}
 
-	configFile, err := os.CreateTemp(cred.TempDir, "osc-config-")
+	configFile, err := os.CreateTemp("", "osc-config-")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temporary config file: %w", err)
+	}
+	if strings.Contains(configFile.Name(), cred.TempDir) {
+		os.RemoveAll(configFile.Name())
+		return "", fmt.Errorf("workdir %s is part of credential tempdir %s", cred.TempDir, configFile.Name())
 	}
 
 	configContent := fmt.Sprintf("[general]\napi=%s\nuser=%s\n[%s]\nuser=%s\npass=%s\n", cred.GetAPiAddr(), cred.Name, cred.GetAPiAddr(), cred.Name, cred.Passwd)
