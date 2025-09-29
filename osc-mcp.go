@@ -119,9 +119,13 @@ func main() {
 		Description: fmt.Sprintf("Branch a bundle and check it out as local bundle under the path %s", obsCred.TempDir),
 	}, obsCred.BranchBundle)
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "build_bundle",
-		Description: "Build a source bundle also known as source package or run a service.",
+		Name:        "run_build",
+		Description: "Build a source bundle also known as source package.",
 	}, obsCred.Build)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "run_services",
+		Description: "Run OBS source services on a specified project and bundle. Useful services are: download_files: downloads the source files reference via an URI in the spec file with the pattern https://github.com/foo/baar/v%{version}.tar.gz#./%{name}-%{version}.tar.gz, go_modules: which creates a vendor directory for go files if the source has the same name as the project.",
+	}, obsCred.RunServices)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_project_meta",
 		Description: "Get the metadata of a project. The metadata defines for which project a source bundle can be built",
