@@ -24,12 +24,24 @@ type Repository struct {
 	Arches         []string `json:"arches,omitempty" yaml:"arches,omitempty"`
 }
 
+type BundleStatus struct {
+	Bundle string `json:"bundle" yaml:"bundle"`
+	Code   string `json:"code" yaml:"code"`
+}
+
+type RepositoryBuildStatus struct {
+	Repository string         `json:"repository" yaml:"repository"`
+	Arch       string         `json:"arch" yaml:"arch"`
+	Bundles    []BundleStatus `json:"bundles,omitempty" yaml:"bundles,omitempty"`
+}
+
 type ProjectMeta struct {
-	ProjectName  string       `json:"project_name"`
-	Title        string       `json:"title,omitempty"`
-	Description  string       `json:"description,omitempty"`
-	Maintainers  []string     `json:"maintainers,omitempty"`
-	Repositories []Repository `json:"repositories,omitempty"`
+	ProjectName             string                  `json:"project_name"`
+	Title                   string                  `json:"title,omitempty"`
+	Description             string                  `json:"description,omitempty"`
+	Maintainers             []string                `json:"maintainers,omitempty"`
+	Repositories            []Repository            `json:"repositories,omitempty"`
+	RepositoryBuildStatuses []RepositoryBuildStatus `json:"repository_build_statuses,omitempty" yaml:"repository_build_statuses,omitempty"`
 }
 
 func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectName string) (*ProjectMeta, error) {
@@ -103,6 +115,56 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 			r.Arches = append(r.Arches, arch.Text())
 		}
 		meta.Repositories = append(meta.Repositories, r)
+	}
+
+	apiURL, err = url.Parse(fmt.Sprintf("%s/build/%s/_result", cred.GetAPiAddr(), projectName))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+	}
+
+	req, err = http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("User-Agent", "osc-mcp")
+	req.SetBasicAuth(cred.Name, cred.Passwd)
+	req.Header.Set("Accept", "application/xml; charset=utf-8")
+
+	resp, err = client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		slog.Debug("no build status")
+		return meta, nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
+	}
+	doc = etree.NewDocument()
+	if _, err := doc.ReadFrom(resp.Body); err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	resultListElement := doc.SelectElement("resultlist")
+	if resultListElement != nil {
+		for _, resultElement := range resultListElement.SelectElements("result") {
+			repoStatus := RepositoryBuildStatus{
+				Repository: resultElement.SelectAttrValue("repository", ""),
+				Arch:       resultElement.SelectAttrValue("arch", ""),
+			}
+			for _, statusElement := range resultElement.SelectElements("status") {
+				pkgStatus := BundleStatus{
+					Bundle: statusElement.SelectAttrValue("package", ""),
+					Code:   statusElement.SelectAttrValue("code", ""),
+				}
+				repoStatus.Bundles = append(repoStatus.Bundles, pkgStatus)
+			}
+			meta.RepositoryBuildStatuses = append(meta.RepositoryBuildStatuses, repoStatus)
+		}
 	}
 
 	return meta, nil
