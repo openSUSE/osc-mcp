@@ -30,6 +30,7 @@ type BuildResult struct {
 	PackagesBuilt []string           `json:"packages_built,omitempty"`
 	RpmLint       map[string]any     `json:"lint_report,omitempty"`
 	ParsedLog     *buildlog.BuildLog `json:"parsed_log,omitempty"`
+	Buildroot     string             `json:"build-root,omitempty" jsonschema:"The root directory for the build"`
 }
 
 type RunServicesParam struct {
@@ -121,21 +122,22 @@ func (cred *OSCCredentials) RunServices(ctx context.Context, req *mcp.CallToolRe
 }
 
 func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest, params BuildParam) (*mcp.CallToolResult, any, error) {
+	result := BuildResult{}
 	slog.Debug("mcp tool call: Build", "session", req.Session.ID(), "params", params)
 	if params.ProjectName == "" {
-		return nil, BuildResult{}, fmt.Errorf("project name must be specified")
+		return nil, result, fmt.Errorf("project name must be specified")
 	}
 	if params.BundleName == "" {
-		return nil, BuildResult{}, fmt.Errorf("package or bundle name must be specified")
+		return nil, result, fmt.Errorf("package or bundle name must be specified")
 	}
 
-	cmdlineCfg := []string{"osc"}
+	cmdline := []string{"osc"}
 	configFile, err := cred.writeTempOscConfig()
 	if err != nil {
 		slog.Warn("failed to write osc config", "error", err)
 	} else {
 		defer os.Remove(configFile)
-		cmdlineCfg = append(cmdlineCfg, "--config", configFile)
+		cmdline = append(cmdline, "--config", configFile)
 	}
 
 	cmdDir := filepath.Join(cred.TempDir, params.ProjectName, params.BundleName)
@@ -146,14 +148,14 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	if dist == "" || arch == "" {
 		meta, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
 		if err != nil {
-			return nil, BuildResult{}, fmt.Errorf("failed to get project meta to determine distribution and arch: %w", err)
+			return nil, result, fmt.Errorf("failed to get project meta to determine distribution and arch: %w", err)
 		}
 
 		if dist == "" {
 			if len(meta.Repositories) > 0 {
 				dist = meta.Repositories[0].Name
 			} else {
-				return nil, BuildResult{}, fmt.Errorf("no distribution specified and could not determine one from project meta")
+				return nil, result, fmt.Errorf("no distribution specified and could not determine one from project meta")
 			}
 		}
 		if arch == "" {
@@ -178,15 +180,18 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 					slog.Warn("no architecture specified, using first available architecture", slog.String("arch", arch))
 				}
 			} else {
-				return nil, BuildResult{}, fmt.Errorf("no architecture specified and could not determine one from project meta")
+				return nil, result, fmt.Errorf("no architecture specified and could not determine one from project meta")
 			}
 		}
 	}
 
-	cmdline := cmdlineCfg
 	cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
-	if params.VmType != "" {
+	if params.VmType != "" && params.VmType != "chroot" {
 		cmdline = append(cmdline, "--vm-type", params.VmType, dist, arch)
+	} else {
+		buildRoot := fmt.Sprintf("%s/build-root/%s-%s", cred.TempDir, dist, arch)
+		cmdline = append(cmdline, "--root", buildRoot)
+		result.Buildroot = buildRoot
 	}
 	if params.MultibuildPackage != "" {
 		cmdline = append(cmdline, "-M", params.MultibuildPackage)
@@ -197,13 +202,13 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 
 	stdout, err := oscCmd.StdoutPipe()
 	if err != nil {
-		return nil, BuildResult{Error: "failed to get stdout pipe: " + err.Error(), Success: false}, nil
+		return nil, nil, err
 	}
 	oscCmd.Stderr = oscCmd.Stdout
 	slog.Info("starting osc build", slog.String("command", oscCmd.String()), slog.String("dir", cmdDir))
 	if err := oscCmd.Start(); err != nil {
 		slog.Error("failed to start osc build", "error", err)
-		return nil, BuildResult{Error: "failed to start build: " + err.Error(), Success: false}, nil
+		return nil, nil, err
 	}
 	var out bytes.Buffer
 	scanner := bufio.NewScanner(stdout)
@@ -235,18 +240,16 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 
 	if buildErr != nil {
 		slog.Error("failed to run build", slog.String("command", oscCmd.String()), "error", buildErr)
-		return nil, BuildResult{
-			Error:     buildErr.Error(),
-			ParsedLog: buildLog,
-			Success:   false,
-		}, nil
+		result.Error = buildErr.Error()
+		result.ParsedLog = buildLog
+		result.Success = false
+		return nil, result, nil
 	}
 
 	slog.Debug("osc build finished successfully", slog.String("command", oscCmd.String()))
-	return nil, BuildResult{
-		Success:       true,
-		PackagesBuilt: []string{},
-		RpmLint:       map[string]any{},
-		ParsedLog:     buildLog,
-	}, nil
+	result.Success = true
+	result.PackagesBuilt = []string{}
+	result.RpmLint = map[string]any{}
+	result.ParsedLog = buildLog
+	return nil, result, nil
 }
