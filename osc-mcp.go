@@ -147,7 +147,7 @@ func main() {
 	// */
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "checkout_bundle",
-		Description: fmt.Sprintf("Checkout a package from the online repository. After this step the package is available as local package under %s", obsCred.TempDir),
+		Description: fmt.Sprintf("Checkout a bundle from the online repository. After this step the package is available as local package under %s. Check out a single package instead of the complete repository if possible,", obsCred.TempDir),
 	}, obsCred.CheckoutBundle)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_build_log",

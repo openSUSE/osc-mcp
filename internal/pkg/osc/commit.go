@@ -30,6 +30,7 @@ type CommitCmd struct {
 
 type CommitResult struct {
 	Revision string `json:"revision"`
+	Warning  string `json:"warning,omitempty"`
 }
 
 type Revision struct {
@@ -37,11 +38,37 @@ type Revision struct {
 	Rev     string   `xml:"rev,attr"`
 }
 
-type Directory struct {
-	XMLName xml.Name `xml:"directory"`
-	Name    string   `xml:"name,attr"`
+type LinkFile struct {
+	XMLName xml.Name `xml:"link"`
 	Project string   `xml:"project,attr"`
-	Entries []Entry  `xml:"entry"`
+	BaseRev string   `xml:"baserev,attr"`
+	Patches struct {
+		XMLName xml.Name `xml:"patches"`
+		Branch  struct {
+			XMLName xml.Name `xml:"branch"`
+		} `xml:"branch"`
+	} `xml:"patches"`
+}
+
+type LinkInfo struct {
+	XMLName xml.Name `xml:"linkinfo"`
+	Project string   `xml:"project,attr"`
+	Package string   `xml:"package,attr"`
+	SrcMd5  string   `xml:"srcmd5,attr"`
+	BaseRev string   `xml:"baserev,attr"`
+	XSrcMd5 string   `xml:"xsrcmd5,attr,omitempty"`
+	LSrcMd5 string   `xml:"lsrcmd5,attr,omitempty"`
+}
+
+type Directory struct {
+	XMLName xml.Name  `xml:"directory"`
+	Name    string    `xml:"name,attr"`
+	Project string    `xml:"project,attr,omitempty"`
+	Rev     string    `xml:"rev,attr,omitempty"`
+	VRev    string    `xml:"vrev,attr,omitempty"`
+	SrcMd5  string    `xml:"srcmd5,attr,omitempty"`
+	Link    *LinkInfo `xml:"linkinfo,omitempty"`
+	Entries []Entry   `xml:"entry"`
 }
 
 type Entry struct {
@@ -159,7 +186,7 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 	}
 
 	for _, entry := range remoteFiles.Entries {
-		if _, exists := localFileMap[entry.Name]; !exists && strings.HasPrefix(entry.Name, "_service:") {
+		if _, exists := localFileMap[entry.Name]; !exists && !strings.HasPrefix(entry.Name, "_service:") {
 			deletedFiles = append(deletedFiles, entry.Name)
 		}
 	}
@@ -190,6 +217,7 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 	commitDir := Directory{
 		Name:    bundleName,
 		Project: projectName,
+		Link:    remoteFiles.Link,
 	}
 	for _, file := range allLocalFiles {
 		if file.IsDir() {
@@ -216,6 +244,12 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		})
 	}
 
+	for _, entry := range remoteFiles.Entries {
+		if strings.HasPrefix(entry.Name, "_service:") || entry.Name == "_link" {
+			commitDir.Entries = append(commitDir.Entries, entry)
+		}
+	}
+
 	xmlData, err := xml.MarshalIndent(commitDir, "", "  ")
 	if err != nil {
 		return nil, CommitResult{}, fmt.Errorf("failed to marshal commit xml: %w", err)
@@ -226,37 +260,84 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		return nil, CommitResult{}, fmt.Errorf("failed to commit changes: %w", err)
 	}
 
-	// Update .osc/_files
+	// Update .osc/_files cache
 	oscDir := filepath.Join(params.Directory, ".osc")
 	if _, err := os.Stat(oscDir); !os.IsNotExist(err) {
-		slog.Debug("Updating .osc/_files")
-		// we need to fetch the raw XML content
-		url := fmt.Sprintf("%s/source/%s/%s", cred.GetAPiAddr(), projectName, bundleName)
-		req, err := cred.buildRequest(ctx, "GET", url, nil)
+		slog.Debug("Updating .osc/_files cache")
+		newRemoteFiles, err := cred.getRemoteFileList(ctx, projectName, bundleName)
 		if err != nil {
-			slog.Warn("failed to build request for updated file list", "error", err)
+			// Don't fail the whole commit, just warn. The cache can be updated later.
+			slog.Warn("failed to get updated remote file list, .osc/_files not updated", "error", err)
 		} else {
-			resp, err := http.DefaultClient.Do(req)
+			filesCachePath := filepath.Join(oscDir, "_files")
+			xmlData, err := xml.MarshalIndent(newRemoteFiles, "", "  ")
 			if err != nil {
-				slog.Warn("failed to get updated remote file list", "error", err)
+				slog.Warn("failed to marshal updated file list, .osc/_files not updated", "error", err)
 			} else {
-				defer resp.Body.Close()
-				if resp.StatusCode == http.StatusOK {
-					body, err := io.ReadAll(resp.Body)
+				// we need to add the XML header
+				fullFileContent := append([]byte(xml.Header), xmlData...)
+				err := os.WriteFile(filesCachePath, fullFileContent, 0644)
+				if err != nil {
+					slog.Warn("failed to write to .osc/_files", "error", err)
+				} else {
+					slog.Debug("Successfully updated .osc/_files")
+				}
+			}
+			sourcesDir := filepath.Join(oscDir, "sources")
+			if _, err := os.Stat(sourcesDir); os.IsNotExist(err) {
+				os.MkdirAll(sourcesDir, 0755)
+			}
+			// Create _link file
+			if newRemoteFiles.Link != nil {
+				linkFilePath := filepath.Join(sourcesDir, "_link")
+				linkFileContent := LinkFile{
+					Project: newRemoteFiles.Link.Project,
+					BaseRev: newRemoteFiles.Link.BaseRev,
+				}
+				linkFileContent.Patches.Branch = struct{ XMLName xml.Name `xml:"branch"` }{}
+
+				xmlData, err := xml.MarshalIndent(linkFileContent, "", "  ")
+				if err != nil {
+					slog.Warn("failed to marshal _link file content", "error", err)
+				} else {
+					fullFileContent := append(xmlData, '\n')
+					err := os.WriteFile(linkFilePath, fullFileContent, 0644)
 					if err != nil {
-						slog.Warn("failed to read response body for updated file list", "error", err)
+						slog.Warn("failed to write _link file", "error", err)
 					} else {
-						filesPath := filepath.Join(oscDir, "_files")
-						err := os.WriteFile(filesPath, body, 0644)
-						if err != nil {
-							slog.Warn("failed to write to .osc/_files", "error", err)
-						} else {
-							slog.Debug("Successfully updated .osc/_files")
-						}
+						slog.Debug("Successfully created/updated .osc/sources/_link")
+					}
+				}
+			}
+
+			// Synchronize local sources cache and working directory with the new remote state
+			for _, entry := range newRemoteFiles.Entries {
+				if entry.Name == "_link" {
+					continue
+				}
+
+				sourceWdPath := filepath.Join(params.Directory, entry.Name)
+				sourceCachePath := filepath.Join(sourcesDir, entry.Name)
+
+				if _, err := os.Stat(sourceWdPath); !os.IsNotExist(err) {
+					// File exists in working dir, copy it to .osc/sources
+					slog.Debug("Copying file to .osc/sources", "file", entry.Name)
+					if err := copyFile(sourceWdPath, sourceCachePath); err != nil {
+						slog.Warn("failed to copy file to .osc/sources", "file", entry.Name, "error", err)
 					}
 				} else {
-					body, _ := io.ReadAll(resp.Body)
-					slog.Warn("failed to get updated remote file list", "status", resp.Status, "body", string(body))
+					// File does not exist in working dir, it was generated on the server. Download it.
+					slog.Info("Downloading new server-generated file", "file", entry.Name)
+					// Download to working directory
+					err := cred.downloadFile(ctx, projectName, bundleName, entry.Name, sourceWdPath)
+					if err != nil {
+						slog.Warn("failed to download new file", "file", entry.Name, "error", err)
+						continue // Don't try to copy if download failed
+					}
+					// Copy from working directory to .osc/sources
+					if err := copyFile(sourceWdPath, sourceCachePath); err != nil {
+						slog.Warn("failed to copy new file to .osc/sources", "file", entry.Name, "error", err)
+					}
 				}
 			}
 		}
@@ -307,6 +388,23 @@ func fileMD5(filePath string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	return err
+}
+
 func (cred *OSCCredentials) uploadFile(ctx context.Context, project, pkg, fileName, filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -332,6 +430,33 @@ func (cred *OSCCredentials) uploadFile(ctx context.Context, project, pkg, fileNa
 		return fmt.Errorf("failed to upload file: status %s, body: %s", resp.Status, string(body))
 	}
 	return nil
+}
+
+func (cred *OSCCredentials) downloadFile(ctx context.Context, project, pkg, fileName, destinationPath string) error {
+	url := fmt.Sprintf("%s/source/%s/%s/%s", cred.GetAPiAddr(), project, pkg, fileName)
+	req, err := cred.buildRequest(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to download file: status %s, body: %s", resp.Status, string(body))
+	}
+
+	outFile, err := os.Create(destinationPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, resp.Body)
+	return err
 }
 
 func (cred *OSCCredentials) commitFiles(ctx context.Context, project, pkg, message string, xmlData []byte) (*Revision, error) {
