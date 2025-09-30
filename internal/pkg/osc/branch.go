@@ -74,7 +74,7 @@ func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRe
 		return nil, BranchResult{}, fmt.Errorf("api request failed with status: %s", resp.Status)
 	}
 
-	checkoutDir := filepath.Join(cred.TempDir, targetProject)
+	checkoutDir := filepath.Join(cred.TempDir, targetProject, targetPackage)
 	if _, err := os.Stat(checkoutDir); err == nil { // directory exists
 		cmd := exec.CommandContext(ctx, "osc", "update")
 		cmd.Dir = checkoutDir
@@ -83,7 +83,7 @@ func (cred OSCCredentials) BranchBundle(ctx context.Context, req *mcp.CallToolRe
 			return nil, BranchResult{}, fmt.Errorf("failed to run '%s' in '%s': %w\n%s", cmd.String(), checkoutDir, err, string(output))
 		}
 	} else if os.IsNotExist(err) { // directory does not exist
-		cmd := exec.CommandContext(ctx, "osc", "checkout", targetProject)
+		cmd := exec.CommandContext(ctx, "osc", "checkout", targetProject, targetPackage)
 		cmd.Dir = cred.TempDir
 		output, err := cmd.CombinedOutput()
 		if err != nil {
