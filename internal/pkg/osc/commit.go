@@ -24,8 +24,8 @@ type CommitCmd struct {
 	Message             string `json:"message" jsonschema:"Commit message"`
 	Directory           string `json:"directory" jsonschema:"Directory of the package to commit"`
 	ProjectName         string `json:"project_name,omitempty" jsonschema:"Project name. If not provided, it will be derived from the directory path."`
-	BundleName          string `json:"bundle_name,omitemtpy" jsonschema:"Bundle name also known as source package name. If not provided, it will be derived from the directory path."`
-	SkipChangesCreation bool   `json:"skip_changes,omitempy" jsonschema:"Skip the automatic update of the changes file."`
+	BundleName          string `json:"bundle_name,omitempty" jsonschema:"Bundle name also known as source package name. If not provided, it will be derived from the directory path."`
+	SkipChangesCreation bool   `json:"skip_changes,omitempty" jsonschema:"Skip the automatic update of the changes file."`
 }
 
 type CommitResult struct {
@@ -131,6 +131,7 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 
 	var changedFiles []string
 	var newFiles []string
+	var deletedFiles []string
 	localFileMap := make(map[string]bool)
 
 	for _, file := range localFiles {
@@ -156,6 +157,13 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 			changedFiles = append(changedFiles, fileName)
 		}
 	}
+
+	for _, entry := range remoteFiles.Entries {
+		if _, exists := localFileMap[entry.Name]; !exists && strings.HasPrefix(entry.Name, "_service:") {
+			deletedFiles = append(deletedFiles, entry.Name)
+		}
+	}
+
 	filesToUpload := append(newFiles, changedFiles...)
 	if len(filesToUpload) > 0 {
 		slog.Info("Uploading changed files", "files", filesToUpload)
@@ -168,6 +176,10 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		}
 	} else {
 		slog.Info("No changed files to upload")
+	}
+
+	if len(deletedFiles) > 0 {
+		slog.Info("Deleting remote files", "files", deletedFiles)
 	}
 
 	allLocalFiles, err := os.ReadDir(params.Directory)
@@ -212,6 +224,42 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 	revision, err := cred.commitFiles(ctx, projectName, bundleName, params.Message, xmlData)
 	if err != nil {
 		return nil, CommitResult{}, fmt.Errorf("failed to commit changes: %w", err)
+	}
+
+	// Update .osc/_files
+	oscDir := filepath.Join(params.Directory, ".osc")
+	if _, err := os.Stat(oscDir); !os.IsNotExist(err) {
+		slog.Debug("Updating .osc/_files")
+		// we need to fetch the raw XML content
+		url := fmt.Sprintf("%s/source/%s/%s", cred.GetAPiAddr(), projectName, bundleName)
+		req, err := cred.buildRequest(ctx, "GET", url, nil)
+		if err != nil {
+			slog.Warn("failed to build request for updated file list", "error", err)
+		} else {
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				slog.Warn("failed to get updated remote file list", "error", err)
+			} else {
+				defer resp.Body.Close()
+				if resp.StatusCode == http.StatusOK {
+					body, err := io.ReadAll(resp.Body)
+					if err != nil {
+						slog.Warn("failed to read response body for updated file list", "error", err)
+					} else {
+						filesPath := filepath.Join(oscDir, "_files")
+						err := os.WriteFile(filesPath, body, 0644)
+						if err != nil {
+							slog.Warn("failed to write to .osc/_files", "error", err)
+						} else {
+							slog.Debug("Successfully updated .osc/_files")
+						}
+					}
+				} else {
+					body, _ := io.ReadAll(resp.Body)
+					slog.Warn("failed to get updated remote file list", "status", resp.Status, "body", string(body))
+				}
+			}
+		}
 	}
 
 	return nil, CommitResult{Revision: revision.Rev}, nil
