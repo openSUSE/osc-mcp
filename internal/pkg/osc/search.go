@@ -218,10 +218,14 @@ func (cred OSCCredentials) SearchPackages(ctx context.Context, req *mcp.CallTool
 	if params.ExactMatch && params.Regexp {
 		return nil, nil, fmt.Errorf("pattern can't be matched exactly and as a regexp at the same time")
 	}
-	if !strings.HasPrefix(cred.Apiaddr, "api.") {
+	apiURL, err := url.Parse(cred.Apiaddr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse api address '%s': %w", cred.Apiaddr, err)
+	}
+	if !strings.HasPrefix(apiURL.Host, "api.") {
 		return nil, nil, fmt.Errorf("unexpected api address format: %s", cred.Apiaddr)
 	}
-	apiaddr := "download." + strings.TrimPrefix(cred.GetApiDomain(), "api.")
+	apiaddr := "download." + strings.TrimPrefix(apiURL.Host, "api.")
 
 	repoPath := "/repositories/" + strings.ReplaceAll(params.Path, ":", ":/")
 	if params.Path_repository != "" {
