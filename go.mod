@@ -1,14 +1,15 @@
 module github.com/openSUSE/osc-mcp
 
-go 1.24.5
+go 1.25.0
 
 require (
 	github.com/beevik/etree v1.5.1
 	github.com/godbus/dbus/v5 v5.1.0
-	github.com/google/jsonschema-go v0.2.3
+	github.com/google/jsonschema-go v0.3.0
 	github.com/hbollon/go-edlib v1.7.0
-	github.com/modelcontextprotocol/go-sdk v0.6.0
+	github.com/modelcontextprotocol/go-sdk v1.0.1-0.20250930202407-49047aebe804
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/openSUSE/mcp-archive v0.1.3
 	github.com/ppacher/go-dbus-keyring v1.0.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.10
@@ -18,6 +19,7 @@ require (
 )
 
 require (
+	github.com/cavaliergopher/cpio v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
@@ -31,9 +33,11 @@ require (
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 )

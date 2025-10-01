@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/openSUSE/mcp-archive/archive"
 	"github.com/openSUSE/osc-mcp/internal/pkg/licenses"
 	"github.com/openSUSE/osc-mcp/internal/pkg/osc"
 	"github.com/spf13/pflag"
@@ -38,6 +39,7 @@ func main() {
 	pflag.String("logfile", "", "if set, log to this file instead of stderr")
 	pflag.BoolP("verbose", "v", false, "Enable verbose logging")
 	pflag.BoolP("debug", "d", false, "Enable debug logging")
+	pflag.Bool("disable-archives", false, "Disables archive tools")
 
 	pflag.Parse()
 	viper.SetEnvPrefix("OSC_MCP")
@@ -169,6 +171,21 @@ func main() {
 		Name:        "get_request",
 		Description: "Get a single request by its ID. Includes a diff to what has changed in that request.",
 	}, obsCred.GetRequest)
+	if !viper.GetBool("disable-archives") {
+		archiver, err := archive.New(obsCred.TempDir)
+		if err != nil {
+			slog.Error("failed to create archiver", "error", err)
+			os.Exit(1)
+		}
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "list_archive_files",
+			Description: "Content of an archive. Supported formats are cpio, tar.gz, tar.bz2, tar.xz and zip",
+		}, archiver.ListArchiveFiles)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "extract_archive_files",
+			Description: "Extract files from a cpio, tar.gz, tar.bz2, tar.xz or zip archive. If no files are given the complete archive is extracted",
+		}, archiver.ExtractArchiveFiles)
+	}
 	server.AddPrompt(&mcp.Prompt{
 		Name:        "basic_information",
 		Description: "Basic information about the tools and how they are used for the OpenBuild Server.",
