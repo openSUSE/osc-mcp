@@ -189,9 +189,11 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	if params.VmType != "" && params.VmType != "chroot" {
 		cmdline = append(cmdline, "--vm-type", params.VmType, dist, arch)
 	} else {
-		buildRoot := fmt.Sprintf("%s/build-root/%s-%s", cred.TempDir, dist, arch)
-		cmdline = append(cmdline, "--root", buildRoot)
-		result.Buildroot = buildRoot
+		if cred.BuildRootInWorkdir {
+			buildRoot := fmt.Sprintf("%s/build-root/%s-%s", cred.TempDir, dist, arch)
+			cmdline = append(cmdline, "--root", buildRoot)
+			result.Buildroot = buildRoot
+		}
 	}
 	if params.MultibuildPackage != "" {
 		cmdline = append(cmdline, "-M", params.MultibuildPackage)

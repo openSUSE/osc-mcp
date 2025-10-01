@@ -24,13 +24,14 @@ func IgnoredDirs() []string {
 }
 
 type OSCCredentials struct {
-	Name         string
-	EMail        string
-	Passwd       string
-	Apiaddr      string
-	TempDir      string
-	BuildLogs    map[string]*buildlog.BuildLog
-	LastBuildKey string
+	Name               string
+	EMail              string
+	Passwd             string
+	Apiaddr            string
+	TempDir            string
+	BuildLogs          map[string]*buildlog.BuildLog
+	LastBuildKey       string
+	BuildRootInWorkdir bool
 }
 
 func (cred *OSCCredentials) GetAPiAddr() string {
