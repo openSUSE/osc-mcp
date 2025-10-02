@@ -139,6 +139,8 @@ func Parse(logContent string) *BuildLog {
 
 		if newPhase != phase {
 			currentPhaseDetails.Duration = lastTime - phaseStartTime
+			// next phase so we succeded in this phase
+			currentPhaseDetails.Succeeded = true
 			log.Phases[phase] = currentPhaseDetails
 			currentPhaseDetails = Phase{
 				Succeeded: true,
