@@ -44,6 +44,7 @@ func (p BuildPhase) String() string {
 }
 
 type Phase struct {
+	Type      BuildPhase
 	Succeeded bool
 	Lines     []string
 	Duration  int
@@ -54,7 +55,7 @@ type BuildLog struct {
 	Project string
 	Distro  string
 	Arch    string
-	Phases  map[BuildPhase]Phase
+	Phases  []Phase
 	rawlog  string
 }
 
@@ -106,14 +107,15 @@ func extractTime(line string) (int, bool) {
 
 func Parse(logContent string) *BuildLog {
 	log := &BuildLog{
-		Phases: make(map[BuildPhase]Phase),
+		Phases: []Phase{},
 		rawlog: logContent,
 	}
 	scanner := bufio.NewScanner(strings.NewReader(logContent))
 	phase := Header
-	var currentPhaseDetails Phase
+	currentPhaseDetails := Phase{Type: phase}
 	var phaseStartTime int
 	var lastTime int
+	var hasError bool
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -139,20 +141,22 @@ func Parse(logContent string) *BuildLog {
 
 		if newPhase != phase {
 			currentPhaseDetails.Duration = lastTime - phaseStartTime
-			log.Phases[phase] = currentPhaseDetails
-			currentPhaseDetails = Phase{
-				Succeeded: true,
-			}
+			currentPhaseDetails.Succeeded = !hasError
+			log.Phases = append(log.Phases, currentPhaseDetails)
+
 			phase = newPhase
+			currentPhaseDetails = Phase{Type: phase}
 			phaseStartTime = lastTime
+			hasError = false
 		}
 		if strings.Contains(line, " FAILED") || strings.Contains(line, " ERROR") {
-			currentPhaseDetails.Succeeded = false
+			hasError = true
 		}
 		currentPhaseDetails.Lines = append(currentPhaseDetails.Lines, line)
 	}
 	currentPhaseDetails.Duration = lastTime - phaseStartTime
-	log.Phases[phase] = currentPhaseDetails
+	currentPhaseDetails.Succeeded = (currentPhaseDetails.Type == Summary && !hasError)
+	log.Phases = append(log.Phases, currentPhaseDetails)
 
 	return log
 }
@@ -165,9 +169,10 @@ func (log *BuildLog) FormatJson(nrLines int, printSucceded bool) map[string]any 
 		"Arch":    log.Arch,
 	}
 
-	phases := make(map[string]any)
-	for phase, phaseDetails := range log.Phases {
-		phases[phase.String()] = map[string]any{
+	phases := []any{}
+	for _, phaseDetails := range log.Phases {
+		phaseData := map[string]any{
+			"Phase":    phaseDetails.Type.String(),
 			"Duration": phaseDetails.Duration,
 			"Success":  phaseDetails.Succeeded,
 		}
@@ -176,17 +181,9 @@ func (log *BuildLog) FormatJson(nrLines int, printSucceded bool) map[string]any 
 			if nrLines > len(phaseDetails.Lines) || nrLines == 0 {
 				printLines = len(phaseDetails.Lines)
 			}
-			phases[phase.String()] = map[string]any{
-				"Duration": phaseDetails.Duration,
-				"Success":  phaseDetails.Succeeded,
-				"Lines":    phaseDetails.Lines[:printLines],
-			}
-		} else {
-			phases[phase.String()] = map[string]any{
-				"Duration": phaseDetails.Duration,
-				"Success":  phaseDetails.Succeeded,
-			}
+			phaseData["Lines"] = phaseDetails.Lines[:printLines]
 		}
+		phases = append(phases, phaseData)
 	}
 
 	return map[string]any{

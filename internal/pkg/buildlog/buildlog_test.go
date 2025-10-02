@@ -80,11 +80,11 @@ func TestParseLog(t *testing.T) {
 
 			assert.Equal(t, len(tc.expectedPhases), len(log.Phases))
 
-			for phase, expected := range tc.expectedPhases {
-				actual, ok := log.Phases[phase]
-				assert.True(t, ok, "Expected phase %s not found", phase.String())
-				assert.Equal(t, expected.lineCount, len(actual.Lines), "Line count mismatch for phase %s", phase.String())
-				assert.Equal(t, expected.duration, actual.Duration, "Duration mismatch for phase %s", phase.String())
+			for _, actual := range log.Phases {
+				expected, ok := tc.expectedPhases[actual.Type]
+				assert.True(t, ok, "Unexpected phase %s", actual.Type.String())
+				assert.Equal(t, expected.lineCount, len(actual.Lines), "Line count mismatch for phase %s", actual.Type.String())
+				assert.Equal(t, expected.duration, actual.Duration, "Duration mismatch for phase %s", actual.Type.String())
 			}
 		})
 	}
