@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/beevik/etree"
@@ -15,6 +16,7 @@ import (
 
 type GetProjectMetaParam struct {
 	ProjectName string `json:"project_name" jsonschema:"Name of the project"`
+	Filter      string `json:"filter,omitempty" jsonschema:"Optional regexp to filter packages, returning all if empty"`
 }
 
 type Repository struct {
@@ -24,24 +26,69 @@ type Repository struct {
 	Arches         []string `json:"arches,omitempty" yaml:"arches,omitempty"`
 }
 
-type BundleStatus struct {
-	Bundle string `json:"bundle" yaml:"bundle"`
-	Code   string `json:"code" yaml:"code"`
-}
-
-type RepositoryBuildStatus struct {
-	Repository string         `json:"repository" yaml:"repository"`
-	Arch       string         `json:"arch" yaml:"arch"`
-	Bundles    []BundleStatus `json:"bundles,omitempty" yaml:"bundles,omitempty"`
-}
-
 type ProjectMeta struct {
-	ProjectName             string                  `json:"project_name"`
-	Title                   string                  `json:"title,omitempty"`
-	Description             string                  `json:"description,omitempty"`
-	Maintainers             []string                `json:"maintainers,omitempty"`
-	Repositories            []Repository            `json:"repositories,omitempty"`
-	RepositoryBuildStatuses []RepositoryBuildStatus `json:"repository_build_statuses,omitempty" yaml:"repository_build_statuses,omitempty"`
+	ProjectName   string       `json:"project_name"`
+	Title         string       `json:"title,omitempty"`
+	Description   string       `json:"description,omitempty"`
+	Maintainers   []string     `json:"maintainers,omitempty"`
+	Repositories  []Repository `json:"repositories,omitempty"`
+	Packages      []string     `json:"packages,omitempty"`
+	NumPackages   int          `json:"num_packages,omitempty"`
+	NumFiltered   int          `json:"num_filtered,omitempty"`
+}
+
+func (cred *OSCCredentials) listProjectPackages(ctx context.Context, projectName string) ([]string, error) {
+	if projectName == "" {
+		return nil, fmt.Errorf("project name cannot be empty")
+	}
+
+	apiURL, err := url.Parse(fmt.Sprintf("%s/source/%s", cred.GetAPiAddr(), projectName))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("User-Agent", "osc-mcp")
+	req.SetBasicAuth(cred.Name, cred.Passwd)
+	req.Header.Set("Accept", "application/xml; charset=utf-8")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrBundleOrProjectNotFound
+	} else if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
+	}
+
+	doc := etree.NewDocument()
+	if _, err := doc.ReadFrom(resp.Body); err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	dirElement := doc.SelectElement("directory")
+	if dirElement == nil {
+		return nil, fmt.Errorf("directory not found, project was: %s", projectName)
+	}
+
+	var packages []string
+	for _, entry := range dirElement.SelectElements("entry") {
+		if name := entry.SelectAttrValue("name", ""); name != "" {
+			if !strings.HasPrefix(name, "_") {
+				packages = append(packages, name)
+			}
+		}
+	}
+
+	return packages, nil
 }
 
 func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectName string) (*ProjectMeta, error) {
@@ -117,63 +164,42 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 		meta.Repositories = append(meta.Repositories, r)
 	}
 
-	apiURL, err = url.Parse(fmt.Sprintf("%s/build/%s/_result", cred.GetAPiAddr(), projectName))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse API URL: %w", err)
-	}
-
-	req, err = http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("User-Agent", "osc-mcp")
-	req.SetBasicAuth(cred.Name, cred.Passwd)
-	req.Header.Set("Accept", "application/xml; charset=utf-8")
-
-	resp, err = client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		slog.Debug("no build status")
-		return meta, nil
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
-	}
-	doc = etree.NewDocument()
-	if _, err := doc.ReadFrom(resp.Body); err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	resultListElement := doc.SelectElement("resultlist")
-	if resultListElement != nil {
-		for _, resultElement := range resultListElement.SelectElements("result") {
-			repoStatus := RepositoryBuildStatus{
-				Repository: resultElement.SelectAttrValue("repository", ""),
-				Arch:       resultElement.SelectAttrValue("arch", ""),
-			}
-			for _, statusElement := range resultElement.SelectElements("status") {
-				pkgStatus := BundleStatus{
-					Bundle: statusElement.SelectAttrValue("package", ""),
-					Code:   statusElement.SelectAttrValue("code", ""),
-				}
-				repoStatus.Bundles = append(repoStatus.Bundles, pkgStatus)
-			}
-			meta.RepositoryBuildStatuses = append(meta.RepositoryBuildStatuses, repoStatus)
-		}
-	}
-
 	return meta, nil
 }
 
 func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params GetProjectMetaParam) (*mcp.CallToolResult, *ProjectMeta, error) {
 	slog.Debug("mcp tool call: GetProjectMeta", "params", params)
 	res, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
-	return nil, res, err
+	if err != nil {
+		return nil, nil, err
+	}
+
+	packages, err := cred.listProjectPackages(ctx, params.ProjectName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list packages for project %s: %w", params.ProjectName, err)
+	}
+
+	res.NumPackages = len(packages)
+
+	if params.Filter != "" {
+		re, err := regexp.Compile(params.Filter)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid filter regexp: %w", err)
+		}
+		var filteredPackages []string
+		for _, pkg := range packages {
+			if re.MatchString(pkg) {
+				filteredPackages = append(filteredPackages, pkg)
+			}
+		}
+		res.Packages = filteredPackages
+		res.NumFiltered = len(filteredPackages)
+	} else {
+		if len(packages) <= 100 {
+			res.Packages = packages
+		}
+	}
+	return nil, res, nil
 }
 
 func (cred *OSCCredentials) setProjectMetaInternal(ctx context.Context, params ProjectMeta) error {
