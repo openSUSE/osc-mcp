@@ -185,11 +185,11 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 		}
 	}
 
-	cmdline = append(cmdline, "build", "--clean", "--trust-all-projects")
+	cmdline = append(cmdline, "build", "--clean", "--trust-all-projects", "--noservice")
 	if params.VmType != "" && params.VmType != "chroot" {
 		cmdline = append(cmdline, "--vm-type", params.VmType, dist, arch)
 	} else {
-		if cred.BuildRootInWorkdir {
+		if cred.buildRootInWorkdir {
 			buildRoot := fmt.Sprintf("%s/build-root/%s-%s", cred.TempDir, dist, arch)
 			cmdline = append(cmdline, "--root", buildRoot)
 			result.Buildroot = buildRoot

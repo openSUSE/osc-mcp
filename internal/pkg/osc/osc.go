@@ -31,7 +31,8 @@ type OSCCredentials struct {
 	TempDir            string
 	BuildLogs          map[string]*buildlog.BuildLog
 	LastBuildKey       string
-	BuildRootInWorkdir bool
+	buildRootInWorkdir bool
+	useInternalCommit  bool
 }
 
 func (cred *OSCCredentials) GetAPiAddr() string {

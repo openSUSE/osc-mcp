@@ -1,6 +1,7 @@
 package osc
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/md5"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -21,11 +23,13 @@ import (
 )
 
 type CommitCmd struct {
-	Message             string `json:"message" jsonschema:"Commit message"`
-	Directory           string `json:"directory" jsonschema:"Directory of the package to commit"`
-	ProjectName         string `json:"project_name,omitempty" jsonschema:"Project name. If not provided, it will be derived from the directory path."`
-	BundleName          string `json:"bundle_name,omitempty" jsonschema:"Bundle name also known as source package name. If not provided, it will be derived from the directory path."`
-	SkipChangesCreation bool   `json:"skip_changes,omitempty" jsonschema:"Skip the automatic update of the changes file."`
+	Message             string   `json:"message" jsonschema:"Commit message"`
+	AddedFiles          []string `json:"added_files,omitempty" jsonschema:"Files to add before committing"`
+	RemovedFiles        []string `json:"removed_files,omitempty" jsonschema:"Files to remove before committing"`
+	Directory           string   `json:"directory" jsonschema:"Directory of the package to commit"`
+	ProjectName         string   `json:"project_name,omitempty" jsonschema:"Project name. If not provided, it will be derived from the directory path."`
+	BundleName          string   `json:"bundle_name,omitempty" jsonschema:"Bundle name also known as source package name. If not provided, it will be derived from the directory path."`
+	SkipChangesCreation bool     `json:"skip_changes,omitempty" jsonschema:"Skip the automatic update of the changes file."`
 }
 
 type CommitResult struct {
@@ -88,6 +92,106 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 	if params.Directory == "" {
 		return nil, CommitResult{}, fmt.Errorf("directory must be specified")
 	}
+	progressToken := req.Params.GetProgressToken()
+
+	if !cred.useInternalCommit {
+		baseCmdline := []string{"osc"}
+		configFile, err := cred.writeTempOscConfig()
+		if err != nil {
+			slog.Warn("failed to write osc config", "error", err)
+		} else {
+			defer os.Remove(configFile)
+			baseCmdline = append(baseCmdline, "--config", configFile)
+		}
+
+		if len(params.AddedFiles) > 0 {
+			addCmdline := append(baseCmdline, "add", "--force")
+			addCmdline = append(addCmdline, params.AddedFiles...)
+			oscAddCmd := exec.CommandContext(ctx, addCmdline[0], addCmdline[1:]...)
+			oscAddCmd.Dir = params.Directory
+			slog.Info("running osc add", slog.String("command", oscAddCmd.String()), slog.String("dir", params.Directory))
+			output, err := oscAddCmd.CombinedOutput()
+			if err != nil {
+				slog.Error("failed to run osc add", slog.String("command", oscAddCmd.String()), "error", err, "output", string(output))
+				return nil, CommitResult{}, fmt.Errorf("failed to run osc add: %w\nOutput:\n%s", err, string(output))
+			}
+			slog.Debug("osc add finished successfully", slog.String("command", oscAddCmd.String()), "output", string(output))
+		}
+
+		if len(params.RemovedFiles) > 0 {
+			deleteCmdline := append(baseCmdline, "delete", "--force")
+			deleteCmdline = append(deleteCmdline, params.RemovedFiles...)
+			oscDeleteCmd := exec.CommandContext(ctx, deleteCmdline[0], deleteCmdline[1:]...)
+			oscDeleteCmd.Dir = params.Directory
+			slog.Info("running osc delete", slog.String("command", oscDeleteCmd.String()), slog.String("dir", params.Directory))
+			output, err := oscDeleteCmd.CombinedOutput()
+			if err != nil {
+				slog.Error("failed to run osc delete", slog.String("command", oscDeleteCmd.String()), "error", err, "output", string(output))
+				return nil, CommitResult{}, fmt.Errorf("failed to run osc delete: %w\nOutput:\n%s", err, string(output))
+			}
+			slog.Debug("osc delete finished successfully", slog.String("command", oscDeleteCmd.String()), "output", string(output))
+		}
+
+		cmdline := append(baseCmdline, "commit", "-m", params.Message)
+
+		oscCmd := exec.CommandContext(ctx, cmdline[0], cmdline[1:]...)
+		oscCmd.Dir = params.Directory
+
+		stdout, err := oscCmd.StdoutPipe()
+		if err != nil {
+			return nil, CommitResult{}, fmt.Errorf("failed to get stdout pipe: %w", err)
+		}
+		oscCmd.Stderr = oscCmd.Stdout
+
+		slog.Info("starting osc commit", slog.String("command", oscCmd.String()), slog.String("dir", params.Directory))
+		if err := oscCmd.Start(); err != nil {
+			slog.Error("failed to start osc commit", "error", err)
+			return nil, CommitResult{}, fmt.Errorf("failed to start osc commit: %w", err)
+		}
+
+		var out bytes.Buffer
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			line := scanner.Text()
+			out.WriteString(line)
+			out.WriteString("\n")
+			if progressToken != nil {
+				if err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+					ProgressToken: progressToken,
+					Message:       line,
+				}); err != nil {
+					slog.Warn("failed to send progress notification", "error", err)
+				}
+			}
+		}
+
+		err = oscCmd.Wait()
+		if err != nil {
+			slog.Error("failed to run osc commit", slog.String("command", oscCmd.String()), "error", err, "output", out.String())
+			return nil, CommitResult{}, fmt.Errorf("failed to run osc commit: %w\nOutput:\n%s", err, out.String())
+		}
+
+		slog.Debug("osc commit finished successfully", slog.String("command", oscCmd.String()))
+
+		// Parse output to find revision.
+		// A typical output is "Committed revision 123."
+		// Or on obs.group.suse.de "New revision 123."
+		output := out.String()
+		rev := ""
+		if strings.Contains(output, "Committed revision") {
+			parts := strings.Split(output, "Committed revision ")
+			if len(parts) > 1 {
+				rev = strings.TrimRight(strings.Fields(parts[1])[0], ".")
+			}
+		} else if strings.Contains(output, "New revision") {
+			parts := strings.Split(output, "New revision ")
+			if len(parts) > 1 {
+				rev = strings.TrimRight(strings.Fields(parts[1])[0], ".")
+			}
+		}
+
+		return nil, CommitResult{Revision: rev}, nil
+	}
 
 	projectName := params.ProjectName
 	bundleName := params.BundleName
@@ -142,6 +246,14 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		}
 	}
 	// get the remote files so that we know what to commit
+	if progressToken != nil {
+		if err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+			ProgressToken: progressToken,
+			Message:       "Getting remote file list...",
+		}); err != nil {
+			slog.Warn("failed to send progress notification", "error", err)
+		}
+	}
 	remoteFiles, err := cred.getRemoteFileList(ctx, projectName, bundleName)
 	if err != nil {
 		return nil, CommitResult{}, fmt.Errorf("failed to get remote file list: %w", err)
@@ -156,10 +268,23 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		return nil, CommitResult{}, fmt.Errorf("failed to read local directory: %w", err)
 	}
 
+	if progressToken != nil {
+		if err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+			ProgressToken: progressToken,
+			Message:       "Comparing local and remote files...",
+		}); err != nil {
+			slog.Warn("failed to send progress notification", "error", err)
+		}
+	}
+
 	var changedFiles []string
 	var newFiles []string
 	var deletedFiles []string
 	localFileMap := make(map[string]bool)
+	removedFileMap := make(map[string]bool)
+	for _, f := range params.RemovedFiles {
+		removedFileMap[f] = true
+	}
 
 	for _, file := range localFiles {
 		if file.IsDir() {
@@ -168,6 +293,9 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		fileName := file.Name()
 		if strings.HasPrefix(fileName, ".") {
 			continue // Ignore hidden files like .osc
+		}
+		if _, isRemoved := removedFileMap[fileName]; isRemoved {
+			continue
 		}
 		localFileMap[fileName] = true
 		filePath := filepath.Join(params.Directory, fileName)
@@ -195,6 +323,14 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 	if len(filesToUpload) > 0 {
 		slog.Info("Uploading changed files", "files", filesToUpload)
 		for _, fileName := range filesToUpload {
+			if progressToken != nil {
+				if err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+					ProgressToken: progressToken,
+					Message:       "Uploading " + fileName,
+				}); err != nil {
+					slog.Warn("failed to send progress notification", "error", err)
+				}
+			}
 			filePath := filepath.Join(params.Directory, fileName)
 			err := cred.uploadFile(ctx, projectName, bundleName, fileName, filePath)
 			if err != nil {
@@ -224,6 +360,9 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 			continue
 		}
 		fileName := file.Name()
+		if _, isRemoved := removedFileMap[fileName]; isRemoved {
+			continue
+		}
 		if strings.HasPrefix(fileName, ".") {
 			continue
 		}
@@ -255,6 +394,14 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		return nil, CommitResult{}, fmt.Errorf("failed to marshal commit xml: %w", err)
 	}
 
+	if progressToken != nil {
+		if err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+			ProgressToken: progressToken,
+			Message:       "Committing changes to OBS...",
+		}); err != nil {
+			slog.Warn("failed to send progress notification", "error", err)
+		}
+	}
 	revision, err := cred.commitFiles(ctx, projectName, bundleName, params.Message, xmlData)
 	if err != nil {
 		return nil, CommitResult{}, fmt.Errorf("failed to commit changes: %w", err)
@@ -263,6 +410,14 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 	// Update .osc/_files cache
 	oscDir := filepath.Join(params.Directory, ".osc")
 	if _, err := os.Stat(oscDir); !os.IsNotExist(err) {
+		if progressToken != nil {
+			if err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
+				ProgressToken: progressToken,
+				Message:       "Updating .osc cache...",
+			}); err != nil {
+				slog.Warn("failed to send progress notification", "error", err)
+			}
+		}
 		slog.Debug("Updating .osc/_files cache")
 		newRemoteFiles, err := cred.getRemoteFileList(ctx, projectName, bundleName)
 		if err != nil {
@@ -294,7 +449,9 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 					Project: newRemoteFiles.Link.Project,
 					BaseRev: newRemoteFiles.Link.BaseRev,
 				}
-				linkFileContent.Patches.Branch = struct{ XMLName xml.Name `xml:"branch"` }{}
+				linkFileContent.Patches.Branch = struct {
+					XMLName xml.Name `xml:"branch"`
+				}{}
 
 				xmlData, err := xml.MarshalIndent(linkFileContent, "", "  ")
 				if err != nil {
