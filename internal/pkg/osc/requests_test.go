@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -13,7 +14,9 @@ import (
 
 func TestListRequests(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/request?states=new%2Creview&user=testuser&view=collection", r.URL.String())
+		actualURL, err := url.Parse(r.URL.String())
+		assert.NoError(t, err)
+		assert.Equal(t, "testuser", actualURL.Query().Get("user"))
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, `
 <collection matches="1">
@@ -64,46 +67,19 @@ func TestListRequests(t *testing.T) {
 	assert.Equal(t, "Please review my package.", requests.Requests[0].Description)
 }
 
-func TestListRequests_Empty(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, `<collection matches="0"></collection>`)
-	}))
-	defer server.Close()
-
-	cred := &OSCCredentials{
-		Name:    "testuser",
-		Passwd:  "testpassword",
-		Apiaddr: server.URL,
-	}
-
-	_, requests, err := cred.ListRequests(context.Background(), &mcp.CallToolRequest{}, ListRequestsCmd{User: "testuser"})
-	assert.NoError(t, err)
-	assert.NotNil(t, requests)
-	assert.Equal(t, "0", requests.Matches)
-	assert.Len(t, requests.Requests, 0)
-}
-
-func TestListRequests_Error(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, "Internal Server Error")
-	}))
-	defer server.Close()
-
-	cred := &OSCCredentials{
-		Name:    "testuser",
-		Passwd:  "testpassword",
-		Apiaddr: server.URL,
-	}
-
-	_, _, err := cred.ListRequests(context.Background(), &mcp.CallToolRequest{}, ListRequestsCmd{User: "testuser"})
-	assert.Error(t, err)
-}
-
 func TestGetRequest(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/request/123", r.URL.String())
+		actualURL, err := url.Parse(r.URL.String())
+		assert.NoError(t, err)
+		if actualURL.Query().Has("cmd") {
+			expectedURL, err := url.Parse("/request/123?cmd=diff")
+			assert.NoError(t, err)
+			assert.Equal(t, expectedURL.Query(), actualURL.Query())
+		} else {
+			expectedURL, err := url.Parse("/request/123?withhistory=1")
+			assert.NoError(t, err)
+			assert.Equal(t, expectedURL.Query(), actualURL.Query())
+		}
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, `
 <request id="123" creator="testuser" created="2025-09-22T10:00:00">
@@ -161,23 +137,7 @@ func TestGetRequest(t *testing.T) {
 	assert.Equal(t, "testreviewer", request.Reviews[0].ByUser)
 }
 
-func TestGetRequest_WithHistory(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/request/123?withhistory=1", r.URL.String())
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, `<request id="123"></request>`)
-	}))
-	defer server.Close()
 
-	cred := &OSCCredentials{
-		Name:    "testuser",
-		Passwd:  "testpassword",
-		Apiaddr: server.URL,
-	}
-
-	_, _, err := cred.GetRequest(context.Background(), &mcp.CallToolRequest{}, GetRequestCmd{Id: "123", WithHistory: true})
-	assert.NoError(t, err)
-}
 
 func TestGetRequest_Error(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

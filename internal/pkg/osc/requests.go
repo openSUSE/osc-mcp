@@ -124,15 +124,12 @@ func (cred *OSCCredentials) ListRequests(ctx context.Context, req *mcp.CallToolR
 	mustSetuser := true
 	if params.Group != "" {
 		queryParams.Set("group", params.Group)
-		mustSetuser = false
 	}
 	if params.Project != "" {
 		queryParams.Set("project", params.Project)
-		mustSetuser = false
 	}
 	if params.Package != "" {
 		queryParams.Set("package", params.Package)
-		mustSetuser = false
 	}
 	if params.States != "" {
 		queryParams.Set("states", params.States)
@@ -149,7 +146,7 @@ func (cred *OSCCredentials) ListRequests(ctx context.Context, req *mcp.CallToolR
 		queryParams.Set("limit", strconv.Itoa(params.Limit))
 	}
 	user := params.User
-	if user == "" && mustSetuser {
+	if mustSetuser {
 		user = cred.Name
 		queryParams.Set("user", user)
 	}
