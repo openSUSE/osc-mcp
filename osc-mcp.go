@@ -130,7 +130,7 @@ func main() {
 	}, obsCred.RunServices)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_project_meta",
-		Description: "Get the metadata of a project. The metadata defines for which project a source bundle can be built",
+		Description: "Get the metadata of a project. The metadata defines for which project a source bundle can be built the bundles inside the project. The subporjecs of the proejcts are also listed. Project and sub project names are seperated with colons.",
 	}, obsCred.GetProjectMeta)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "set_project_meta",

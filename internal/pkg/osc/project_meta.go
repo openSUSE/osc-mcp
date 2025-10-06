@@ -33,9 +33,15 @@ type ProjectMeta struct {
 	Maintainers   []string     `json:"maintainers,omitempty"`
 	Repositories  []Repository `json:"repositories,omitempty"`
 	Packages      []string     `json:"packages,omitempty"`
+	SubProjects   []SubProject `json:"sub_projects,omitempty"`
 	NumPackages   int          `json:"num_packages,omitempty"`
 	NumFiltered   int          `json:"num_filtered,omitempty"`
 }
+
+type SubProject struct {
+	Name string `json:"name"`
+}
+
 
 func (cred *OSCCredentials) listProjectPackages(ctx context.Context, projectName string) ([]string, error) {
 	if projectName == "" {
@@ -167,6 +173,71 @@ func (cred *OSCCredentials) getProjectMetaInternal(ctx context.Context, projectN
 	return meta, nil
 }
 
+func (cred *OSCCredentials) listAllProjects(ctx context.Context) ([]string, error) {
+	apiURL, err := url.Parse(fmt.Sprintf("%s/source", cred.GetAPiAddr()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse API URL: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("User-Agent", "osc-mcp")
+	req.SetBasicAuth(cred.Name, cred.Passwd)
+	req.Header.Set("Accept", "application/xml; charset=utf-8")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api request failed with status: %s", resp.Status)
+	}
+
+	doc := etree.NewDocument()
+	if _, err := doc.ReadFrom(resp.Body); err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	dirElement := doc.SelectElement("directory")
+	if dirElement == nil {
+		return nil, fmt.Errorf("directory not found in response")
+	}
+
+	var projects []string
+	for _, entry := range dirElement.SelectElements("entry") {
+		if name := entry.SelectAttrValue("name", ""); name != "" {
+			projects = append(projects, name)
+		}
+	}
+
+	return projects, nil
+}
+
+func (cred *OSCCredentials) listSubProjects(ctx context.Context, projectName string) ([]SubProject, error) {
+	allProjects, err := cred.listAllProjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var subProjects []SubProject
+	prefix := projectName + ":"
+	for _, p := range allProjects {
+		if strings.HasPrefix(p, prefix) {
+			subProjectName := strings.TrimPrefix(p, prefix)
+			if !strings.Contains(subProjectName, ":") {
+				subProjects = append(subProjects, SubProject{Name: subProjectName})
+			}
+		}
+	}
+	return subProjects, nil
+}
+
 func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, req *mcp.CallToolRequest, params GetProjectMetaParam) (*mcp.CallToolResult, *ProjectMeta, error) {
 	slog.Debug("mcp tool call: GetProjectMeta", "params", params)
 	res, err := cred.getProjectMetaInternal(ctx, params.ProjectName)
@@ -199,6 +270,14 @@ func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, req *mcp.CallToo
 			res.Packages = packages
 		}
 	}
+
+	subProjects, err := cred.listSubProjects(ctx, params.ProjectName)
+	if err != nil {
+		slog.Warn("failed to list subprojects", "project", params.ProjectName, "error", err)
+	} else {
+		res.SubProjects = subProjects
+	}
+
 	return nil, res, nil
 }
 
