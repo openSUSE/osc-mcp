@@ -374,15 +374,10 @@ services:
       <service name="node_modules">
         <summary>download node modules</summary>
         <description>download node modules</description>
-        <!-- <param name="cpio"> -->
-        <!--   <description>cpio file name to store all tarballs in</description> -->
-        <!-- </param> -->
-        <!-- <param name="output"> -->
-        <!--   <description>write rpm source lines to that file</description> -->
-        <!-- </param> -->
-        <!-- <param name="source-offset"> -->
-        <!--   <description>rpm source number to start with</description> -->
-        <!-- </param> -->
+        <!-- <param name="file">package.json</param> -->
+        <!-- <param name="spec-file">__PACKAGE_NAME__.spec</param> -->
+        <!-- <param name="tarball">__PACKAGE_NAME__-%{version}.tar.gz</param> -->
+        <!-- <param name="compression">xz</param> -->
       </service>
 
 

@@ -152,8 +152,8 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 }
 
 type SearchPackagesParams struct {
-	Path            string `json:"path"`
-	Path_repository string `json:"path_repository"`
+	Path            string `json:"path" jsonschema:"Distribution to serach in. Underscores are replaced with colons openSUSE_Tumbleweed is openSUSE:Tumbleweed"`
+	Path_repository string `json:"path_repository jsonschema:"Different build type. Use standard for most cases."`
 	Arch            string `json:"arch,omitempty"`
 	Pattern         string `json:"pattern" jsonschema:"package name to search for, matches any package for which pattern is substring."`
 	ExactMatch      bool   `json:"exact,omitempty" jsonschema:"treat pattern as exact match"`
