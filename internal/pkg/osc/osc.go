@@ -43,8 +43,8 @@ func (cred *OSCCredentials) GetAPiAddr() string {
 }
 
 func (cred *OSCCredentials) GetApiDomain() string {
-	addr := strings.TrimSuffix(cred.Apiaddr, "http://")
-	addr = strings.TrimSuffix(cred.Apiaddr, "https://")
+	addr := strings.TrimPrefix(cred.Apiaddr, "https://")
+	addr = strings.TrimPrefix(addr, "http://")
 	return addr
 }
 
@@ -130,7 +130,7 @@ func GetCredentials() (OSCCredentials, error) {
 
 	// fallback to keyring
 	var keyringCreds OSCCredentials
-	keyringCreds, err = useKeyringCreds(creds.Apiaddr)
+	keyringCreds, err = useKeyringCreds(creds.GetApiDomain())
 	if err != nil {
 		return creds, fmt.Errorf("password not found in %s and keyring access failed: %w", configPath, err)
 	}
