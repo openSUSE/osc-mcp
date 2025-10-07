@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1]
+
+### Added
+- added archive access.
+- added resource for spec file.
+- integration of _service files.
+
+### Changed
+- include sub-projects when getting meta.
+- more information on projects.
+- build and run service can be separated.
+- the build directory is now configurable.
+- commits now rely on an external `osc` call for improved file handling.
+
+
+### Fixed
+- Fixed tests.
+- Fixed search.
+
 ## [0.2.0] - 22.9.2025
 
 ### Added

@@ -72,7 +72,7 @@ func main() {
 	slog.SetDefault(logger)
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "OSC LLM bridge",
-		Version: "0.0.1"},
+		Version: "0.2.1"},
 		&mcp.ServerOptions{
 			InitializedHandler: func(ctx context.Context, req *mcp.InitializedRequest) {
 				slog.Info("Session started", "ID", req.Session.ID())
