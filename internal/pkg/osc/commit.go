@@ -104,12 +104,42 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 			baseCmdline = append(baseCmdline, "--config", configFile)
 		}
 
-		if len(params.AddedFiles) > 0 {
-			addCmdline := append(baseCmdline, "add", "--force")
-			addCmdline = append(addCmdline, params.AddedFiles...)
+		statusCmdline := append(baseCmdline, "status")
+		oscStatusCmd := exec.CommandContext(ctx, statusCmdline[0], statusCmdline[1:]...)
+		oscStatusCmd.Dir = params.Directory
+		slog.Debug("running osc status", slog.String("command", oscStatusCmd.String()), slog.String("dir", params.Directory))
+		statusOutput, err := oscStatusCmd.CombinedOutput()
+		if err != nil {
+			slog.Error("failed to run osc status", slog.String("command", oscStatusCmd.String()), "error", err, "output", string(statusOutput))
+			return nil, CommitResult{}, fmt.Errorf("failed to run osc status: %w\nOutput:\n%s", err, string(statusOutput))
+		}
+		slog.Debug("osc status finished successfully", slog.String("command", oscStatusCmd.String()), "output", string(statusOutput))
+
+		var filesToAdd []string
+		var filesToRemove []string
+		statusScanner := bufio.NewScanner(bytes.NewReader(statusOutput))
+		for statusScanner.Scan() {
+			line := statusScanner.Text()
+			parts := strings.Fields(line)
+			if len(parts) < 2 {
+				continue
+			}
+			status := parts[0]
+			fileName := strings.Join(parts[1:], " ")
+			switch status {
+			case "?":
+				filesToAdd = append(filesToAdd, fileName)
+			case "D":
+				filesToRemove = append(filesToRemove, fileName)
+			}
+		}
+
+		if len(filesToAdd) > 0 {
+			addCmdline := append(baseCmdline, "add")
+			addCmdline = append(addCmdline, filesToAdd...)
 			oscAddCmd := exec.CommandContext(ctx, addCmdline[0], addCmdline[1:]...)
 			oscAddCmd.Dir = params.Directory
-			slog.Info("running osc add", slog.String("command", oscAddCmd.String()), slog.String("dir", params.Directory))
+			slog.Debug("running osc add", slog.String("command", oscAddCmd.String()), slog.String("dir", params.Directory))
 			output, err := oscAddCmd.CombinedOutput()
 			if err != nil {
 				slog.Error("failed to run osc add", slog.String("command", oscAddCmd.String()), "error", err, "output", string(output))
@@ -118,18 +148,18 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 			slog.Debug("osc add finished successfully", slog.String("command", oscAddCmd.String()), "output", string(output))
 		}
 
-		if len(params.RemovedFiles) > 0 {
-			deleteCmdline := append(baseCmdline, "delete", "--force")
-			deleteCmdline = append(deleteCmdline, params.RemovedFiles...)
+		if len(filesToRemove) > 0 {
+			deleteCmdline := append(baseCmdline, "remove", "-f")
+			deleteCmdline = append(deleteCmdline, filesToRemove...)
 			oscDeleteCmd := exec.CommandContext(ctx, deleteCmdline[0], deleteCmdline[1:]...)
 			oscDeleteCmd.Dir = params.Directory
-			slog.Info("running osc delete", slog.String("command", oscDeleteCmd.String()), slog.String("dir", params.Directory))
+			slog.Debug("running osc remove", slog.String("command", oscDeleteCmd.String()), slog.String("dir", params.Directory))
 			output, err := oscDeleteCmd.CombinedOutput()
 			if err != nil {
-				slog.Error("failed to run osc delete", slog.String("command", oscDeleteCmd.String()), "error", err, "output", string(output))
-				return nil, CommitResult{}, fmt.Errorf("failed to run osc delete: %w\nOutput:\n%s", err, string(output))
+				slog.Error("failed to run osc remove", slog.String("command", oscDeleteCmd.String()), "error", err, "output", string(output))
+				return nil, CommitResult{}, fmt.Errorf("failed to run osc remove: %w\nOutput:\n%s", err, string(output))
 			}
-			slog.Debug("osc delete finished successfully", slog.String("command", oscDeleteCmd.String()), "output", string(output))
+			slog.Debug("osc remove finished successfully", slog.String("command", oscDeleteCmd.String()), "output", string(output))
 		}
 
 		cmdline := append(baseCmdline, "commit", "-m", params.Message)
@@ -143,7 +173,7 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 		}
 		oscCmd.Stderr = oscCmd.Stdout
 
-		slog.Info("starting osc commit", slog.String("command", oscCmd.String()), slog.String("dir", params.Directory))
+		slog.Debug("starting osc commit", slog.String("command", oscCmd.String()), slog.String("dir", params.Directory))
 		if err := oscCmd.Start(); err != nil {
 			slog.Error("failed to start osc commit", "error", err)
 			return nil, CommitResult{}, fmt.Errorf("failed to start osc commit: %w", err)
@@ -321,7 +351,7 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 
 	filesToUpload := append(newFiles, changedFiles...)
 	if len(filesToUpload) > 0 {
-		slog.Info("Uploading changed files", "files", filesToUpload)
+		slog.Debug("Uploading changed files", "files", filesToUpload)
 		for _, fileName := range filesToUpload {
 			if progressToken != nil {
 				if err := req.Session.NotifyProgress(ctx, &mcp.ProgressNotificationParams{
@@ -338,11 +368,11 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 			}
 		}
 	} else {
-		slog.Info("No changed files to upload")
+		slog.Debug("No changed files to upload")
 	}
 
 	if len(deletedFiles) > 0 {
-		slog.Info("Deleting remote files", "files", deletedFiles)
+		slog.Debug("Deleting remote files", "files", deletedFiles)
 	}
 
 	allLocalFiles, err := os.ReadDir(params.Directory)
@@ -484,7 +514,7 @@ func (cred *OSCCredentials) Commit(ctx context.Context, req *mcp.CallToolRequest
 					}
 				} else {
 					// File does not exist in working dir, it was generated on the server. Download it.
-					slog.Info("Downloading new server-generated file", "file", entry.Name)
+					slog.Debug("Downloading new server-generated file", "file", entry.Name)
 					// Download to working directory
 					err := cred.downloadFile(ctx, projectName, bundleName, entry.Name, sourceWdPath)
 					if err != nil {
