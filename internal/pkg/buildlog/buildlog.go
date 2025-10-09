@@ -63,6 +63,7 @@ var (
 	buildInfoRegex  = regexp.MustCompile(`Building (\S+) for project '([^']+)' repository '([^']+)' arch '([^']+)'`)
 	localBuildRegex = regexp.MustCompile(`started "build (\S+)\.spec"`)
 	localBuildRoot  = regexp.MustCompile(`Using BUILD_ROOT=.*/([^-]+)-([^-/]+)`)
+	timeRegex       = regexp.MustCompile(`^\[\s*(\d+)s\]\s*`)
 )
 
 var phaseMatches = []struct {
@@ -93,8 +94,7 @@ func nextPhase(current BuildPhase, line string) BuildPhase {
 }
 
 func extractTime(line string) (int, bool) {
-	re := regexp.MustCompile(`^\[\s*(\d+)s\]`)
-	matches := re.FindStringSubmatch(line)
+	matches := timeRegex.FindStringSubmatch(line)
 	if len(matches) < 2 {
 		return 0, false
 	}
@@ -152,7 +152,7 @@ func Parse(logContent string) *BuildLog {
 		if strings.Contains(line, " FAILED") || strings.Contains(line, " ERROR") {
 			hasError = true
 		}
-		currentPhaseDetails.Lines = append(currentPhaseDetails.Lines, line)
+		currentPhaseDetails.Lines = append(currentPhaseDetails.Lines, timeRegex.ReplaceAllString(line, ""))
 	}
 	currentPhaseDetails.Duration = lastTime - phaseStartTime
 	currentPhaseDetails.Succeeded = (currentPhaseDetails.Type == Summary && !hasError)
