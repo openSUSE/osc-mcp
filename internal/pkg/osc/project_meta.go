@@ -26,24 +26,28 @@ type Repository struct {
 	Arches         []string `json:"arches,omitempty" yaml:"arches,omitempty"`
 }
 
+type Package struct {
+	Name   string            `json:"name"`
+	Status map[string]string `json:"status,omitempty"`
+}
+
 type ProjectMeta struct {
-	ProjectName   string       `json:"project_name"`
-	Title         string       `json:"title,omitempty"`
-	Description   string       `json:"description,omitempty"`
-	Maintainers   []string     `json:"maintainers,omitempty"`
-	Repositories  []Repository `json:"repositories,omitempty"`
-	Packages      []string     `json:"packages,omitempty"`
-	SubProjects   []SubProject `json:"sub_projects,omitempty"`
-	NumPackages   int          `json:"num_packages,omitempty"`
-	NumFiltered   int          `json:"num_filtered,omitempty"`
+	ProjectName  string       `json:"project_name"`
+	Title        string       `json:"title,omitempty"`
+	Description  string       `json:"description,omitempty"`
+	Maintainers  []string     `json:"maintainers,omitempty"`
+	Repositories []Repository `json:"repositories,omitempty"`
+	Packages     []*Package   `json:"packages,omitempty"`
+	SubProjects  []SubProject `json:"sub_projects,omitempty"`
+	NumPackages  int          `json:"num_packages,omitempty"`
+	NumFiltered  int          `json:"num_filtered,omitempty"`
 }
 
 type SubProject struct {
 	Name string `json:"name"`
 }
 
-
-func (cred *OSCCredentials) listProjectPackages(ctx context.Context, projectName string) ([]string, error) {
+func (cred *OSCCredentials) listProjectPackages(ctx context.Context, projectName string) ([]*Package, error) {
 	if projectName == "" {
 		return nil, fmt.Errorf("project name cannot be empty")
 	}
@@ -85,11 +89,86 @@ func (cred *OSCCredentials) listProjectPackages(ctx context.Context, projectName
 		return nil, fmt.Errorf("directory not found, project was: %s", projectName)
 	}
 
-	var packages []string
+	var packageNames []string
 	for _, entry := range dirElement.SelectElements("entry") {
 		if name := entry.SelectAttrValue("name", ""); name != "" {
 			if !strings.HasPrefix(name, "_") {
-				packages = append(packages, name)
+				packageNames = append(packageNames, name)
+			}
+		}
+	}
+
+	packages := make([]*Package, len(packageNames))
+	packageMap := make(map[string]*Package)
+	for i, name := range packageNames {
+		packages[i] = &Package{Name: name}
+		packageMap[name] = packages[i]
+	}
+
+	// Get build results
+	buildResultURL, err := url.Parse(fmt.Sprintf("%s/build/%s/_result", cred.GetAPiAddr(), projectName))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse build result API URL: %w", err)
+	}
+
+	req, err = http.NewRequestWithContext(ctx, "GET", buildResultURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request for build result: %w", err)
+	}
+	req.Header.Set("User-Agent", "osc-mcp")
+	req.SetBasicAuth(cred.Name, cred.Passwd)
+	req.Header.Set("Accept", "application/xml; charset=utf-8")
+
+	resp, err = client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request for build result: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		slog.Warn("failed to get build results", "project", projectName, "status", resp.Status)
+		return packages, nil
+	}
+
+	buildDoc := etree.NewDocument()
+	if _, err := buildDoc.ReadFrom(resp.Body); err != nil {
+		slog.Warn("failed to parse build result", "project", projectName, "error", err)
+		return packages, nil
+	}
+
+	resultList := buildDoc.SelectElement("resultlist")
+	if resultList == nil {
+		slog.Warn("no resultlist found in build result", "project", projectName)
+		return packages, nil
+	}
+
+	for _, result := range resultList.SelectElements("result") {
+		repo := result.SelectAttrValue("repository", "")
+		arch := result.SelectAttrValue("arch", "")
+		if repo == "" || arch == "" {
+			continue
+		}
+		repoArch := fmt.Sprintf("%s/%s", repo, arch)
+		for _, status := range result.SelectElements("status") {
+			pkgNameWithFlavor := status.SelectAttrValue("package", "")
+			code := status.SelectAttrValue("code", "")
+			pkgName := pkgNameWithFlavor
+			flavor := ""
+			if strings.Contains(pkgNameWithFlavor, ":") {
+				parts := strings.SplitN(pkgNameWithFlavor, ":", 2)
+				pkgName = parts[0]
+				flavor = parts[1]
+			}
+
+			if pkg, ok := packageMap[pkgName]; ok {
+				if pkg.Status == nil {
+					pkg.Status = make(map[string]string)
+				}
+				key := repoArch
+				if flavor != "" {
+					key = fmt.Sprintf("%s/%s", repoArch, flavor)
+				}
+				pkg.Status[key] = code
 			}
 		}
 	}
@@ -257,9 +336,9 @@ func (cred *OSCCredentials) GetProjectMeta(ctx context.Context, req *mcp.CallToo
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid filter regexp: %w", err)
 		}
-		var filteredPackages []string
+		var filteredPackages []*Package
 		for _, pkg := range packages {
-			if re.MatchString(pkg) {
+			if re.MatchString(pkg.Name) {
 				filteredPackages = append(filteredPackages, pkg)
 			}
 		}

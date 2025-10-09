@@ -3,6 +3,7 @@ package osc
 import (
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,6 +13,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 )
+
+var ErrBuildLogNotFound = errors.New("build log not found")
 
 func (cred *OSCCredentials) getFromApi(ctx context.Context, url string) ([]byte, int, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -42,6 +45,12 @@ type BuildStatus struct {
 	Details string   `xml:"details"`
 }
 
+type MultibuildStatus struct {
+	Package string `json:"package,omitempty"`
+	Status  string `json:"status,omitempty"`
+	Details string `json:"details,omitempty"`
+}
+
 // GetBuildStatus retrieves the build status for a given package.
 func (cred *OSCCredentials) GetBuildStatus(ctx context.Context, projectName, repositoryName, architectureName, packageName string) (*BuildStatus, error) {
 	url := fmt.Sprintf("%s/build/%s/%s/%s/%s/_status", cred.GetAPiAddr(), projectName, repositoryName, architectureName, packageName)
@@ -53,19 +62,88 @@ func (cred *OSCCredentials) GetBuildStatus(ctx context.Context, projectName, rep
 		return nil, fmt.Errorf("failed to get build status: status code %d, body: %s", statusCode, string(body))
 	}
 
-	var status BuildStatus
+	status := BuildStatus{}
 	if err := xml.Unmarshal(body, &status); err != nil {
 		return nil, fmt.Errorf("failed to parse build status XML: %w", err)
 	}
 	return &status, nil
 }
 
-type BuildDepInfo struct {
-	XMLName  xml.Name  `xml:"builddepinfo"`
-	Packages []Package `xml:"package"`
+func (cred *OSCCredentials) getMultibuildStatus(ctx context.Context, projectName, repositoryName, architectureName, packageName string) ([]MultibuildStatus, error) {
+	packages, err := cred.listProjectPackages(ctx, projectName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list packages for project %s: %w", projectName, err)
+	}
+
+	basePackageName := packageName
+	if strings.Contains(packageName, ":") {
+		basePackageName = strings.Split(packageName, ":")[0]
+	}
+
+	var pkg *Package
+	for _, p := range packages {
+		if p.Name == basePackageName {
+			pkg = p
+			break
+		}
+	}
+
+	if pkg == nil {
+		slog.Warn("base package not found for multibuild status", "project", projectName, "package", packageName, "basePackageName", basePackageName)
+		return []MultibuildStatus{}, nil
+	}
+
+	var statuses []MultibuildStatus
+
+	for key := range pkg.Status {
+		parts := strings.Split(key, "/")
+		if len(parts) < 2 {
+			continue
+		}
+		repo := parts[0]
+		arch := parts[1]
+
+		if repo != repositoryName || arch != architectureName {
+			continue
+		}
+
+		var flavor string
+		if len(parts) > 2 {
+			flavor = strings.Join(parts[2:], "/")
+		}
+
+		var fullPackageName string
+		if flavor != "" {
+			fullPackageName = fmt.Sprintf("%s:%s", basePackageName, flavor)
+		} else {
+			fullPackageName = basePackageName
+		}
+
+		status, err := cred.GetBuildStatus(ctx, projectName, repositoryName, architectureName, fullPackageName)
+		if err != nil {
+			statuses = append(statuses, MultibuildStatus{
+				Package: fullPackageName,
+				Status:  "error",
+				Details: err.Error(),
+			})
+		} else {
+			statuses = append(statuses, MultibuildStatus{
+				Package: fullPackageName,
+				Status:  status.Code,
+				Details: status.Details,
+			})
+		}
+	}
+
+	return statuses, nil
 }
 
-type Package struct {
+type BuildDepInfo struct {
+	XMLName  xml.Name          `xml:"builddepinfo"`
+	Packages []BuildLogPackage `xml:"package"`
+}
+
+type BuildLogPackage struct {
 	XMLName xml.Name `xml:"package"`
 	Name    string   `xml:"name,attr"`
 	Deps    []Dep    `xml:"dep"`
@@ -107,48 +185,17 @@ func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, rep
 		return string(bodyBytes), nil
 	}
 
-	if statusCode != http.StatusNotFound {
-		return "", fmt.Errorf("failed to get build log: status code %d, body: %s", statusCode, string(bodyBytes))
+	if statusCode == http.StatusNotFound {
+		return "", ErrBuildLogNotFound
 	}
 
-	// Status is 404, check build status
-	status, err := cred.GetBuildStatus(ctx, projectName, repositoryName, architectureName, packageName)
-	if err != nil {
-		return "", fmt.Errorf("failed to get build log (status code %d), and also failed to get build status: %w", statusCode, err)
-	}
-
-	if status.Code != "unresolvable" {
-		return "", fmt.Errorf("failed to get build log: status code %d, build status is '%s': %s", statusCode, status.Code, status.Details)
-	}
-
-	// It's unresolvable. Now get dep info.
-	depInfo, err := cred.GetBuildDepInfo(ctx, projectName, repositoryName, architectureName)
-	if err != nil {
-		return "", fmt.Errorf("package is unresolvable, but failed to get dependency info: %w", err)
-	}
-
-	var missingDeps []string
-	for _, p := range depInfo.Packages {
-		if p.Name == packageName {
-			for _, d := range p.Deps {
-				if d.State == "missing" {
-					missingDeps = append(missingDeps, d.Name)
-				}
-			}
-			break
-		}
-	}
-
-	if len(missingDeps) > 0 {
-		return "", fmt.Errorf("package is unresolvable. Missing dependencies: %s", strings.Join(missingDeps, ", "))
-	}
-
-	return "", fmt.Errorf("package is unresolvable, but could not determine missing dependencies. Details: %s", status.Details)
+	return "", fmt.Errorf("failed to get build log: status code %d, body: %s", statusCode, string(bodyBytes))
 }
 
 type BuildLogParam struct {
 	ProjectName      string `json:"project_name" jsonschema:"Name of the project"`
 	PackageName      string `json:"package_name" jsonschema:"Name of the package"`
+	Flavor           string `json:"flavor,omitempty" jsonschema:"Flavor of the package"`
 	RepositoryName   string `json:"repository_name,omitempty" jsonschema:"Repository name"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
@@ -173,10 +220,83 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolReque
 		params.ArchitectureName = defArch
 	}
 
-	rawLog, err := cred.GetBuildLogRaw(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, params.PackageName)
-	if err != nil {
-		return nil, nil, err
+	packageNameWithFlavor := params.PackageName
+	if params.Flavor != "" {
+		packageNameWithFlavor = fmt.Sprintf("%s:%s", params.PackageName, params.Flavor)
 	}
+
+	rawLog, err := cred.GetBuildLogRaw(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor)
+
+	multibuildStatuses, mbErr := cred.getMultibuildStatus(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, params.PackageName)
+	if mbErr != nil {
+		slog.Warn("failed to get multibuild status", "error", mbErr)
+	}
+
+	otherFlavors := []MultibuildStatus{}
+	for _, status := range multibuildStatuses {
+		if status.Package != packageNameWithFlavor {
+			otherFlavors = append(otherFlavors, status)
+		}
+	}
+
+	if err != nil {
+		result := map[string]any{}
+		if errors.Is(err, ErrBuildLogNotFound) {
+			if len(otherFlavors) > 0 {
+				result["message"] = fmt.Sprintf("Build log for package '%s' not found.", packageNameWithFlavor)
+				result["other_flavors_status"] = otherFlavors
+				return nil, result, nil
+			}
+
+			// It's a 404, but there are no other flavors, so let's provide a more detailed error.
+			status, statusErr := cred.GetBuildStatus(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor)
+			if statusErr != nil {
+				return nil, nil, fmt.Errorf("failed to get build log (not found), and also failed to get build status: %w", statusErr)
+			}
+
+			if status.Code == "unresolvable" {
+				depInfo, depErr := cred.GetBuildDepInfo(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName)
+				if depErr != nil {
+					return nil, nil, fmt.Errorf("package is unresolvable, but failed to get dependency info: %w", depErr)
+				}
+
+				var missingDeps []string
+				for _, p := range depInfo.Packages {
+					if p.Name == packageNameWithFlavor {
+						for _, d := range p.Deps {
+							if d.State == "missing" {
+								missingDeps = append(missingDeps, d.Name)
+							}
+						}
+						break
+					}
+				}
+
+				if len(missingDeps) > 0 {
+					return nil, nil, fmt.Errorf("package is unresolvable. Missing dependencies: %s", strings.Join(missingDeps, ", "))
+				}
+
+				return nil, nil, fmt.Errorf("package is unresolvable, but could not determine missing dependencies. Details: %s", status.Details)
+			} else if status.Code == "excluded" {
+				return nil, nil, fmt.Errorf("EXCLUDED '%s': %s", status.Code, multibuildStatuses)
+			}
+
+			return nil, nil, fmt.Errorf("failed to get build log: not found, build status is '%s': %s", status.Code, status.Details)
+		}
+
+		// It's a different error (e.g., 500, network error)
+		result["error"] = err.Error()
+		if len(otherFlavors) > 0 {
+			result["other_flavors_status"] = otherFlavors
+		}
+		return nil, result, nil
+	}
+
 	log := buildlog.Parse(rawLog)
-	return nil, log.FormatJson(params.NrLines, params.ShowSucceeded), nil
+	result := log.FormatJson(params.NrLines, params.ShowSucceeded)
+	if len(otherFlavors) > 0 {
+		result["other_flavors_status"] = otherFlavors
+	}
+
+	return nil, result, nil
 }
