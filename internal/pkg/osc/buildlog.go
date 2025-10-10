@@ -199,11 +199,15 @@ type BuildLogParam struct {
 	RepositoryName   string `json:"repository_name,omitempty" jsonschema:"Repository name"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
+	Offest           int    `json:"offset,omitempty" jsonschema:"Offset from where to starti. If the offset if 0, the last 1000 lines are returned."`
+	Exclude          string `json:"exclude,omitempty" jsonschema:"Exclude lines with this regular expression"`
+	Match            string `json:"match,omitempty" jsonschema:"Include only lines matchine this regular expression"`
 	ShowSucceeded    bool   `json:"show_succeeded,omitempty" jsonschema:"Also show succeeded logs"`
 }
 
 const defRepo = "openSUSE_Tumbleweed"
 const defArch = "x86_64"
+const maxLines = 1000
 
 func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolRequest, params BuildLogParam) (*mcp.CallToolResult, map[string]any, error) {
 	slog.Debug("mcp tool call: BuildLog", "params", params)
@@ -293,7 +297,11 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolReque
 	}
 
 	log := buildlog.Parse(rawLog)
-	result := log.FormatJson(params.NrLines, params.ShowSucceeded)
+	nrLines := params.NrLines
+	if nrLines == 0 || nrLines > maxLines {
+		nrLines = maxLines
+	}
+	result := log.FormatJson(maxLines, params.Offest, params.ShowSucceeded, params.Match, params.Exclude)
 	if len(otherFlavors) > 0 {
 		result["other_flavors_status"] = otherFlavors
 	}

@@ -161,7 +161,7 @@ func Parse(logContent string) *BuildLog {
 	return log
 }
 
-func (log *BuildLog) FormatJson(nrLines int, printSucceded bool) map[string]any {
+func (log *BuildLog) FormatJson(nrLines int, offset int, printSucceded bool, match, exclude string) map[string]any {
 	properties := map[string]string{
 		"Name":    log.Name,
 		"Project": log.Project,
@@ -169,19 +169,65 @@ func (log *BuildLog) FormatJson(nrLines int, printSucceded bool) map[string]any 
 		"Arch":    log.Arch,
 	}
 
+	var matchRe, excludeRe *regexp.Regexp
+	var err error
+	if match != "" {
+		matchRe, err = regexp.Compile(match)
+		if err != nil {
+			matchRe = nil
+		}
+	}
+	if exclude != "" {
+		excludeRe, err = regexp.Compile(exclude)
+		if err != nil {
+			excludeRe = nil
+		}
+	}
+
 	phases := []any{}
 	for _, phaseDetails := range log.Phases {
+		lines := phaseDetails.Lines
+		var filteredLines []string
+		if match != "" || exclude != "" {
+			for _, line := range lines {
+				if excludeRe != nil && excludeRe.MatchString(line) {
+					continue
+				}
+				if matchRe != nil && !matchRe.MatchString(line) {
+					continue
+				}
+				filteredLines = append(filteredLines, line)
+			}
+		} else {
+			filteredLines = lines
+		}
+
 		phaseData := map[string]any{
 			"Phase":    phaseDetails.Type.String(),
 			"Duration": phaseDetails.Duration,
 			"Success":  phaseDetails.Succeeded,
+			"NrLines":  len(filteredLines),
 		}
-		if printSucceded || !phaseDetails.Succeeded {
-			printLines := nrLines
-			if nrLines > len(phaseDetails.Lines) || nrLines == 0 {
-				printLines = len(phaseDetails.Lines)
+
+		showLines := (printSucceded || !phaseDetails.Succeeded) || ((match != "" || exclude != "") && len(filteredLines) > 0)
+
+		if showLines {
+			if !printSucceded && phaseDetails.Succeeded && match == "" && exclude == "" {
+				// don't add lines
+			} else if len(filteredLines) > 0 {
+				currentOffset := offset
+				printLines := nrLines
+				if currentOffset+printLines > len(filteredLines) {
+					printLines = len(filteredLines) - currentOffset
+				}
+				if currentOffset == 0 {
+					currentOffset = len(filteredLines) - printLines
+					if currentOffset < 0 {
+						currentOffset = 0
+					}
+				}
+				phaseData["Lines"] = filteredLines[currentOffset:len(filteredLines)]
 			}
-			phaseData["Lines"] = phaseDetails.Lines[:printLines]
 		}
 		phases = append(phases, phaseData)
 	}
