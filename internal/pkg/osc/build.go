@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
@@ -207,6 +208,7 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 		return nil, nil, err
 	}
 	oscCmd.Stderr = oscCmd.Stdout
+	buildStartTime := time.Now()
 	slog.Info("starting osc build", slog.String("command", oscCmd.String()), slog.String("dir", cmdDir))
 	if err := oscCmd.Start(); err != nil {
 		slog.Error("failed to start osc build", "error", err)
@@ -230,6 +232,7 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	}
 
 	buildErr := oscCmd.Wait()
+	buildDuration := time.Since(buildStartTime)
 
 	buildLog := buildlog.Parse(out.String())
 
@@ -241,14 +244,14 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	cred.LastBuildKey = buildKey
 
 	if buildErr != nil {
-		slog.Error("failed to run build", slog.String("command", oscCmd.String()), "error", buildErr)
+		slog.Error("failed to run build", slog.String("command", oscCmd.String()), "error", buildErr, "duration", buildDuration)
 		result.Error = buildErr.Error()
 		result.ParsedLog = buildLog
 		result.Success = false
 		return nil, result, nil
 	}
 
-	slog.Debug("osc build finished successfully", slog.String("command", oscCmd.String()))
+	slog.Info("osc build finished successfully", "project", params.ProjectName, "package", params.BundleName, "duration", buildDuration)
 	result.Success = true
 	result.PackagesBuilt = []string{}
 	result.RpmLint = map[string]any{}

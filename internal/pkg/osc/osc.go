@@ -68,6 +68,7 @@ func GetCredentials() (OSCCredentials, error) {
 		for _, p := range configPaths {
 			if _, err := os.Stat(p); err == nil {
 				configPath = p
+				slog.Debug("Found OSC config", "path", configPath)
 				break
 			}
 		}
@@ -125,10 +126,12 @@ func GetCredentials() (OSCCredentials, error) {
 		}
 		creds.Name = user
 		creds.Passwd = pass
+		slog.Info("Loaded credentials from config file", "user", user, "api", creds.Apiaddr)
 		return creds, nil
 	}
 
 	// fallback to keyring
+	slog.Debug("Password not in config, attempting keyring")
 	var keyringCreds OSCCredentials
 	keyringCreds, err = useKeyringCreds(creds.GetApiDomain())
 	if err != nil {
@@ -144,6 +147,7 @@ func GetCredentials() (OSCCredentials, error) {
 		return creds, fmt.Errorf("password found in keyring for %s, but username is missing from both keyring and config", creds.Apiaddr)
 	}
 
+	slog.Info("Loaded credentials from keyring", "user", creds.Name, "api", creds.Apiaddr)
 	return creds, nil
 }
 
@@ -242,6 +246,8 @@ func (cred *OSCCredentials) buildRequest(ctx context.Context, method, url string
 
 func (cred *OSCCredentials) apiGetRequest(ctx context.Context, path string, headers map[string]string) (*http.Response, error) {
 	apiURL := fmt.Sprintf("%s/%s", cred.GetAPiAddr(), path)
+	slog.Debug("API GET request", "url", apiURL, "path", path)
+
 	req, err := cred.buildRequest(ctx, "GET", apiURL, nil)
 	if err != nil {
 		return nil, err
@@ -253,7 +259,10 @@ func (cred *OSCCredentials) apiGetRequest(ctx context.Context, path string, head
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		slog.Error("API request failed", "url", apiURL, "error", err)
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
+
+	slog.Debug("API response received", "url", apiURL, "status", resp.StatusCode, "content_length", resp.ContentLength)
 	return resp, nil
 }

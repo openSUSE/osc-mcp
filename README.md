@@ -95,6 +95,62 @@ Create a configuration file `~/.mcphost.yml` and add the following lines to add 
 This program can be used to check the available tools.
 
 
+# Logging
+
+The MCP server includes comprehensive logging to help monitor operations and troubleshoot issues.
+
+## Log Levels
+
+Use the following flags to control logging verbosity:
+
+- **Default (Warn)**: Only warnings and errors are logged
+- **`-v` or `--verbose`**: Enable info-level logging for important operational events
+- **`-d` or `--debug`**: Enable debug-level logging for detailed diagnostic information
+
+## Log Output Options
+
+### Standard Output (stderr)
+By default, logs are written to stderr:
+```bash
+go run osc-mcp.go -v
+```
+
+### File Output
+Direct logs to a file for persistent logging:
+```bash
+go run osc-mcp.go -v --logfile /var/log/osc-mcp.log
+```
+
+### JSON Format
+For machine-readable logs (useful for log aggregation systems):
+```bash
+go run osc-mcp.go -v --log-json
+```
+
+JSON logging can be combined with file output:
+```bash
+go run osc-mcp.go -v --log-json --logfile /var/log/osc-mcp.json
+```
+
+## What Gets Logged
+
+- **Info level** (`-v`): Major operations like builds, commits, checkouts, file uploads, and their durations
+- **Debug level** (`-d`): API requests/responses, command execution details, file operations, and internal state
+- **Warn level** (default): Non-fatal issues like missing configs or failed progress notifications
+- **Error level** (always): Fatal errors with full context
+
+## Example Usage
+
+Monitor build operations with timing information:
+```bash
+go run osc-mcp.go -v --http localhost:8666 --workdir /tmp/mcp/osc-mcp/
+```
+
+Full debugging with JSON output to a file:
+```bash
+go run osc-mcp.go -d --log-json --logfile debug.json --http localhost:8666
+```
+
 # Other functionality
 
 For all options use
