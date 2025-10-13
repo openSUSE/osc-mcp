@@ -39,6 +39,7 @@ func main() {
 	pflag.String("logfile", "", "if set, log to this file instead of stderr")
 	pflag.BoolP("verbose", "v", false, "Enable verbose logging")
 	pflag.BoolP("debug", "d", false, "Enable debug logging")
+	pflag.Bool("log-json", false, "Output logs in JSON format (machine-readable)")
 	pflag.Bool("disable-archives", false, "Disables archive tools")
 
 	pflag.Parse()
@@ -58,6 +59,7 @@ func main() {
 		Level: logLevel,
 	}
 	var logger *slog.Logger
+	logOutput := os.Stderr
 	if viper.GetString("logfile") != "" {
 		f, err := os.OpenFile(viper.GetString("logfile"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
@@ -65,9 +67,14 @@ func main() {
 			os.Exit(1)
 		}
 		defer f.Close()
-		logger = slog.New(slog.NewTextHandler(f, handlerOpts))
+		logOutput = f
+	}
+
+	// Choose handler based on format preference
+	if viper.GetBool("log-json") {
+		logger = slog.New(slog.NewJSONHandler(logOutput, handlerOpts))
 	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stderr, handlerOpts))
+		logger = slog.New(slog.NewTextHandler(logOutput, handlerOpts))
 	}
 	slog.SetDefault(logger)
 	server := mcp.NewServer(&mcp.Implementation{

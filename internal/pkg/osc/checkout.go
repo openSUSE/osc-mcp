@@ -44,13 +44,16 @@ func (cred *OSCCredentials) CheckoutBundle(ctx context.Context, req *mcp.CallToo
 	var out bytes.Buffer
 	oscCmd.Stdout = &out
 	oscCmd.Stderr = &out
+	slog.Info("Checking out bundle", "project", params.Project, "package", params.Package)
 	if err := oscCmd.Run(); err != nil {
 		slog.Error("failed to run osc checkout", slog.String("command", oscCmd.String()), slog.String("output", out.String()))
 		return nil, CheckoutPackageResult{}, fmt.Errorf("failed to run osc checkout command `%s`: %w\nOutput:\n%s", oscCmd.String(), err, out.String())
 	}
 
+	checkoutPath := path.Join(cred.TempDir, params.Project, params.Package)
+	slog.Info("Bundle checked out successfully", "path", checkoutPath)
 	return nil, CheckoutPackageResult{
-		Path:        path.Join(cred.TempDir, params.Project, params.Package),
+		Path:        checkoutPath,
 		PackageName: params.Package,
 		ProjectName: params.Project,
 	}, nil

@@ -599,7 +599,10 @@ func (cred *OSCCredentials) uploadFile(ctx context.Context, project, pkg, fileNa
 	}
 	defer file.Close()
 
+	fileInfo, _ := file.Stat()
 	url := fmt.Sprintf("%s/source/%s/%s/%s", cred.GetAPiAddr(), project, pkg, fileName)
+	slog.Debug("Uploading file", "file", fileName, "size", fileInfo.Size(), "project", project, "package", pkg)
+
 	req, err := cred.buildRequest(ctx, "PUT", url, file)
 	if err != nil {
 		return err
@@ -608,14 +611,17 @@ func (cred *OSCCredentials) uploadFile(ctx context.Context, project, pkg, fileNa
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		slog.Error("File upload failed", "file", fileName, "error", err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
+		slog.Error("File upload rejected by server", "file", fileName, "status", resp.StatusCode)
 		return fmt.Errorf("failed to upload file: status %s, body: %s", resp.Status, string(body))
 	}
+	slog.Info("File uploaded successfully", "file", fileName)
 	return nil
 }
 
@@ -650,6 +656,8 @@ func (cred *OSCCredentials) commitFiles(ctx context.Context, project, pkg, messa
 	escapedMessage := url.QueryEscape(message)
 	url := fmt.Sprintf("%s/source/%s/%s?cmd=commit&comment=%s", cred.GetAPiAddr(), project, pkg, escapedMessage)
 	slog.Debug("Committing to OBS", "url", url)
+	slog.Info("Committing changes", "project", project, "package", pkg)
+
 	req, err := cred.buildRequest(ctx, "POST", url, bytes.NewReader(xmlData))
 	if err != nil {
 		return nil, err
@@ -658,18 +666,21 @@ func (cred *OSCCredentials) commitFiles(ctx context.Context, project, pkg, messa
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		slog.Error("Commit request failed", "project", project, "package", pkg, "error", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		slog.Error("Commit rejected by server", "project", project, "package", pkg, "status", resp.StatusCode)
 		return nil, fmt.Errorf("failed to commit: status %s, body: %s", resp.Status, string(body))
 	}
 	var revision Revision
 	if err := xml.NewDecoder(resp.Body).Decode(&revision); err != nil {
 		return nil, err
 	}
+	slog.Info("Changes committed successfully", "project", project, "package", pkg, "revision", revision.Rev)
 	return &revision, nil
 }
 
