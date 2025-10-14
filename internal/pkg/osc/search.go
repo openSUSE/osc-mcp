@@ -21,9 +21,16 @@ import (
 )
 
 type SearchSrcBundleParam struct {
+	// mcp.Meta
 	Name     string   `json:"package_name,omitempty" jsonschema:"Name of the source package to search"`
 	Projects []string `json:"projects,omitempty" jsonschema:"Optional list of projects to search in"`
 }
+
+func (p SearchSrcBundleParam) GetMeta() map[string]any {
+	return nil
+}
+
+func (p SearchSrcBundleParam) SetMeta(meta map[string]any) {}
 
 type BundleInfo struct {
 	Name        string `json:"name"`
@@ -123,7 +130,8 @@ func (cred OSCCredentials) searchRemoteSrcBundle(ctx context.Context, bundleName
 	return packages, nil
 }
 
-func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, any, error) {
+// func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, any, error) {
+func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToolRequest, params SearchSrcBundleParam) (*mcp.CallToolResult, *BundleOut, error) {
 	slog.Debug("mcp tool call: SearchSrcBundle", "session", req.Session.ID(), "params", params)
 	isLocal := false
 	if len(params.Projects) == 1 && strings.EqualFold("local", strings.ToLower(params.Projects[0])) || (len(params.Projects) == 0 && params.Name == "") {
@@ -135,7 +143,7 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to list local packages in '%s': %w", cred.TempDir, err)
 		}
-		return nil, BundleOut{Result: bundles}, nil
+		return nil, &BundleOut{Result: bundles}, nil
 	}
 
 	packages, err := cred.searchRemoteSrcBundle(ctx, params.Name, params.Projects)
@@ -146,13 +154,14 @@ func (cred OSCCredentials) SearchSrcBundle(ctx context.Context, req *mcp.CallToo
 		return nil, nil, ErrBundleOrProjectNotFound
 	}
 
-	return nil, BundleOut{
+	return nil, &BundleOut{
 		Result: packages,
 	}, nil
 }
 
 type SearchPackagesParams struct {
-	Path            string `json:"path" jsonschema:"Distribution to serach in. Underscores are replaced with colons openSUSE_Tumbleweed is openSUSE:Tumbleweed"`
+	mcp.Meta
+	Path            string `json:"path" jsonschema:"Distribution to serach in. Underscores are replaced with colons openSUSE_Tumbleweed is openSUSE:Tumbleweed."`
 	Path_repository string `json:"path_repository" jsonschema:"Different build type. Use standard for most cases."`
 	Arch            string `json:"arch,omitempty"`
 	Pattern         string `json:"pattern" jsonschema:"package name to search for, matches any package for which pattern is substring."`
