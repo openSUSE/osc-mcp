@@ -172,3 +172,19 @@ The parser can also retrieve remote build logs with
 ```
   parse_log -k dolly -p home:mslacken:p
 ```
+
+# Standalone Tools
+
+## write-report
+
+This project also includes a standalone `write-report` tool. It provides a `write_report` function to an LLM that can be used to write content to a file where the file name and maximal file size is controlled at the startup of the server.
+
+It can be built with
+```
+  go build write-report.go
+```
+and be used like
+```
+  ./write-report --http localhost:8667 --file <path-to-file>
+```
+This will start a server on port 8667 and the `write_report` tool will write to the specified file.

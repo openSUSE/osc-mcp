@@ -1,5 +1,6 @@
 # ignore binary
 osc-mcp
 parse_log
+write-report
 # ignore the vendored stuff
 vendor/*

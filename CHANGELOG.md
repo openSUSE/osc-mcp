@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added archive access.
 - added resource for spec file.
 - integration of _service files.
+- added `write-report` tool.
 
 ### Changed
 - include sub-projects when getting meta.
