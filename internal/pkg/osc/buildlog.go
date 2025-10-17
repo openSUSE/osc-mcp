@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
@@ -30,6 +31,55 @@ func (cred *OSCCredentials) getFromApi(ctx context.Context, url string) ([]byte,
 		return nil, 0, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	return bodyBytes, resp.StatusCode, nil
+}
+
+func (cred *OSCCredentials) getFromApiWithProgress(ctx context.Context, url string, req *mcp.CallToolRequest) ([]byte, int, error) {
+	slog.Debug("getFromApiWithProgress", "url", url)
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to create request: %w", err)
+	}
+	httpReq.Header.Set("User-Agent", "osc-mcp")
+	httpReq.SetBasicAuth(cred.Name, cred.Passwd)
+
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	progressToken := req.Params.GetProgressToken()
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	progressCtx, cancelProgress := context.WithCancel(context.Background())
+	defer cancelProgress()
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				slog.Debug("sending progress notification for build log download")
+				err := req.Session.NotifyProgress(progressCtx, &mcp.ProgressNotificationParams{
+					ProgressToken: progressToken,
+					Message:       "Downloading build log...",
+				})
+				if err != nil {
+					slog.Warn("failed to send progress notification", "error", err)
+				}
+			case <-progressCtx.Done():
+				return
+			}
+		}
+	}()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -69,7 +119,9 @@ func (cred *OSCCredentials) GetBuildStatus(ctx context.Context, projectName, rep
 	return &status, nil
 }
 
-func (cred *OSCCredentials) getMultibuildStatus(ctx context.Context, projectName, repositoryName, architectureName, packageName string) ([]MultibuildStatus, error) {
+func (cred *OSCCredentials) getMultibuildStatus(ctx context.Context, projectName, repositoryName, architectureName, packageName string, req *mcp.CallToolRequest) ([]MultibuildStatus, error) {
+	slog.Debug("getMultibuildStatus", "project", projectName, "repository", repositoryName, "architecture", architectureName, "package", packageName)
+
 	packages, err := cred.listProjectPackages(ctx, projectName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list packages for project %s: %w", projectName, err)
@@ -93,6 +145,7 @@ func (cred *OSCCredentials) getMultibuildStatus(ctx context.Context, projectName
 		return []MultibuildStatus{}, nil
 	}
 
+	progressToken := req.Params.GetProgressToken()
 	var statuses []MultibuildStatus
 
 	for key := range pkg.Status {
@@ -117,6 +170,16 @@ func (cred *OSCCredentials) getMultibuildStatus(ctx context.Context, projectName
 			fullPackageName = fmt.Sprintf("%s:%s", basePackageName, flavor)
 		} else {
 			fullPackageName = basePackageName
+		}
+
+		if progressToken != "" {
+			err := req.Session.NotifyProgress(context.Background(), &mcp.ProgressNotificationParams{
+				ProgressToken: progressToken,
+				Message:       fmt.Sprintf("Checking status of %s...", fullPackageName),
+			})
+			if err != nil {
+				slog.Warn("failed to send progress notification", "error", err)
+			}
 		}
 
 		status, err := cred.GetBuildStatus(ctx, projectName, repositoryName, architectureName, fullPackageName)
@@ -158,6 +221,7 @@ type Dep struct {
 // GetBuildDepInfo retrieves the build dependency information for a project.
 func (cred *OSCCredentials) GetBuildDepInfo(ctx context.Context, projectName, repositoryName, architectureName string) (*BuildDepInfo, error) {
 	url := fmt.Sprintf("%s/build/%s/%s/%s/_builddepinfo", cred.GetAPiAddr(), projectName, repositoryName, architectureName)
+	slog.Debug("GetBuildDepInfo", "url", url)
 	body, statusCode, err := cred.getFromApi(ctx, url)
 	if err != nil {
 		return nil, err
@@ -174,9 +238,15 @@ func (cred *OSCCredentials) GetBuildDepInfo(ctx context.Context, projectName, re
 }
 
 // GetBuildLogRaw retrieves the build log for a given package and returns the raw content.
-func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, repositoryName, architectureName, packageName string) (string, error) {
+func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, repositoryName, architectureName, packageName string, req *mcp.CallToolRequest) (string, error) {
+	slog.Debug("GetBuildLogRaw", "project", projectName, "repository", repositoryName, "architecture", architectureName, "package", packageName)
 	url := fmt.Sprintf("%s/build/%s/%s/%s/%s/_log", cred.GetAPiAddr(), projectName, repositoryName, architectureName, packageName)
-	bodyBytes, statusCode, err := cred.getFromApi(ctx, url)
+	var bodyBytes []byte
+	var statusCode int
+	var err error
+
+	bodyBytes, statusCode, err = cred.getFromApiWithProgress(ctx, url, req)
+
 	if err != nil {
 		return "", err
 	}
@@ -196,7 +266,7 @@ type BuildLogParam struct {
 	ProjectName      string `json:"project_name" jsonschema:"Name of the project"`
 	PackageName      string `json:"package_name" jsonschema:"Name of the package"`
 	Flavor           string `json:"flavor,omitempty" jsonschema:"Flavor of the package"`
-	RepositoryName   string `json:"repository_name,omitempty" jsonschema:"Repository name"`
+	RepositoryName   string `json:"repository_name" jsonschema:"Repository name, use openSUSE_Tumblweed if the not requested otherwise"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
 	Offest           int    `json:"offset,omitempty" jsonschema:"Offset from where to starti. If the offset if 0, the last 1000 lines are returned."`
@@ -205,7 +275,6 @@ type BuildLogParam struct {
 	ShowSucceeded    bool   `json:"show_succeeded,omitempty" jsonschema:"Also show succeeded logs"`
 }
 
-const defRepo = "openSUSE_Tumbleweed"
 const defArch = "x86_64"
 const maxLines = 1000
 
@@ -218,7 +287,7 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolReque
 		return nil, nil, fmt.Errorf("package name must be specified")
 	}
 	if params.RepositoryName == "" {
-		params.RepositoryName = defRepo
+		return nil, nil, fmt.Errorf("repository name must be specified")
 	}
 	if params.ArchitectureName == "" {
 		params.ArchitectureName = defArch
@@ -229,82 +298,73 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolReque
 		packageNameWithFlavor = fmt.Sprintf("%s:%s", params.PackageName, params.Flavor)
 	}
 
-	rawLog, err := cred.GetBuildLogRaw(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor)
-
-	multibuildStatuses, mbErr := cred.getMultibuildStatus(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, params.PackageName)
-	if mbErr != nil {
-		slog.Warn("failed to get multibuild status", "error", mbErr)
-	}
-
-	otherFlavors := []MultibuildStatus{}
-	for _, status := range multibuildStatuses {
-		if status.Package != packageNameWithFlavor {
-			otherFlavors = append(otherFlavors, status)
+	rawLog, err := cred.GetBuildLogRaw(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor, req)
+	if err == nil {
+		log := buildlog.Parse(rawLog)
+		nrLines := params.NrLines
+		if nrLines == 0 || nrLines > maxLines {
+			nrLines = maxLines
 		}
-	}
-
-	if err != nil {
-		result := map[string]any{}
-		if errors.Is(err, ErrBuildLogNotFound) {
-			if len(otherFlavors) > 0 {
-				result["message"] = fmt.Sprintf("Build log for package '%s' not found.", packageNameWithFlavor)
-				result["other_flavors_status"] = otherFlavors
-				return nil, result, nil
-			}
-
-			// It's a 404, but there are no other flavors, so let's provide a more detailed error.
-			status, statusErr := cred.GetBuildStatus(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor)
-			if statusErr != nil {
-				return nil, nil, fmt.Errorf("failed to get build log (not found), and also failed to get build status: %w", statusErr)
-			}
-
-			if status.Code == "unresolvable" {
-				depInfo, depErr := cred.GetBuildDepInfo(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName)
-				if depErr != nil {
-					return nil, nil, fmt.Errorf("package is unresolvable, but failed to get dependency info: %w", depErr)
-				}
-
-				var missingDeps []string
-				for _, p := range depInfo.Packages {
-					if p.Name == packageNameWithFlavor {
-						for _, d := range p.Deps {
-							if d.State == "missing" {
-								missingDeps = append(missingDeps, d.Name)
-							}
-						}
-						break
-					}
-				}
-
-				if len(missingDeps) > 0 {
-					return nil, nil, fmt.Errorf("package is unresolvable. Missing dependencies: %s", strings.Join(missingDeps, ", "))
-				}
-
-				return nil, nil, fmt.Errorf("package is unresolvable, but could not determine missing dependencies. Details: %s", status.Details)
-			} else if status.Code == "excluded" {
-				return nil, nil, fmt.Errorf("EXCLUDED '%s': %s", status.Code, multibuildStatuses)
-			}
-
-			return nil, nil, fmt.Errorf("failed to get build log: not found, build status is '%s': %s", status.Code, status.Details)
-		}
-
-		// It's a different error (e.g., 500, network error)
-		result["error"] = err.Error()
-		if len(otherFlavors) > 0 {
-			result["other_flavors_status"] = otherFlavors
-		}
+		result := log.FormatJson(maxLines, params.Offest, params.ShowSucceeded, params.Match, params.Exclude)
 		return nil, result, nil
 	}
 
-	log := buildlog.Parse(rawLog)
-	nrLines := params.NrLines
-	if nrLines == 0 || nrLines > maxLines {
-		nrLines = maxLines
-	}
-	result := log.FormatJson(maxLines, params.Offest, params.ShowSucceeded, params.Match, params.Exclude)
-	if len(otherFlavors) > 0 {
-		result["other_flavors_status"] = otherFlavors
+	result := map[string]any{}
+	if errors.Is(err, ErrBuildLogNotFound) {
+		multibuildStatuses, mbErr := cred.getMultibuildStatus(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, params.PackageName, req)
+		if mbErr != nil {
+			slog.Warn("failed to get multibuild status", "error", mbErr)
+		}
+
+		otherFlavors := []MultibuildStatus{}
+		for _, status := range multibuildStatuses {
+			if status.Package != packageNameWithFlavor {
+				otherFlavors = append(otherFlavors, status)
+			}
+		}
+
+		if len(otherFlavors) > 0 {
+			result["message"] = fmt.Sprintf("Build log for package '%s' not found.", packageNameWithFlavor)
+			result["other_flavors_status"] = otherFlavors
+			return nil, result, nil
+		}
+		// It's a 404, but there are no other flavors, so let's provide a more detailed error.
+		status, statusErr := cred.GetBuildStatus(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor)
+		if statusErr != nil {
+			return nil, nil, fmt.Errorf("failed to get build log (not found), and also failed to get build status: %w", statusErr)
+		}
+
+		if status.Code == "unresolvable" {
+			depInfo, depErr := cred.GetBuildDepInfo(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName)
+			if depErr != nil {
+				return nil, nil, fmt.Errorf("package is unresolvable, but failed to get dependency info: %w", depErr)
+			}
+
+			var missingDeps []string
+			for _, p := range depInfo.Packages {
+				if p.Name == packageNameWithFlavor {
+					for _, d := range p.Deps {
+						if d.State == "missing" {
+							missingDeps = append(missingDeps, d.Name)
+						}
+					}
+					break
+				}
+			}
+
+			if len(missingDeps) > 0 {
+				return nil, nil, fmt.Errorf("package is unresolvable. Missing dependencies: %s", strings.Join(missingDeps, ", "))
+			}
+
+			return nil, nil, fmt.Errorf("package is unresolvable, but could not determine missing dependencies. Details: %s", status.Details)
+		} else if status.Code == "excluded" {
+			return nil, nil, fmt.Errorf("EXCLUDED '%s': %v", status.Code, multibuildStatuses)
+		}
+
+		return nil, nil, fmt.Errorf("failed to get build log: not found, build status is '%s': %s", status.Code, status.Details)
 	}
 
+	// It's a different error (e.g., 500, network error)
+	result["error"] = err.Error()
 	return nil, result, nil
 }
