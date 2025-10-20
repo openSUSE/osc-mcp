@@ -182,7 +182,7 @@ func useKernelKeyringCreds() (cred OSCCredentials, err error) {
 			slog.Info("Skipping key: failed to get info: ", "error", err)
 			continue
 		}
-		log.Printf("Found object name=%q type=%q id=%d", info.Name, info.Type, ref.Id)
+		slog.Info("Found object", "name", info.Name, "type", info.Type, "id", ref.Id)
 
 		parts := strings.SplitN(info.Name, ":", 2)
 
