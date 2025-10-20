@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/godbus/dbus/v5"
+	"github.com/jsipprell/keyctl"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 	"github.com/openSUSE/osc-mcp/internal/pkg/config"
 	keyring "github.com/ppacher/go-dbus-keyring"
@@ -130,12 +131,17 @@ func GetCredentials() (OSCCredentials, error) {
 		return creds, nil
 	}
 
-	// fallback to keyring
-	slog.Debug("Password not in config, attempting keyring")
+	// Check for kernel keyring (keyutils) before D-Bus
 	var keyringCreds OSCCredentials
-	keyringCreds, err = useKeyringCreds(creds.GetApiDomain())
+	slog.Debug("Password not in config, attempting kernel keyring (keyutils)")
+	keyringCreds, err = useKernelKeyringCreds()
 	if err != nil {
-		return creds, fmt.Errorf("password not found in %s and keyring access failed: %w", configPath, err)
+		// fallback to keyring
+		slog.Debug("Password not in config, attempting keyring")
+		keyringCreds, err = useKeyringCreds(creds.GetApiDomain())
+		if err != nil {
+			return creds, fmt.Errorf("password not found in %s and keyring access failed: %w", configPath, err)
+		}
 	}
 
 	creds.Passwd = keyringCreds.Passwd
@@ -149,6 +155,62 @@ func GetCredentials() (OSCCredentials, error) {
 
 	slog.Info("Loaded credentials from keyring", "user", creds.Name, "api", creds.Apiaddr)
 	return creds, nil
+}
+
+func useKernelKeyringCreds() (cred OSCCredentials, err error) {
+	// open the session keyring
+	kr, err := keyctl.SessionKeyring()
+	if err != nil {
+		return cred, fmt.Errorf("failed to open session keyring: %w", err)
+	}
+
+	// open the named keyring “osc_credentials”
+	named, err := keyctl.OpenKeyring(kr, "osc_credentials")
+	if err != nil {
+		return cred, fmt.Errorf("failed to open 'osc_credentials' keyring: %w", err)
+	}
+
+	// list the entries
+	refs, err := keyctl.ListKeyring(named)
+	if err != nil {
+		return cred, fmt.Errorf("failed to list 'osc_credentials' keyring: %w", err)
+	}
+
+	for _, ref := range refs {
+		info, err := ref.Info()
+		if err != nil {
+			slog.Info("Skipping key: failed to get info: ", "error", err)
+			continue
+		}
+		log.Printf("Found object name=%q type=%q id=%d", info.Name, info.Type, ref.Id)
+
+		parts := strings.SplitN(info.Name, ":", 2)
+
+		if len(parts) != 2 {
+			return cred, fmt.Errorf("Invalid format, expected two parts separated by ':'")
+		}
+		cred.Apiaddr = parts[0]
+		cred.Name = parts[1]
+
+		// Search for the key by name inside the named keyring
+		key, err := named.Search(info.Name)
+		if err != nil {
+			slog.Info("Failed to search key", "name", info.Name, "error", err)
+			continue
+		}
+
+		data, err := key.Get()
+		if err != nil {
+			slog.Info("Failed to read key ", "name", info.Name, "error", err)
+			continue
+		}
+		cred.Passwd = string(data)
+
+		// Return the first successfully read key's contents
+		return cred, nil
+	}
+
+	return cred, fmt.Errorf("no readable keys found in 'osc_credentials' keyring")
 }
 
 func useKeyringCreds(apiAddr string) (cred OSCCredentials, err error) {
