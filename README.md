@@ -68,11 +68,31 @@ Check the [example](example.md) for how a conversation looks like.
 
 Create a configuration file `~/.mcphost.yml` and add the following lines to add the server
 ```
-     osc-mcp:
-       command: /home/chris/programming/github/openSUSE/osc-mcp/osc-mcp
-       args: ["-workdir","/tmp/osc-mcp/","-clean-workdir"]
-  
+model: "ollama:mistral-small3.2:24b"
+provider-url: "http://localhost:11434"
+mcpServers:
+  osc-mcp:
+    type: "remote"
+    url: "http://localhost:8666"
+  fs:
+    name: "fs"
+    type: "builtin"
+    options:
+      allowed_directories:
+        - ${env://WORK_DIR:-/tmp}
+        - /tmp/mcp
+  web-fetcher: 
+    type: "builtin"
+    name: "http"
 ```
+With that configuration `mcphost` will
+* connect to a local ollama instance
+* use the `mistral-small3.2:24b` model
+* access to the internet to check for updates
+* access /tmp/mcp and ${WORK_DIR} or /tmp
+
+[!NOTE]
+> `mcphost` will run the tools without prior confirmation
 
 # Available tools for the LLM
 
@@ -82,6 +102,7 @@ Create a configuration file `~/.mcphost.yml` and add the following lines to add 
 - **build_bundle**: Build a source bundle.
 - **get_project_meta**: Get the metadata of a project.
 - **set_project_meta**: Set the metadata for the project.
+
 - **create_bundle**: Create a new local bundle.
 - **checkout_bundle**: Checkout a package from the online repository.
 - **get_build_log**: Get the remote or local build log of a package.
