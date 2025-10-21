@@ -262,21 +262,21 @@ func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, rep
 	return "", fmt.Errorf("failed to get build log: status code %d, body: %s", statusCode, string(bodyBytes))
 }
 
+const defArch = "x86_64"
+const maxLines = 1000
+
 type BuildLogParam struct {
 	ProjectName      string `json:"project_name" jsonschema:"Name of the project"`
 	PackageName      string `json:"package_name" jsonschema:"Name of the package"`
-	Flavor           string `json:"flavor,omitempty" jsonschema:"Flavor of the package"`
+	Flavor           string `json:"flavor,omitempty" jsonschema:"Flavor of the package. In most cases leave this empty, build falvors only exist if there is a _multibuild file in the source."`
 	RepositoryName   string `json:"repository_name" jsonschema:"Repository name, use openSUSE_Tumblweed if the not requested otherwise"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
 	Offest           int    `json:"offset,omitempty" jsonschema:"Offset from where to starti. If the offset if 0, the last 1000 lines are returned."`
-	Exclude          string `json:"exclude,omitempty" jsonschema:"Exclude lines with this regular expression"`
-	Match            string `json:"match,omitempty" jsonschema:"Include only lines matchine this regular expression"`
+	Exclude          string `json:"exclude,omitempty" jsonschema:"Exclude lines with the given regular expression. Only use this option for logs with more than 1000 lines. Call the tool without this paramater first."`
+	Match            string `json:"match,omitempty" jsonschema:"Include only lines matchine this regular expression. Only use this option for logs with more than 1000 lines. Call the tool without this paramater first."`
 	ShowSucceeded    bool   `json:"show_succeeded,omitempty" jsonschema:"Also show succeeded logs"`
 }
-
-const defArch = "x86_64"
-const maxLines = 1000
 
 func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolRequest, params BuildLogParam) (*mcp.CallToolResult, map[string]any, error) {
 	slog.Debug("mcp tool call: BuildLog", "params", params)

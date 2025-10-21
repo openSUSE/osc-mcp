@@ -99,18 +99,27 @@ func main() {
 			return nil, nil, fmt.Errorf("content size (%d bytes) exceeds the maximum allowed size (%d bytes)", len(params.Content), maxSize)
 		}
 
+		// Determine file opening flags
+		openFlags := os.O_WRONLY | os.O_CREATE
 		if _, err := os.Stat(filePath); err == nil {
 			// file exists
-			if !overwrite {
-				return nil, nil, fmt.Errorf("file '%s' already exists and overwrite is not enabled", filePath)
+			if overwrite {
+				openFlags |= os.O_TRUNC // Overwrite (truncate)
+			} else {
+				openFlags |= os.O_APPEND // Append
 			}
 		} else if !os.IsNotExist(err) {
 			// some other error with stat
 			return nil, nil, fmt.Errorf("failed to check file status for '%s': %w", filePath, err)
 		}
 
-		err := os.WriteFile(filePath, []byte(params.Content), 0644)
+		file, err := os.OpenFile(filePath, openFlags, 0644)
 		if err != nil {
+			return nil, nil, fmt.Errorf("failed to open file '%s': %w", filePath, err)
+		}
+		defer file.Close()
+
+		if _, err := file.Write([]byte(params.Content)); err != nil {
 			return nil, nil, fmt.Errorf("failed to write to file '%s': %w", filePath, err)
 		}
 
