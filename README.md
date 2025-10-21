@@ -91,7 +91,7 @@ With that configuration `mcphost` will
 * access to the internet to check for updates
 * access /tmp/mcp and ${WORK_DIR} or /tmp
 
-[!NOTE]
+>[!NOTE]
 > `mcphost` will run the tools without prior confirmation
 
 # Available tools for the LLM
