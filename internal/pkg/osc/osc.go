@@ -64,7 +64,7 @@ func GetCredentials() (OSCCredentials, error) {
 		configPaths := []string{filepath.Join(home, ".oscrc"), ".oscrc"}
 		configDir, err := os.UserConfigDir()
 		if err == nil {
-			configPaths = append([]string{filepath.Join(configDir, ".config", "osc", "oscrc")}, configPaths...)
+			configPaths = append([]string{filepath.Join(configDir, "osc", "oscrc")}, configPaths...)
 		}
 		for _, p := range configPaths {
 			if _, err := os.Stat(p); err == nil {
