@@ -346,7 +346,11 @@ func main() {
 			return server
 		}, nil)
 		slog.Info("MCP handler listening at", slog.String("address", viper.GetString("http")))
-		http.ListenAndServe(viper.GetString("http"), handler)
+		err = http.ListenAndServe(viper.GetString("http"), handler)
+		if err != nil {
+			slog.Error("failed start http handler", "error", err)
+			os.Exit(1)
+		}
 	} else {
 		slog.Info("New client has connected via stdin/stdout")
 
