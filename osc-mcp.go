@@ -158,6 +158,7 @@ func main() {
 			Tool: &mcp.Tool{
 				Name:        "run_build",
 				Description: "Build a source bundle also known as source package. A build is awlays local and withoout any online connection. All source files and software has to be downloaded and provided in advance.",
+				InputSchema: osc.BuildInputSchema(),
 			},
 			Register: func(server *mcp.Server, tool *mcp.Tool) {
 				mcp.AddTool(server, tool, obsCred.Build)
@@ -219,6 +220,7 @@ func main() {
 			Tool: &mcp.Tool{
 				Name:        "get_build_log",
 				Description: "Get the remote or local build log of a package.",
+				InputSchema: osc.BuildLogInputSchema(),
 			},
 			Register: func(server *mcp.Server, tool *mcp.Tool) {
 				mcp.AddTool(server, tool, obsCred.BuildLog)
@@ -246,6 +248,7 @@ func main() {
 			Tool: &mcp.Tool{
 				Name:        "list_requests",
 				Description: fmt.Sprintf("Get a list of requests. Need to set one of the following: user, group, project, package, state, reviewstates, types, ids. If not package group or ids ist set %s will be set for user.", obsCred.Name),
+				InputSchema: osc.ListRequestsInputSchema(),
 			},
 			Register: func(server *mcp.Server, tool *mcp.Tool) {
 				mcp.AddTool(server, tool, obsCred.ListRequests)

@@ -2,6 +2,7 @@ package osc
 
 import (
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -10,15 +11,22 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
+
+func ListRequestsInputSchema() *jsonschema.Schema {
+	inputSchema, _ := jsonschema.For[ListRequestsCmd](nil)
+	inputSchema.Properties["states"].Default = json.RawMessage("\"new,review\"")
+	return inputSchema
+}
 
 type ListRequestsCmd struct {
 	User         string `json:"user,omitempty" jsonschema:"Username to get requests for. If not provided, it will use the configured user."`
 	Group        string `json:"group,omitempty" jsonschema:"Group name to filter requests."`
 	Project      string `json:"project,omitempty" jsonschema:"Project name to filter requests."`
 	Package      string `json:"package,omitempty" jsonschema:"Package name to filter requests."`
-	States       string `json:"states,omitempty" jsonschema:"Comma-separated list of request states (e.g., 'new,review'). Defaults to 'new,review'"`
+	States       string `json:"states,omitempty" jsonschema:"Comma-separated list of request states (e.g., 'new,review')"`
 	ReviewStates string `json:"reviewstates,omitempty" jsonschema:"Comma-separated list of review states."`
 	Types        string `json:"types,omitempty" jsonschema:"Comma-separated list of action types."`
 	Limit        int    `json:"limit,omitempty" jsonschema:"Limit number of requests."`

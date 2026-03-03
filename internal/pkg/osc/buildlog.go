@@ -2,6 +2,7 @@ package osc
 
 import (
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 )
@@ -277,6 +279,12 @@ func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, rep
 const defArch = "x86_64"
 const maxLines = 1000
 
+func BuildLogInputSchema() *jsonschema.Schema {
+	inputSchema, _ := jsonschema.For[BuildLogParam](nil)
+	inputSchema.Properties["nr_lines"].Default = json.RawMessage("1000")
+	return inputSchema
+}
+
 type BuildLogParam struct {
 	ProjectName      string `json:"project_name" jsonschema:"Name of the project"`
 	PackageName      string `json:"package_name" jsonschema:"Name of the package"`
@@ -284,7 +292,7 @@ type BuildLogParam struct {
 	RepositoryName   string `json:"repository_name" jsonschema:"Repository name, use openSUSE_Tumblweed if the not requested otherwise"`
 	ArchitectureName string `json:"architecture_name,omitempty" jsonschema:"Architecture name"`
 	NrLines          int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines"`
-	Offest           int    `json:"offset,omitempty" jsonschema:"Offset from where to starti. If the offset if 0, the last 1000 lines are returned."`
+	Offset           int    `json:"offset,omitempty" jsonschema:"Offset from where to start. If the offset is 0, the last 1000 lines are returned."`
 	Exclude          string `json:"exclude,omitempty" jsonschema:"Exclude lines with the given regular expression. Only use this option for logs with more than 1000 lines. Call the tool without this paramater first."`
 	Match            string `json:"match,omitempty" jsonschema:"Include only lines matchine this regular expression. Only use this option for logs with more than 1000 lines. Call the tool without this paramater first."`
 	ShowSucceeded    bool   `json:"show_succeeded,omitempty" jsonschema:"Also show succeeded logs"`
@@ -317,7 +325,7 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolReque
 		if nrLines == 0 || nrLines > maxLines {
 			nrLines = maxLines
 		}
-		result := log.FormatJson(maxLines, params.Offest, params.ShowSucceeded, params.Match, params.Exclude)
+		result := log.FormatJson(nrLines, params.Offset, params.ShowSucceeded, params.Match, params.Exclude)
 		return nil, result, nil
 	}
 
