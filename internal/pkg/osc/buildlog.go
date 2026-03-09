@@ -237,15 +237,19 @@ func (cred *OSCCredentials) GetBuildDepInfo(ctx context.Context, projectName, re
 	return &depInfo, nil
 }
 
-// GetBuildLogRaw retrieves the build log for a given package and returns the raw content.
-func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, repositoryName, architectureName, packageName string, req *mcp.CallToolRequest) (string, error) {
+// getBuildLogRaw retrieves the build log for a given package and returns the raw content.
+func (cred *OSCCredentials) getBuildLogRaw(ctx context.Context, projectName, repositoryName, architectureName, packageName string, req *mcp.CallToolRequest) (string, error) {
 	slog.Debug("GetBuildLogRaw", "project", projectName, "repository", repositoryName, "architecture", architectureName, "package", packageName)
 	url := fmt.Sprintf("%s/build/%s/%s/%s/%s/_log", cred.GetAPiAddr(), projectName, repositoryName, architectureName, packageName)
 	var bodyBytes []byte
 	var statusCode int
 	var err error
 
-	bodyBytes, statusCode, err = cred.getFromApiWithProgress(ctx, url, req)
+	if req != nil {
+		bodyBytes, statusCode, err = cred.getFromApiWithProgress(ctx, url, req)
+	} else {
+		bodyBytes, statusCode, err = cred.getFromApi(ctx, url)
+	}
 
 	if err != nil {
 		return "", err
@@ -260,6 +264,14 @@ func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, rep
 	}
 
 	return "", fmt.Errorf("failed to get build log: status code %d, body: %s", statusCode, string(bodyBytes))
+}
+
+func (cred *OSCCredentials) GetBuildLogRawWithProgress(ctx context.Context, projectName, repositoryName, architectureName, packageName string, req *mcp.CallToolRequest) (string, error) {
+	return cred.getBuildLogRaw(ctx, projectName, repositoryName, architectureName, packageName, req)
+}
+
+func (cred *OSCCredentials) GetBuildLogRaw(ctx context.Context, projectName, repositoryName, architectureName, packageName string) (string, error) {
+	return cred.getBuildLogRaw(ctx, projectName, repositoryName, architectureName, packageName, nil)
 }
 
 const defArch = "x86_64"
@@ -298,7 +310,7 @@ func (cred *OSCCredentials) BuildLog(ctx context.Context, req *mcp.CallToolReque
 		packageNameWithFlavor = fmt.Sprintf("%s:%s", params.PackageName, params.Flavor)
 	}
 
-	rawLog, err := cred.GetBuildLogRaw(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor, req)
+	rawLog, err := cred.GetBuildLogRawWithProgress(ctx, params.ProjectName, params.RepositoryName, params.ArchitectureName, packageNameWithFlavor, req)
 	if err == nil {
 		log := buildlog.Parse(rawLog)
 		nrLines := params.NrLines
