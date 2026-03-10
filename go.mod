@@ -5,9 +5,10 @@ go 1.24.0
 require (
 	github.com/beevik/etree v1.5.1
 	github.com/godbus/dbus/v5 v5.1.0
-	github.com/google/jsonschema-go v0.3.0
+	github.com/google/jsonschema-go v0.4.2
 	github.com/hbollon/go-edlib v1.7.0
-	github.com/modelcontextprotocol/go-sdk v1.0.0
+	github.com/jsipprell/keyctl v1.0.3
+	github.com/modelcontextprotocol/go-sdk v1.3.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/openSUSE/mcp-archive v0.1.3
 	github.com/ppacher/go-dbus-keyring v1.0.1
@@ -24,12 +25,13 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jsipprell/keyctl v1.0.3 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
+	github.com/segmentio/asm v1.1.3 // indirect
+	github.com/segmentio/encoding v0.5.3 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
@@ -38,6 +40,7 @@ require (
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 )
