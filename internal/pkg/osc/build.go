@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/openSUSE/osc-mcp/internal/pkg/buildlog"
 )
@@ -23,15 +25,16 @@ type BuildParam struct {
 	MultibuildPackage string `json:"multibuild_package,omitempty" jsonschema:"Specify the flavor of a multibuild package"`
 	Distribution      string `json:"distribution,omitempty" jsonschema:"Distribution to build against (e.g., openSUSE_Tumbleweed)."`
 	Arch              string `json:"arch,omitempty" jsonschema:"Architecture to build for (e.g., x86_64)."`
+	NrLines           int    `json:"nr_lines,omitempty" jsonschema:"Maximum number of lines to return in the log"`
 }
 
 type BuildResult struct {
-	Error         string             `json:"error,omitempty"`
-	Success       bool               `json:"success"`
-	PackagesBuilt []string           `json:"packages_built,omitempty"`
-	RpmLint       map[string]any     `json:"lint_report,omitempty"`
-	ParsedLog     *buildlog.BuildLog `json:"parsed_log,omitempty"`
-	Buildroot     string             `json:"build-root,omitempty" jsonschema:"The root directory for the build"`
+	Error         string         `json:"error,omitempty"`
+	Success       bool           `json:"success"`
+	PackagesBuilt []string       `json:"packages_built,omitempty"`
+	RpmLint       map[string]any `json:"lint_report,omitempty"`
+	ParsedLog     any            `json:"parsed_log,omitempty"`
+	Buildroot     string         `json:"build-root,omitempty" jsonschema:"The root directory for the build"`
 }
 
 type RunServicesParam struct {
@@ -120,6 +123,12 @@ func (cred *OSCCredentials) RunServices(ctx context.Context, req *mcp.CallToolRe
 		Success: true,
 		Log:     outAll.String(),
 	}, nil
+}
+
+func BuildInputSchema() *jsonschema.Schema {
+	inputSchema, _ := jsonschema.For[BuildParam](nil)
+	inputSchema.Properties["nr_lines"].Default = json.RawMessage("1000")
+	return inputSchema
 }
 
 func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest, params BuildParam) (*mcp.CallToolResult, any, error) {
@@ -243,10 +252,15 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	cred.BuildLogs[buildKey] = buildLog
 	cred.LastBuildKey = buildKey
 
+	nrLines := params.NrLines
+	if nrLines <= 0 {
+		nrLines = 1000
+	}
+
 	if buildErr != nil {
 		slog.Error("failed to run build", slog.String("command", oscCmd.String()), "error", buildErr, "duration", buildDuration)
 		result.Error = buildErr.Error()
-		result.ParsedLog = buildLog
+		result.ParsedLog = buildLog.FormatJson(nrLines, 0, false, "", "")
 		result.Success = false
 		return nil, result, nil
 	}
@@ -255,6 +269,6 @@ func (cred *OSCCredentials) Build(ctx context.Context, req *mcp.CallToolRequest,
 	result.Success = true
 	result.PackagesBuilt = []string{}
 	result.RpmLint = map[string]any{}
-	result.ParsedLog = buildLog
+	result.ParsedLog = buildLog.FormatJson(nrLines, 0, false, "", "")
 	return nil, result, nil
 }
