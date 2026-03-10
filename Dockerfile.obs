@@ -1,0 +1,34 @@
+#!BuildTag: mcp-server-osc:%PKG_VERSION%.%GIT_OFFSET%.%RELEASE% mcp-server-osc:%PKG_VERSION%.%GIT_OFFSET% mcp-server-osc:%PKG_VERSION% mcp-server-osc
+FROM opensuse/tumbleweed:latest
+
+# labelprefix=org.opensuse.mcp-server-osc
+LABEL org.opencontainers.image.title="MCP Server for OBS"
+LABEL org.opencontainers.image.description="MCP Server Container for the Open Build Service %PKG_VERSION%.%GIT_OFFSET%"
+LABEL org.opensuse.version="%PKG_VERSION%.%GIT_OFFSET%"
+LABEL org.openbuildservice.disturl="%DISTURL%"
+LABEL org.opencontainers.image.created="%BUILDTIME%"
+LABEL org.opensuse.reference="registry.opensuse.org/science/machinelearning/mcp/mcp-server-osc:%PKG_VERSION%.%GIT_OFFSET%"
+# endlabelprefix
+
+# Install the MCP server, osc, and build tools
+RUN zypper --non-interactive install -y \
+    mcp-server-osc \
+    osc \
+    build \
+    ca-certificates \
+    && zypper clean -a
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Environment variables for authentication
+ENV OSC_MCP_API="api.opensuse.org"
+ENV OSC_MCP_USER=""
+ENV OSC_MCP_PASSWORD=""
+ENV OSC_MCP_PASSWORD_FILE=""
+ENV OSC_MCP_HTTP=":8666"
+
+EXPOSE 8666
+
+ENTRYPOINT ["/usr/bin/mcp-server-osc"]
+CMD ["--workdir", "/workspace", "--clean-workdir", "-v"]
