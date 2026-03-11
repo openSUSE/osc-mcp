@@ -120,7 +120,20 @@ func GetCredentials() (OSCCredentials, error) {
 	}
 	if viper.IsSet("password") {
 		pass = viper.GetString("password")
+	} else if viper.IsSet("password-file") {
+		path := viper.GetString("password-file")
+		pass_bytes, err := os.ReadFile(path)
+		if err != nil {
+			return creds, fmt.Errorf("%w", err)
+		}
+
+		pass = strings.TrimRight(string(pass_bytes), "\r\n")
+
+		if pass == "" {
+			return creds, fmt.Errorf("empty password file")
+		}
 	}
+
 	if pass != "" {
 		if user == "" {
 			return creds, fmt.Errorf("user not set for apiurl %s in .oscrc", creds.Apiaddr)

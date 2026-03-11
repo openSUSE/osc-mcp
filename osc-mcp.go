@@ -35,6 +35,7 @@ func main() {
 	pflag.String("user", "", "OBS username")
 	pflag.String("email", "", "user's email address")
 	pflag.String("password", "", "OBS password")
+	pflag.String("password-file", "", "OBS password in specified file")
 	pflag.Bool("print-creds", false, "Just print the retrieved credentials and exit")
 	pflag.Bool("clean-workdir", false, "Cleans the workdir before usage")
 	pflag.String("logfile", "", "if set, log to this file instead of stderr")
