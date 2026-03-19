@@ -1,6 +1,6 @@
 module github.com/openSUSE/osc-mcp
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/beevik/etree v1.5.1
@@ -8,7 +8,7 @@ require (
 	github.com/google/jsonschema-go v0.4.2
 	github.com/hbollon/go-edlib v1.7.0
 	github.com/jsipprell/keyctl v1.0.3
-	github.com/modelcontextprotocol/go-sdk v1.4.0
+	github.com/modelcontextprotocol/go-sdk v1.4.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/openSUSE/mcp-archive v0.1.3
 	github.com/ppacher/go-dbus-keyring v1.0.1
@@ -31,7 +31,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
-	github.com/segmentio/encoding v0.5.3 // indirect
+	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
