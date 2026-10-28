@@ -266,6 +266,15 @@ func main() {
 		},
 		{
 			Tool: &mcp.Tool{
+				Name:        "edit_file",
+				Description: fmt.Sprintf("Write or update a file in a checked out package directory. The directory must be under %s. Use this to modify spec files or other source files after branching.", obsCred.TempDir),
+			},
+			Register: func(server *mcp.Server, tool *mcp.Tool) {
+				mcp.AddTool(server, tool, obsCred.EditFile)
+			},
+		},
+		{
+			Tool: &mcp.Tool{
 				Name:        "list_archive_files",
 				Description: "Content of an archive. Supported formats are cpio, tar.gz, tar.bz2, tar.xz and zip",
 			},
