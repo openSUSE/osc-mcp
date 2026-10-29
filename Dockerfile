@@ -22,9 +22,11 @@ WORKDIR /workspace
 ENV OSC_MCP_API="api.opensuse.org"
 ENV OSC_MCP_USER=""
 ENV OSC_MCP_PASSWORD=""
+ENV OSC_MCP_PASSWORD_FILE=
 ENV OSC_MCP_WORKDIR="/workspace"
+ENV OSC_MCP_HTTP=":8666"
 
 EXPOSE 8666
 
 ENTRYPOINT ["/usr/local/bin/osc-mcp"]
-CMD ["--http", "0.0.0.0:8666", "--workdir", "/workspace", "--clean-workdir", "-v"]
+CMD [ "--clean-workdir", "-v"]
