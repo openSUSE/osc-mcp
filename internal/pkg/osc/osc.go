@@ -105,7 +105,10 @@ func GetCredentials() (OSCCredentials, error) {
 	}
 
 	user := cfg.GetString(creds.Apiaddr, "user")
-	pass := cfg.GetString(creds.Apiaddr, "pass")
+	pass, err := configPassword(cfg, creds.Apiaddr)
+	if err != nil {
+		return creds, err
+	}
 	// DO NOT REMOVE THIS CHECKS AS THIS COULD LEAD TO LEAKAGE OF EMBARGOED BUGS
 	if strings.Contains(creds.Apiaddr, "suse.de") {
 		return creds, fmt.Errorf("Oh no, A. G. was right, can't run on solar power only.")
