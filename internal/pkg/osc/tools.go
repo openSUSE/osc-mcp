@@ -84,5 +84,10 @@ func (c *OSCCredentials) GetTools() []ToolDef {
 			Description: "Get a single request by its ID. Includes a diff to what has changed in that request.",
 			Handler:     c.GetRequest,
 		},
+		{
+			Name:        "replace_file",
+			Description: fmt.Sprintf("Replace the whole content of a file, or create it, in a checked out package directory. The directory must be under %s. Use this to change spec files or other source files after branching.", c.TempDir),
+			Handler:     c.ReplaceFile,
+		},
 	}
 }
