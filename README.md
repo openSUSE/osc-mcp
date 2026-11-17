@@ -108,7 +108,7 @@ With that configuration `mcphost` will
 - **get_build_log**: Get the remote or local build log of a package.
 - **search_packages**: Search the available packages for a remote repository.
 - **commit**: Commits changed files.
-- **edit_file**: Write a file in a checked out bundle.
+- **replace_file**: Replace or create a file in a checked out bundle.
 
 # Useful tools
 

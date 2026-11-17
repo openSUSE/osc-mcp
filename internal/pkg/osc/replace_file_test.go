@@ -9,30 +9,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func TestInWorkdir(t *testing.T) {
-	cred := &OSCCredentials{TempDir: "/tmp/osc-mcp"}
-	testCases := []struct {
-		dir string
-		ok  bool
-	}{
-		{"/tmp/osc-mcp", true},
-		{"/tmp/osc-mcp/home:user:branches:devel/pkg", true},
-		{"/tmp/osc-mcp/prj/../pkg", true},
-		{"/tmp/osc-mcp-other/pkg", false},
-		{"/tmp/osc-mcp/../etc", false},
-		{"/etc", false},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.dir, func(t *testing.T) {
-			_, err := cred.inWorkdir(tc.dir)
-			if (err == nil) != tc.ok {
-				t.Errorf("inWorkdir(%q) error = %v, want ok = %v", tc.dir, err, tc.ok)
-			}
-		})
-	}
-}
-
-func TestEditFile(t *testing.T) {
+func TestReplaceFile(t *testing.T) {
 	workdir := t.TempDir()
 	cred := &OSCCredentials{TempDir: workdir}
 	req := &mcp.CallToolRequest{Session: &mcp.ServerSession{}}
@@ -44,11 +21,13 @@ func TestEditFile(t *testing.T) {
 		}
 	}
 
-	if _, _, err := cred.EditFile(context.Background(), req, EditFileParams{Directory: pkgDir, Filename: "pkg.spec", Content: "Name: pkg\n"}); err != nil {
-		t.Fatalf("EditFile failed: %v", err)
-	}
-	if got, _ := os.ReadFile(filepath.Join(pkgDir, "pkg.spec")); string(got) != "Name: pkg\n" {
-		t.Errorf("unexpected file content %q", got)
+	for _, dir := range []string{pkgDir, filepath.Join(workdir, "prj", "..", "prj", "pkg"), workdir} {
+		if _, _, err := cred.ReplaceFile(context.Background(), req, ReplaceFileParams{Directory: dir, Filename: "pkg.spec", Content: "Name: pkg\n"}); err != nil {
+			t.Fatalf("ReplaceFile in %s failed: %v", dir, err)
+		}
+		if got, _ := os.ReadFile(filepath.Join(dir, "pkg.spec")); string(got) != "Name: pkg\n" {
+			t.Errorf("unexpected file content %q", got)
+		}
 	}
 
 	// symlinks inside the workdir that point out of it must not be written through
@@ -62,20 +41,30 @@ func TestEditFile(t *testing.T) {
 	if err := os.Symlink(filepath.Join(outside, "target"), filepath.Join(pkgDir, "link.spec")); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.Symlink("pkg.spec", filepath.Join(pkgDir, "inside.link")); err != nil {
+		t.Fatal(err)
+	}
 
-	for _, params := range []EditFileParams{
+	for _, params := range []ReplaceFileParams{
 		{Directory: pkgDir, Filename: "../escape", Content: "x"},
 		{Directory: pkgDir, Filename: "..", Content: "x"},
 		{Directory: workdir + "-other", Filename: "escape", Content: "x"},
+		{Directory: filepath.Join(workdir, "..", filepath.Base(outside)), Filename: "new", Content: "x"},
+		{Directory: outside, Filename: "new", Content: "x"},
 		{Directory: filepath.Join(workdir, "prj", "linkdir"), Filename: "new", Content: "x"},
 		{Directory: pkgDir, Filename: "link.spec", Content: "x"},
+		{Directory: pkgDir, Filename: "inside.link", Content: "x"},
+		{Directory: filepath.Join(workdir, "missing"), Filename: "new", Content: "x"},
 	} {
-		if _, _, err := cred.EditFile(context.Background(), req, params); err == nil {
-			t.Errorf("EditFile(%+v) succeeded, want error", params)
+		if _, _, err := cred.ReplaceFile(context.Background(), req, params); err == nil {
+			t.Errorf("ReplaceFile(%+v) succeeded, want error", params)
 		}
 	}
 	if got, _ := os.ReadFile(filepath.Join(outside, "target")); string(got) != "keep" {
 		t.Errorf("file outside the workdir changed: %q", got)
+	}
+	if got, _ := os.ReadFile(filepath.Join(pkgDir, "pkg.spec")); string(got) != "Name: pkg\n" {
+		t.Errorf("file behind a symlink changed: %q", got)
 	}
 	if _, err := os.Stat(filepath.Join(outside, "new")); err == nil {
 		t.Errorf("file created outside the workdir")
